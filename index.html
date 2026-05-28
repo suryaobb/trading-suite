@@ -7,358 +7,374 @@
 <link rel="stylesheet" href="shared.css">
 <style>
 .hero {
-  max-width: 900px;
-  margin: 60px auto 0;
-  padding: 0 24px;
-  text-align: center;
-}
-.hero h1 {
-  font-size: 42px;
-  font-weight: 900;
-  letter-spacing: -1.5px;
-  line-height: 1.1;
-  color: var(--text-primary);
-  margin-bottom: 12px;
-}
-.hero h1 span { color: var(--blue); }
-.hero p {
-  font-size: 16px;
-  color: var(--text-muted);
-  max-width: 520px;
-  margin: 0 auto 40px;
-  line-height: 1.6;
-}
-
-.app-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
+  padding: 40px 20px 20px;
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 24px;
 }
 
-.app-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  padding: 28px 24px;
-  text-decoration: none;
-  color: inherit;
-  transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+.hero-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.hero-sub {
+  font-size: 14px;
+  color: var(--text-mute);
+}
+
+/* ─── MARKET BAR ─── */
+.market-bar {
+  max-width: 900px;
+  margin: 16px auto;
+  padding: 0 20px;
   display: flex;
-  flex-direction: column;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.market-chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
   gap: 10px;
+}
+
+.mc-symbol {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.mc-price {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.mc-change {
+  font-size: 12px;
+  font-weight: 600;
+}
+.mc-change.up { color: var(--green); }
+.mc-change.dn { color: var(--red); }
+
+/* ─── TOOL CARDS ─── */
+.tools-grid {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.tool-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  text-decoration: none;
+  display: block;
+  transition: border-color 0.2s, transform 0.15s;
   position: relative;
   overflow: hidden;
 }
-.app-card::before {
+
+.tool-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
+  border-radius: 16px 16px 0 0;
 }
-.app-card.scanner::before { background: linear-gradient(90deg, var(--green), var(--blue)); }
-.app-card.planner::before { background: linear-gradient(90deg, var(--blue), var(--indigo)); }
-.app-card.journal::before { background: linear-gradient(90deg, var(--purple), var(--blue)); }
 
-.app-card:hover {
-  border-color: var(--border-bright);
+.tool-card.scanner::before { background: linear-gradient(90deg, #38bdf8, #6366f1); }
+.tool-card.planner::before { background: linear-gradient(90deg, #22c55e, #38bdf8); }
+.tool-card.journal::before { background: linear-gradient(90deg, #f59e0b, #f43f5e); }
+
+.tool-card:hover {
+  border-color: var(--border-hi);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
 }
 
-.app-icon {
+.tc-icon {
   font-size: 32px;
-  line-height: 1;
+  margin-bottom: 14px;
 }
 
-.app-name {
-  font-size: 20px;
+.tc-name {
+  font-size: 18px;
   font-weight: 800;
-  color: var(--text-primary);
+  color: #fff;
+  margin-bottom: 6px;
   letter-spacing: -0.3px;
 }
 
-.app-desc {
+.tc-desc {
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--text-mute);
   line-height: 1.5;
-  flex: 1;
+  margin-bottom: 16px;
 }
 
-.app-features {
-  list-style: none;
-  margin-top: 4px;
-}
-.app-features li {
-  font-size: 12px;
-  color: var(--text-muted);
-  padding: 3px 0;
+.tc-tags {
   display: flex;
-  align-items: center;
   gap: 6px;
-}
-.app-features li::before {
-  content: '→';
-  color: var(--text-faint);
-  font-size: 10px;
-}
-
-.open-btn {
-  margin-top: 8px;
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 9px 16px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-align: center;
-  transition: all 0.15s;
-}
-.app-card:hover .open-btn {
-  border-color: var(--blue);
-  color: var(--blue);
-  background: rgba(56,189,248,0.06);
-}
-
-/* Rules summary */
-.rules-section {
-  max-width: 900px;
-  margin: 40px auto;
-  padding: 0 24px 60px;
-}
-
-.rules-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.rule-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  padding: 16px;
-}
-
-.rule-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-
-.rule-value {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--blue);
-  letter-spacing: -0.5px;
-  line-height: 1.1;
-}
-
-.rule-sub {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 3px;
-}
-
-/* API key section */
-.api-section {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.api-card {
-  background: #1c1200;
-  border: 1px solid #4a3010;
-  border-radius: var(--r-lg);
-  padding: 20px 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
   flex-wrap: wrap;
 }
 
-.api-card .api-icon { font-size: 28px; flex-shrink: 0; }
-.api-card .api-text h3 { font-size: 14px; font-weight: 700; color: #fbbf24; margin-bottom: 3px; }
-.api-card .api-text p { font-size: 12px; color: #92400e; line-height: 1.4; }
-.api-card .api-input-row { display: flex; gap: 8px; flex: 1; min-width: 260px; }
-.api-card .api-input-row input {
-  flex: 1;
+.tc-tag {
   background: var(--bg-input);
-  border: 1px solid #4a3010;
-  border-radius: var(--r-sm);
-  padding: 9px 14px;
-  font-size: 13px;
-  color: var(--text-primary);
-  outline: none;
-  font-family: monospace;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-mute);
 }
-.api-card .api-input-row input:focus { border-color: var(--yellow); }
-.api-card .api-input-row input::placeholder { color: #4a3010; }
+
+.tc-arrow {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 18px;
+  color: var(--border-hi);
+  transition: color 0.15s, transform 0.15s;
+}
+.tool-card:hover .tc-arrow {
+  color: var(--accent);
+  transform: translateX(3px);
+}
+
+/* ─── STATS ROW ─── */
+.stats-row {
+  max-width: 900px;
+  margin: 0 auto 30px;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.stat-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-val {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ─── MARKET STATUS BADGE ─── */
+.mkt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+.mkt-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+}
+.mkt-dot.open { background: var(--green); animation: pulse 2s infinite; }
+.mkt-dot.closed { background: var(--text-faint); }
+.mkt-dot.ext { background: var(--yellow); animation: pulse 2s infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@media (max-width: 600px) {
+  .hero-title { font-size: 22px; }
+  .tools-grid { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <a class="topbar-logo" href="index.html">⚡ <span class="accent">Trading</span> Suite</a>
-  <nav class="topbar-nav">
-    <a class="nav-link active" href="index.html">🏠 Home</a>
-    <a class="nav-link" href="scanner.html">📡 Scanner</a>
-    <a class="nav-link" href="planner.html">📋 Trade Planner</a>
-    <a class="nav-link" href="journal.html">📓 Journal</a>
-  </nav>
-  <div class="topbar-right">
-    <div class="market-badge closed" id="marketBadge">Market Closed</div>
-    <div class="status-pill">
-      <div class="status-dot demo" id="statusDot"></div>
-      <span id="statusText">Demo</span>
-    </div>
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">⚡ <span>Trading</span> Suite</div>
+  <div class="nav-links">
+    <a class="nav-link active" href="index.html">Dashboard</a>
+    <a class="nav-link" href="scanner.html">Scanner</a>
+    <a class="nav-link" href="planner.html">Planner</a>
+    <a class="nav-link" href="journal.html">Journal</a>
   </div>
-</div>
+  <div class="nav-right">
+    <span id="mktBadge" class="mkt-badge">
+      <span class="mkt-dot closed" id="mktDot"></span>
+      <span id="mktLabel">–</span>
+    </span>
+    <span class="nav-clock" id="navClock">–</span>
+  </div>
+</nav>
 
+<!-- HERO -->
 <div class="hero">
-  <h1>Your <span>Edge</span>,<br>Enforced.</h1>
-  <p>Momentum scanner, trade planner, and trade journal — built around your exact rules. Discipline automated.</p>
+  <div class="hero-title">Your Trading Command Center</div>
+  <div class="hero-sub">Scanner · Position Planner · Trade Journal — all in one place.</div>
 </div>
 
-<div class="app-grid" style="margin-top: 32px;">
+<!-- TOOL CARDS -->
+<div class="tools-grid">
 
-  <a href="scanner.html" class="app-card scanner">
-    <div class="app-icon">📡</div>
-    <div class="app-name">Momentum Scanner</div>
-    <div class="app-desc">Live 5/20 EMA × VWAP crossover alerts across MAG7, SPY, QQQ, and IWM.</div>
-    <ul class="app-features">
-      <li>1-min and 5-min timeframes</li>
-      <li>Sound alerts on crossover</li>
-      <li>One-click → Trade Planner</li>
-      <li>Bull/Bear setup tagging</li>
-    </ul>
-    <div class="open-btn">Open Scanner →</div>
+  <a class="tool-card scanner" href="scanner.html">
+    <div class="tc-arrow">→</div>
+    <div class="tc-icon">📡</div>
+    <div class="tc-name">Momentum Scanner</div>
+    <div class="tc-desc">Real-time EMA 5×20 crossover scanner with VWAP filter. Live Polygon data or demo mode. Audio alerts on signal.</div>
+    <div class="tc-tags">
+      <span class="tc-tag">EMA 5/20</span>
+      <span class="tc-tag">VWAP</span>
+      <span class="tc-tag">Live / Demo</span>
+      <span class="tc-tag">Audio alerts</span>
+    </div>
   </a>
 
-  <a href="planner.html" class="app-card planner">
-    <div class="app-icon">📋</div>
-    <div class="app-name">Trade Planner</div>
-    <div class="app-desc">Enter a trade. The plan is locked in before you click buy — stop, targets, size, and steps.</div>
-    <ul class="app-features">
-      <li>$4,000 allocation enforced</li>
-      <li>30% stop auto-calculated</li>
-      <li>50% off at +20% rule built-in</li>
-      <li>Max loss shown before entry</li>
-    </ul>
-    <div class="open-btn">Open Planner →</div>
+  <a class="tool-card planner" href="planner.html">
+    <div class="tc-arrow">→</div>
+    <div class="tc-icon">⚡</div>
+    <div class="tc-name">Trade Planner</div>
+    <div class="tc-desc">Options position sizer with stop loss, Target 1, and breakeven calculations. Enforces your risk rules automatically.</div>
+    <div class="tc-tags">
+      <span class="tc-tag">Position size</span>
+      <span class="tc-tag">Stop loss</span>
+      <span class="tc-tag">Risk %</span>
+      <span class="tc-tag">P&L targets</span>
+    </div>
   </a>
 
-  <a href="journal.html" class="app-card journal">
-    <div class="app-icon">📓</div>
-    <div class="app-name">Trade Journal</div>
-    <div class="app-desc">Log every trade. Track your edge over time — win rate, average R, and rule compliance.</div>
-    <ul class="app-features">
-      <li>Log entry, exit, and P&L</li>
-      <li>Did you follow your rules?</li>
-      <li>Running totals and win rate</li>
-      <li>Exportable CSV</li>
-    </ul>
-    <div class="open-btn">Open Journal →</div>
+  <a class="tool-card journal" href="journal.html">
+    <div class="tc-arrow">→</div>
+    <div class="tc-icon">📒</div>
+    <div class="tc-name">Trade Journal</div>
+    <div class="tc-desc">Log every trade, track your P&L, win rate, and patterns. Stored locally — works offline, no account needed.</div>
+    <div class="tc-tags">
+      <span class="tc-tag">Win rate</span>
+      <span class="tc-tag">P&L tracking</span>
+      <span class="tc-tag">Local storage</span>
+      <span class="tc-tag">Export CSV</span>
+    </div>
   </a>
 
 </div>
 
-<!-- Your Rules -->
-<div class="rules-section">
-  <div class="card-title" style="padding: 0 0 4px 2px;">Your Rules</div>
-  <div class="rules-grid">
-    <div class="rule-card">
-      <div class="rule-label">Allocation / Trade</div>
-      <div class="rule-value">$4,000</div>
-      <div class="rule-sub">10% of $40k account</div>
-    </div>
-    <div class="rule-card">
-      <div class="rule-label">Stop Loss</div>
-      <div class="rule-value">−30%</div>
-      <div class="rule-sub">On premium paid</div>
-    </div>
-    <div class="rule-card">
-      <div class="rule-label">Target 1</div>
-      <div class="rule-value">+20%</div>
-      <div class="rule-sub">Sell 50% of contracts</div>
-    </div>
-    <div class="rule-card">
-      <div class="rule-label">After Target 1</div>
-      <div class="rule-value">BE Stop</div>
-      <div class="rule-sub">Move stop to entry price</div>
-    </div>
-    <div class="rule-card">
-      <div class="rule-label">Signal</div>
-      <div class="rule-value">5×20</div>
-      <div class="rule-sub">EMA cross above VWAP</div>
-    </div>
-    <div class="rule-card">
-      <div class="rule-label">Timeframes</div>
-      <div class="rule-value">1m / 5m</div>
-      <div class="rule-sub">Both for confirmation</div>
-    </div>
+<!-- QUICK STATS (from journal localStorage) -->
+<div class="stats-row" id="statsRow">
+  <div class="stat-box">
+    <div class="stat-val" id="statTrades">–</div>
+    <div class="stat-label">Total Trades</div>
   </div>
-</div>
-
-<!-- API key banner -->
-<div class="api-section" style="margin-bottom: 60px;">
-  <div class="api-card">
-    <div class="api-icon">🔑</div>
-    <div class="api-text">
-      <h3>Connect Polygon API for live data</h3>
-      <p>Paste your key once — it's shared across the Scanner and Planner.</p>
-    </div>
-    <div class="api-input-row">
-      <input type="password" id="apiKeyInput" placeholder="Paste Polygon API key here...">
-      <button class="btn btn-primary btn-sm" onclick="saveKey()">Save Key</button>
-    </div>
+  <div class="stat-box">
+    <div class="stat-val" id="statWinRate">–</div>
+    <div class="stat-label">Win Rate</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val" id="statPL" style="color: var(--green)">–</div>
+    <div class="stat-label">Total P&L</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-val" id="statStreak">–</div>
+    <div class="stat-label">Current Streak</div>
   </div>
 </div>
 
 <script>
-// Shared API key via localStorage
-function saveKey() {
-  const key = document.getElementById('apiKeyInput').value.trim();
-  if (!key) return;
-  localStorage.setItem('polygonKey', key);
-  document.getElementById('apiKeyInput').value = '•'.repeat(24);
-  document.getElementById('statusDot').className = 'status-dot live';
-  document.getElementById('statusText').textContent = 'Live';
-  alert('API key saved! Open the Scanner to start receiving live data.');
+// ── Clock & Market Hours ──
+function isDST(d) {
+  const jan = new Date(d.getFullYear(), 0, 1);
+  const jul = new Date(d.getFullYear(), 6, 1);
+  return d.getTimezoneOffset() < Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
 }
 
-// Check if key is already saved
-if (localStorage.getItem('polygonKey')) {
-  document.getElementById('statusDot').className = 'status-dot live';
-  document.getElementById('statusText').textContent = 'Live';
-}
-
-// Market hours badge
-function updateMarket() {
+function updateClock() {
   const now = new Date();
-  const dst = now.getTimezoneOffset() < new Date(now.getFullYear(), 0, 1).getTimezoneOffset();
-  const etOffset = dst ? -4 : -5;
-  const et = new Date(now.getTime() + (now.getTimezoneOffset() + etOffset * 60) * 60000);
-  const h = et.getHours(), m = et.getMinutes();
-  const badge = document.getElementById('marketBadge');
-  const isOpen = (h > 9 || (h === 9 && m >= 30)) && h < 16;
-  const isPre  = h >= 4 && (h < 9 || (h === 9 && m < 30));
-  const isAft  = h >= 16 && h < 20;
-  if (isOpen)      { badge.textContent = '● Market Open';   badge.className = 'market-badge open'; }
-  else if (isPre)  { badge.textContent = '● Pre-Market';    badge.className = 'market-badge pre'; }
-  else if (isAft)  { badge.textContent = '● After Hours';   badge.className = 'market-badge after'; }
-  else             { badge.textContent = '● Market Closed'; badge.className = 'market-badge closed'; }
+  const etOffset = -5 * 60 + (isDST(now) ? 60 : 0);
+  const et = new Date(now.getTime() + (now.getTimezoneOffset() + etOffset) * 60000);
+  const hh = et.getHours(), mm = et.getMinutes();
+
+  document.getElementById('navClock').textContent =
+    et.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' ET';
+
+  const isOpen  = (hh > 9 || (hh === 9 && mm >= 30)) && hh < 16;
+  const isExt   = (hh >= 4 && (hh < 9 || (hh === 9 && mm < 30))) || (hh >= 16 && hh < 20);
+  const dot = document.getElementById('mktDot');
+  const lbl = document.getElementById('mktLabel');
+
+  dot.className = 'mkt-dot ' + (isOpen ? 'open' : isExt ? 'ext' : 'closed');
+  lbl.textContent = isOpen ? 'Market Open' : isExt ? 'Extended Hours' : 'Market Closed';
 }
-updateMarket();
-setInterval(updateMarket, 30000);
+
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── Load journal stats from localStorage ──
+function loadStats() {
+  try {
+    const trades = JSON.parse(localStorage.getItem('ts_trades') || '[]');
+    if (!trades.length) {
+      document.getElementById('statTrades').textContent = '0';
+      document.getElementById('statWinRate').textContent = '–';
+      document.getElementById('statPL').textContent = '$0';
+      document.getElementById('statStreak').textContent = '–';
+      return;
+    }
+
+    const wins = trades.filter(t => t.pnl > 0).length;
+    const totalPL = trades.reduce((s, t) => s + (t.pnl || 0), 0);
+    const winRate = ((wins / trades.length) * 100).toFixed(0);
+
+    // Streak
+    let streak = 0;
+    const sorted = [...trades].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const dir = sorted[0]?.pnl > 0 ? 1 : -1;
+    for (const t of sorted) {
+      if ((t.pnl > 0 ? 1 : -1) === dir) streak++;
+      else break;
+    }
+
+    document.getElementById('statTrades').textContent = trades.length;
+    document.getElementById('statWinRate').textContent = winRate + '%';
+    const plEl = document.getElementById('statPL');
+    plEl.textContent = (totalPL >= 0 ? '+$' : '-$') + Math.abs(totalPL).toFixed(0);
+    plEl.style.color = totalPL >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('statStreak').textContent =
+      streak + (dir === 1 ? ' W' : ' L');
+    document.getElementById('statStreak').style.color =
+      dir === 1 ? 'var(--green)' : 'var(--red)';
+  } catch(e) {}
+}
+
+loadStats();
 </script>
 </body>
 </html>

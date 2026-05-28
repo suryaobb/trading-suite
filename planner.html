@@ -6,536 +6,530 @@
 <title>Trade Planner — Trading Suite</title>
 <link rel="stylesheet" href="shared.css">
 <style>
-.page { max-width: 680px; margin: 0 auto; padding: 24px 20px 60px; }
+.page-wrap {
+  padding: 24px 16px;
+}
 
-.page-header { margin-bottom: 24px; }
-.page-header h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-.page-header p  { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+}
 
-.rules-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
-.rules-chip {
-  background: var(--bg-raised);
+.header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.header h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.header p {
+  color: var(--text-mute);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.rules-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.rule-chip {
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 4px 12px;
-  font-size: 11px;
-  color: var(--text-muted);
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--text-dim);
   white-space: nowrap;
 }
-.rules-chip b { color: var(--blue); }
+.rule-chip span { color: var(--accent); font-weight: 600; }
 
-.quick-tickers { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-.ticker-chip {
-  background: var(--bg-input);
+.inner-card {
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 5px 11px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.12s;
-}
-.ticker-chip:hover { border-color: var(--blue); color: var(--blue); }
-.ticker-chip.active { background: rgba(56,189,248,0.1); border-color: var(--blue); color: var(--blue); }
-
-/* Input grid */
-.input-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-.input-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-
-/* Plan cards */
-.plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-
-.plan-card {
-  border-radius: var(--r-md);
-  padding: 16px;
-  position: relative;
-}
-.plan-card.entry   { background: #0a1830; border: 1px solid #1a3060; }
-.plan-card.stop    { background: #1a0a0a; border: 1px solid #6a1a1a; }
-.plan-card.t1      { background: #0a1a0a; border: 1px solid #1a5a1a; }
-.plan-card.be      { background: #12100a; border: 1px solid #4a3a0a; }
-
-.pc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
-.plan-card.entry .pc-label { color: #60a5fa; }
-.plan-card.stop  .pc-label { color: #f87171; }
-.plan-card.t1    .pc-label { color: #4ade80; }
-.plan-card.be    .pc-label { color: #fde68a; }
-
-.pc-price { font-size: 26px; font-weight: 900; letter-spacing: -1px; line-height: 1; margin-bottom: 5px; }
-.plan-card.entry .pc-price { color: #93c5fd; }
-.plan-card.stop  .pc-price { color: #fca5a5; }
-.plan-card.t1    .pc-price { color: #86efac; }
-.plan-card.be    .pc-price { color: #fef08a; }
-
-.pc-sub { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
-
-.pc-tag {
-  position: absolute;
-  top: 10px; right: 10px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 5px;
-  padding: 2px 7px;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-muted);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 14px;
 }
 
-/* Size section */
-.size-rows { background: var(--bg-input); border-radius: var(--r-md); overflow: hidden; }
-.size-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 11px 16px;
-  border-bottom: 1px solid var(--border);
-}
-.size-row:last-child { border-bottom: none; }
-.size-row .sr-label { font-size: 13px; color: var(--text-muted); }
-.size-row .sr-val   { font-size: 14px; font-weight: 700; }
-.size-row .sr-val.big { font-size: 24px; color: var(--blue); }
-.size-row .sr-val.danger { color: var(--red); }
-.size-row .sr-val.success { color: var(--green); }
-
-/* Risk bar */
-.risk-bar-wrap { margin-top: 12px; }
-.risk-bar-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
-.risk-bar-bg { background: var(--bg-input); border-radius: 99px; height: 6px; overflow: hidden; }
-.risk-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--green), var(--yellow), var(--red)); transition: width 0.5s ease; }
-
-/* Steps */
-.steps { list-style: none; }
-.steps li {
-  display: flex;
-  gap: 12px;
-  padding: 11px 0;
-  border-bottom: 1px solid #0f1a2a;
-  align-items: flex-start;
-}
-.steps li:last-child { border-bottom: none; }
-.step-n {
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  background: var(--bg-raised);
-  color: var(--blue);
+.card-title {
   font-size: 11px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-top: 1px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-mute);
+  margin-bottom: 16px;
 }
-.step-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
-.step-text b { color: var(--text-primary); }
 
-/* Stop gate banner */
-.stop-gate {
-  display: flex;
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
-  align-items: flex-start;
-  background: #1a0808;
-  border: 1px solid #7f1d1d;
-  border-radius: var(--r-md);
-  padding: 14px 16px;
   margin-bottom: 12px;
 }
-.stop-gate .sg-icon { font-size: 22px; flex-shrink: 0; }
-.stop-gate p { font-size: 13px; color: #fca5a5; line-height: 1.5; }
-.stop-gate p b { color: #f87171; display: block; font-size: 14px; margin-bottom: 2px; }
+.input-row.single { grid-template-columns: 1fr; }
 
-/* Warning */
-.warning-bar {
-  background: #1c1200;
-  border: 1px solid #a16207;
-  border-radius: var(--r-sm);
-  padding: 10px 14px;
-  font-size: 13px;
-  color: #fde68a;
-  margin-bottom: 10px;
-  display: none;
+.field label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-mute);
+  margin-bottom: 6px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
 }
-.warning-bar.show { display: block; }
 
-/* Save to journal btn */
-.journal-btn {
+.field input, .field select {
   width: 100%;
-  background: var(--bg-raised);
+  background: #0d1424;
   border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 11px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-top: 6px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  font-family: inherit;
 }
-.journal-btn:hover { border-color: var(--purple); color: var(--purple); }
+.field input:focus, .field select:focus { border-color: var(--accent); }
+.field input::placeholder { color: #374151; }
 
-/* Results hidden by default */
-#results { display: none; }
-#results.show { display: block; animation: fadeInUp 0.25s ease; }
+.prefix-wrap { position: relative; }
+.prefix-wrap .prefix {
+  position: absolute; left: 13px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-mute); font-size: 15px; pointer-events: none;
+}
+.prefix-wrap input { padding-left: 26px; }
+
+.calc-btn {
+  width: 100%;
+  background: var(--grad);
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  margin-top: 4px;
+  letter-spacing: 0.3px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.calc-btn:hover { opacity: 0.92; }
+.calc-btn:active { transform: scale(0.98); }
+
+.results { display: none; }
+.results.visible { display: block; }
+
+.stop-gate {
+  background: #1a0a0a;
+  border: 1px solid #7f1d1d;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.stop-gate .gate-icon { font-size: 20px; flex-shrink: 0; }
+.stop-gate p { font-size: 13px; color: #fca5a5; line-height: 1.4; }
+.stop-gate p strong { color: var(--red); display: block; font-size: 14px; margin-bottom: 2px; }
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.plan-card {
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.plan-card.entry   { background: #0f2040; border: 1px solid #1e4080; }
+.plan-card.stop    { background: #1a0e0e; border: 1px solid #7f2020; }
+.plan-card.target1 { background: #0d1f0d; border: 1px solid #1a5c1a; }
+.plan-card.be      { background: #12110a; border: 1px solid #4a4010; }
+
+.pc-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+.plan-card.entry .pc-label   { color: #60a5fa; }
+.plan-card.stop .pc-label    { color: var(--red); }
+.plan-card.target1 .pc-label { color: var(--green); }
+.plan-card.be .pc-label      { color: var(--yellow); }
+
+.pc-price { font-size: 28px; font-weight: 800; letter-spacing: -1px; line-height: 1; margin-bottom: 4px; }
+.plan-card.entry .pc-price   { color: #93c5fd; }
+.plan-card.stop .pc-price    { color: #fca5a5; }
+.plan-card.target1 .pc-price { color: #86efac; }
+.plan-card.be .pc-price      { color: #fde68a; }
+
+.pc-detail { font-size: 12px; color: var(--text-mute); line-height: 1.4; }
+.pc-badge { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.07); border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 600; color: var(--text-mute); }
+
+.size-card { background: #0d1424; border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; }
+.size-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #1a2233; }
+.size-row:last-child { border-bottom: none; }
+.sr-label { font-size: 13px; color: var(--text-mute); }
+.sr-value { font-size: 14px; font-weight: 700; color: var(--text); }
+.sr-value.highlight { font-size: 22px; color: var(--accent); }
+.sr-value.danger { color: var(--red); }
+.sr-value.success { color: var(--green); }
+
+.steps-list { list-style: none; counter-reset: step; }
+.steps-list li { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #0f1a2a; }
+.steps-list li:last-child { border-bottom: none; }
+.step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--border); color: var(--accent); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.step-text { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+.step-text strong { color: var(--text); }
+
+.risk-meter { margin-top: 12px; }
+.rm-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-mute); margin-bottom: 6px; }
+.risk-bar-bg { background: #0d1424; border-radius: 99px; height: 8px; overflow: hidden; }
+.risk-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #22c55e, #eab308, #ef4444); transition: width 0.5s ease; }
+
+.warning-banner { background: #1c1200; border: 1px solid #a16207; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; font-size: 13px; color: #fde68a; display: none; }
+.warning-banner.visible { display: block; }
+
+.settings-toggle { text-align: center; margin-bottom: 14px; }
+.settings-toggle button { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 7px 16px; font-size: 12px; color: var(--text-mute); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+.settings-toggle button:hover { border-color: var(--accent); color: var(--accent); }
+.settings-panel { display: none; margin-bottom: 14px; }
+.settings-panel.open { display: block; }
+
+.ticker-strip { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.ticker-chip { background: #0d1424; border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 600; color: var(--text-mute); cursor: pointer; transition: all 0.1s; }
+.ticker-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+
+.save-btn { width: 100%; background: none; border: 1px solid var(--border); border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 600; color: var(--text-mute); cursor: pointer; margin-top: 8px; transition: all 0.15s; }
+.save-btn:hover { border-color: var(--green); color: var(--green); }
 
 @media (max-width: 480px) {
   .plan-grid { grid-template-columns: 1fr; }
-  .input-grid-2 { grid-template-columns: 1fr; }
-  .input-grid-3 { grid-template-columns: 1fr 1fr; }
+  .input-row { grid-template-columns: 1fr; }
+  .pc-price { font-size: 24px; }
 }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <a class="topbar-logo" href="index.html">⚡ <span class="accent">Trading</span> Suite</a>
-  <nav class="topbar-nav">
-    <a class="nav-link" href="index.html">🏠 Home</a>
-    <a class="nav-link" href="scanner.html">📡 Scanner</a>
-    <a class="nav-link active" href="planner.html">📋 Trade Planner</a>
-    <a class="nav-link" href="journal.html">📓 Journal</a>
-  </nav>
-  <div class="topbar-right">
-    <div class="market-badge closed" id="marketBadge">Market Closed</div>
+<!-- SHARED NAV -->
+<nav class="nav">
+  <div class="nav-logo">⚡ <span>Trading</span> Suite</div>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html">Dashboard</a>
+    <a class="nav-link" href="scanner.html">Scanner</a>
+    <a class="nav-link active" href="planner.html">Planner</a>
+    <a class="nav-link" href="journal.html">Journal</a>
   </div>
-</div>
-
-<div class="page">
-
-  <div class="page-header">
-    <h2>📋 Trade Planner</h2>
-    <p>Plan the trade before you enter. Every field is required.</p>
+  <div class="nav-right">
+    <span class="nav-clock" id="navClock">–</span>
   </div>
+</nav>
 
-  <!-- Rules chips -->
-  <div class="rules-chips">
-    <div class="rules-chip">Allocation <b id="chip-alloc">$4,000</b></div>
-    <div class="rules-chip">Stop <b>−30% premium</b></div>
-    <div class="rules-chip">T1 <b>+20% → sell 50%</b></div>
-    <div class="rules-chip">Then <b>stop → breakeven</b></div>
-    <button class="rules-chip" onclick="toggleSettings()" style="cursor:pointer;color:var(--blue);border-color:var(--border-bright);">⚙ Settings</button>
+<div class="page-wrap">
+<div class="container">
+
+  <div class="header">
+    <h1>⚡ Trade Planner</h1>
+    <p>Plan the trade. Trade the plan.</p>
   </div>
 
-  <!-- Settings panel -->
-  <div id="settingsPanel" style="display:none;margin-bottom:16px;">
-    <div class="card">
+  <div class="rules-bar">
+    <div class="rule-chip">Allocation <span id="chip-alloc">$4,000</span></div>
+    <div class="rule-chip">Stop <span id="chip-stop">-30%</span></div>
+    <div class="rule-chip">Target 1 <span>+20% → sell 50%</span></div>
+    <div class="rule-chip">Then <span>move stop to BE</span></div>
+  </div>
+
+  <div class="settings-toggle">
+    <button onclick="toggleSettings()">⚙ Adjust Settings</button>
+  </div>
+
+  <div class="settings-panel" id="settingsPanel">
+    <div class="inner-card">
       <div class="card-title">Account Settings</div>
-      <div class="input-grid-3">
+      <div class="input-row">
         <div class="field">
           <label>Account Size</label>
-          <div class="input-wrap"><span class="input-prefix">$</span><input class="input prefix" type="number" id="s-account" value="40000"></div>
+          <div class="prefix-wrap">
+            <span class="prefix">$</span>
+            <input type="number" id="accountSize" value="40000" min="1000" step="1000">
+          </div>
         </div>
         <div class="field">
-          <label>Allocation %</label>
-          <div class="input-wrap"><span class="input-prefix">%</span><input class="input prefix" type="number" id="s-alloc" value="10" min="1" max="100"></div>
-        </div>
-        <div class="field">
-          <label>Stop Loss %</label>
-          <div class="input-wrap"><span class="input-prefix">%</span><input class="input prefix" type="number" id="s-stop" value="30" min="5" max="80"></div>
+          <label>Allocation per Trade</label>
+          <div class="prefix-wrap">
+            <span class="prefix">%</span>
+            <input type="number" id="allocPct" value="10" min="1" max="100" step="1">
+          </div>
         </div>
       </div>
-      <div class="input-grid-2">
+      <div class="input-row">
         <div class="field">
-          <label>Target 1 %</label>
-          <div class="input-wrap"><span class="input-prefix">%</span><input class="input prefix" type="number" id="s-t1" value="20" min="5" max="200"></div>
+          <label>Stop Loss (% of premium)</label>
+          <div class="prefix-wrap">
+            <span class="prefix">%</span>
+            <input type="number" id="stopPct" value="30" min="5" max="80" step="5">
+          </div>
         </div>
         <div class="field">
-          <label>Multiplier (options = 100)</label>
-          <input class="input" type="number" id="s-mult" value="100">
+          <label>Target 1 (% gain)</label>
+          <div class="prefix-wrap">
+            <span class="prefix">%</span>
+            <input type="number" id="target1Pct" value="20" min="5" max="200" step="5">
+          </div>
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="applySettings()">Apply</button>
+      <button class="calc-btn" onclick="applySettings()" style="background:#1e2d45;color:var(--text)">Apply Settings</button>
     </div>
   </div>
 
-  <!-- Quick tickers -->
-  <div class="quick-tickers" id="quickTickers">
-    <span style="font-size:11px;color:var(--text-faint);align-self:center;margin-right:2px;">Quick:</span>
-  </div>
-
-  <!-- Input card -->
-  <div class="card" style="margin-bottom:14px;">
+  <div class="inner-card">
     <div class="card-title">Trade Details</div>
-    <div class="input-grid-2">
+    <div class="ticker-strip">
+      <span style="font-size:11px;color:#374151;align-self:center;margin-right:2px;">Quick:</span>
+      <div class="ticker-chip" onclick="setTicker('SPY')">SPY</div>
+      <div class="ticker-chip" onclick="setTicker('QQQ')">QQQ</div>
+      <div class="ticker-chip" onclick="setTicker('AAPL')">AAPL</div>
+      <div class="ticker-chip" onclick="setTicker('TSLA')">TSLA</div>
+      <div class="ticker-chip" onclick="setTicker('NVDA')">NVDA</div>
+      <div class="ticker-chip" onclick="setTicker('AMD')">AMD</div>
+    </div>
+    <div class="input-row">
       <div class="field">
         <label>Ticker</label>
-        <input class="input" type="text" id="ticker" placeholder="AAPL" style="text-transform:uppercase;font-weight:700;font-size:16px;">
+        <input type="text" id="ticker" placeholder="SPY" style="text-transform:uppercase">
       </div>
       <div class="field">
         <label>Type</label>
-        <select class="input" id="optType">
+        <select id="optionType">
           <option value="CALL">📈 Call</option>
           <option value="PUT">📉 Put</option>
         </select>
       </div>
     </div>
-    <div class="input-grid-3">
+    <div class="input-row">
       <div class="field">
-        <label>Entry Price</label>
-        <div class="input-wrap"><span class="input-prefix">$</span><input class="input prefix" type="number" id="entryPrice" placeholder="1.50" step="0.01" min="0.01"></div>
+        <label>Entry Price (per contract)</label>
+        <div class="prefix-wrap">
+          <span class="prefix">$</span>
+          <input type="number" id="entryPrice" placeholder="1.50" min="0.01" step="0.01">
+        </div>
       </div>
       <div class="field">
-        <label>Strike (optional)</label>
-        <div class="input-wrap"><span class="input-prefix">$</span><input class="input prefix" type="number" id="strike" placeholder="190"></div>
-      </div>
-      <div class="field">
-        <label>Expiry (optional)</label>
-        <input class="input" type="text" id="expiry" placeholder="0DTE / Jun 20">
+        <label>Contract Multiplier</label>
+        <input type="number" id="multiplier" value="100" min="1">
       </div>
     </div>
-    <div class="field" style="margin-bottom:14px;">
-      <label>Trade Thesis (optional)</label>
-      <input class="input" type="text" id="thesis" placeholder="e.g. AAPL breakout above 195, 5/20 cross on 1min, above VWAP...">
+    <hr class="divider">
+    <div class="input-row single">
+      <div class="field">
+        <label>Notes (optional)</label>
+        <input type="text" id="notes" placeholder="e.g. SPY breakout above 590, targeting 595...">
+      </div>
     </div>
-    <button class="btn btn-primary btn-full btn-lg" onclick="calculate()">Calculate My Plan →</button>
+    <button class="calc-btn" onclick="calculate()">Calculate My Plan →</button>
   </div>
 
-  <!-- Results -->
-  <div id="results">
+  <div class="results" id="results">
 
-    <!-- Stop gate -->
-    <div class="stop-gate">
-      <div class="sg-icon">🛑</div>
-      <p><b>SET STOP LOSS BEFORE ENTERING</b>Place your stop in Webull at <span id="gate-stop" style="color:#fbbf24;font-weight:800;"></span> BEFORE clicking buy. No exceptions.</p>
+    <div class="stop-gate" id="stopGate">
+      <div class="gate-icon">🛑</div>
+      <p>
+        <strong>STOP LOSS IS MANDATORY</strong>
+        Your stop is at <span id="gateStopPrice"></span>. Place this in Webull before entering.
+      </p>
     </div>
 
-    <!-- Plan grid -->
-    <div class="card" style="margin-bottom:12px;">
-      <div class="card-title">Trade Plan</div>
+    <div class="inner-card">
+      <div class="card-title">Your Trade Plan</div>
       <div class="plan-grid">
         <div class="plan-card entry">
-          <div class="pc-tag" id="pc-type">CALL</div>
           <div class="pc-label">Entry</div>
-          <div class="pc-price" id="pc-entry">$0.00</div>
-          <div class="pc-sub" id="pc-entry-sub"></div>
+          <div class="pc-price" id="res-entry">$0.00</div>
+          <div class="pc-detail" id="res-entry-detail"></div>
+          <div class="pc-badge" id="res-type-badge">CALL</div>
         </div>
         <div class="plan-card stop">
-          <div class="pc-tag">STOP</div>
           <div class="pc-label">🛑 Stop Loss</div>
-          <div class="pc-price" id="pc-stop">$0.00</div>
-          <div class="pc-sub" id="pc-stop-sub"></div>
+          <div class="pc-price" id="res-stop">$0.00</div>
+          <div class="pc-detail" id="res-stop-detail"></div>
+          <div class="pc-badge">-30%</div>
         </div>
-        <div class="plan-card t1">
-          <div class="pc-tag">T1</div>
+        <div class="plan-card target1">
           <div class="pc-label">🎯 Target 1</div>
-          <div class="pc-price" id="pc-t1">$0.00</div>
-          <div class="pc-sub" id="pc-t1-sub"></div>
+          <div class="pc-price" id="res-t1">$0.00</div>
+          <div class="pc-detail" id="res-t1-detail"></div>
+          <div class="pc-badge">+20%</div>
         </div>
         <div class="plan-card be">
-          <div class="pc-tag">T1→</div>
           <div class="pc-label">⚡ Breakeven Stop</div>
-          <div class="pc-price" id="pc-be">$0.00</div>
-          <div class="pc-sub">After T1, move stop here</div>
+          <div class="pc-price" id="res-be">$0.00</div>
+          <div class="pc-detail" id="res-be-detail"></div>
+          <div class="pc-badge">After T1</div>
         </div>
       </div>
     </div>
 
-    <!-- Position sizing -->
-    <div class="card" style="margin-bottom:12px;">
+    <div class="inner-card">
       <div class="card-title">Position Sizing</div>
-      <div class="size-rows">
-        <div class="size-row"><span class="sr-label">Contracts to buy</span><span class="sr-val big" id="sz-contracts">0</span></div>
-        <div class="size-row"><span class="sr-label">Total cost</span><span class="sr-val" id="sz-cost">$0</span></div>
-        <div class="size-row"><span class="sr-label">Max loss (stop hit)</span><span class="sr-val danger" id="sz-loss">$0</span></div>
-        <div class="size-row"><span class="sr-label">% of account at risk</span><span class="sr-val danger" id="sz-risk">0%</span></div>
-        <div class="size-row"><span class="sr-label">Profit at T1 (50% off)</span><span class="sr-val success" id="sz-t1p">$0</span></div>
-        <div class="size-row"><span class="sr-label">Max profit (full position)</span><span class="sr-val success" id="sz-maxp">$0</span></div>
+      <div class="size-card">
+        <div class="size-row"><span class="sr-label">Contracts to buy</span><span class="sr-value highlight" id="res-contracts">0</span></div>
+        <div class="size-row"><span class="sr-label">Total allocation</span><span class="sr-value" id="res-allocation">$0</span></div>
+        <div class="size-row"><span class="sr-label">Max loss (stop hit)</span><span class="sr-value danger" id="res-maxloss">$0</span></div>
+        <div class="size-row"><span class="sr-label">% of account at risk</span><span class="sr-value danger" id="res-acct-risk">0%</span></div>
+        <div class="size-row"><span class="sr-label">Profit at Target 1 (50%)</span><span class="sr-value success" id="res-t1-profit">$0</span></div>
+        <div class="size-row"><span class="sr-label">Max profit (all contracts)</span><span class="sr-value success" id="res-maxprofit">$0</span></div>
       </div>
-      <div class="risk-bar-wrap">
-        <div class="risk-bar-labels"><span>Account risk</span><span id="riskLabel">0%</span></div>
+      <div class="risk-meter">
+        <div class="rm-label"><span>Account Risk</span><span id="rm-pct-label">0%</span></div>
         <div class="risk-bar-bg"><div class="risk-bar-fill" id="riskBar" style="width:0%"></div></div>
       </div>
     </div>
 
-    <!-- Warning -->
-    <div class="warning-bar" id="warnBar"></div>
+    <div class="warning-banner" id="warningBanner">⚠️ <strong>Heads up:</strong> <span id="warningText"></span></div>
 
-    <!-- Steps -->
-    <div class="card" style="margin-bottom:12px;">
-      <div class="card-title">Execute This Plan — Step by Step</div>
-      <ul class="steps" id="stepsList"></ul>
+    <div class="inner-card">
+      <div class="card-title">Execute This Plan</div>
+      <ul class="steps-list" id="stepsList"></ul>
     </div>
 
-    <!-- Save to journal -->
-    <button class="journal-btn" onclick="saveToJournal()">📓 Save this plan to Journal →</button>
+    <button class="save-btn" onclick="saveToJournal()">📒 Save to Journal →</button>
 
   </div>
+
+</div>
 </div>
 
 <script>
-// ── SETTINGS ──
-let S = {
-  account: 40000, alloc: 10, stop: 30, t1: 20, mult: 100
-};
+let settings = { accountSize:40000, allocPct:10, stopPct:30, target1Pct:20 };
+let lastResult = null;
 
-const TICKERS = ['AAPL','MSFT','GOOGL','AMZN','META','NVDA','TSLA','SPY','QQQ','IWM'];
+// Pre-fill from scanner query params
+(function(){
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('ticker')) document.getElementById('ticker').value = p.get('ticker').toUpperCase();
+  if (p.get('price')) document.getElementById('entryPrice').value = p.get('price');
+})();
 
-// Build quick tickers
-const qtRow = document.getElementById('quickTickers');
-TICKERS.forEach(t => {
-  const c = document.createElement('button');
-  c.className = 'ticker-chip';
-  c.textContent = t;
-  c.onclick = () => {
-    document.getElementById('ticker').value = t;
-    document.querySelectorAll('.ticker-chip').forEach(x => x.classList.remove('active'));
-    c.classList.add('active');
-  };
-  qtRow.appendChild(c);
-});
-
-// Check URL params (from scanner)
-const params = new URLSearchParams(window.location.search);
-if (params.get('ticker')) {
-  document.getElementById('ticker').value = params.get('ticker').toUpperCase();
-  // Highlight active ticker chip
-  document.querySelectorAll('.ticker-chip').forEach(c => {
-    if (c.textContent === params.get('ticker').toUpperCase()) c.classList.add('active');
-  });
-}
-if (params.get('price')) {
-  document.getElementById('entryPrice').value = parseFloat(params.get('price')).toFixed(2);
-}
-if (params.get('type')) {
-  document.getElementById('optType').value = params.get('type').toUpperCase();
-}
-// Auto-calculate if params provided
-if (params.get('ticker') && params.get('price')) {
-  window.addEventListener('load', () => setTimeout(calculate, 100));
-}
-
-function toggleSettings() {
-  const p = document.getElementById('settingsPanel');
-  p.style.display = p.style.display === 'none' ? 'block' : 'none';
-}
+function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
 
 function applySettings() {
-  S.account = parseFloat(document.getElementById('s-account').value) || 40000;
-  S.alloc   = parseFloat(document.getElementById('s-alloc').value)   || 10;
-  S.stop    = parseFloat(document.getElementById('s-stop').value)    || 30;
-  S.t1      = parseFloat(document.getElementById('s-t1').value)      || 20;
-  S.mult    = parseFloat(document.getElementById('s-mult').value)    || 100;
-  const allocAmt = (S.account * S.alloc / 100).toFixed(0);
-  document.getElementById('chip-alloc').textContent = '$' + Number(allocAmt).toLocaleString();
-  document.getElementById('settingsPanel').style.display = 'none';
+  settings.accountSize = parseFloat(document.getElementById('accountSize').value)||40000;
+  settings.allocPct = parseFloat(document.getElementById('allocPct').value)||10;
+  settings.stopPct = parseFloat(document.getElementById('stopPct').value)||30;
+  settings.target1Pct = parseFloat(document.getElementById('target1Pct').value)||20;
+  const alloc=(settings.accountSize*settings.allocPct/100).toFixed(0);
+  document.getElementById('chip-alloc').textContent='$'+Number(alloc).toLocaleString();
+  document.getElementById('chip-stop').textContent='-'+settings.stopPct+'%';
+  document.getElementById('settingsPanel').classList.remove('open');
 }
 
-function f2(n) { return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-function f0(n) { return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+function setTicker(t) { document.getElementById('ticker').value=t; }
+
+function fmt(n,dec=2) { return '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
 
 function calculate() {
-  const entry  = parseFloat(document.getElementById('entryPrice').value);
-  const ticker = (document.getElementById('ticker').value || 'TRADE').toUpperCase();
-  const type   = document.getElementById('optType').value;
-
-  if (!entry || entry <= 0) {
-    document.getElementById('entryPrice').style.borderColor = 'var(--red)';
-    setTimeout(() => document.getElementById('entryPrice').style.borderColor = '', 1500);
-    document.getElementById('entryPrice').focus();
-    return;
+  const entry=parseFloat(document.getElementById('entryPrice').value);
+  const mult=parseFloat(document.getElementById('multiplier').value)||100;
+  const ticker=(document.getElementById('ticker').value||'TRADE').toUpperCase();
+  const optType=document.getElementById('optionType').value;
+  if(!entry||entry<=0){
+    const el=document.getElementById('entryPrice');
+    el.focus(); el.style.borderColor='var(--red)';
+    setTimeout(()=>el.style.borderColor='',1500); return;
   }
+  const allocation=settings.accountSize*settings.allocPct/100;
+  const costPer=entry*mult, contracts=Math.floor(allocation/costPer), actualAlloc=contracts*costPer;
+  const stopPrice=entry*(1-settings.stopPct/100), t1Price=entry*(1+settings.target1Pct/100), bePrice=entry;
+  const maxLoss=contracts*(entry-stopPrice)*mult, acctRisk=(maxLoss/settings.accountSize)*100;
+  const t1Contracts=Math.floor(contracts/2), t1Profit=t1Contracts*(t1Price-entry)*mult;
+  const maxProfit=contracts*(t1Price-entry)*mult;
 
-  const allocation  = S.account * S.alloc / 100;
-  const costPer     = entry * S.mult;
-  const contracts   = Math.floor(allocation / costPer);
-  const actualCost  = contracts * costPer;
+  lastResult={ticker,optType,entry,contracts,stopPrice,t1Price,bePrice,maxLoss,acctRisk,t1Profit,maxProfit,actualAlloc,notes:document.getElementById('notes').value};
 
-  const stopPrice   = entry * (1 - S.stop / 100);
-  const t1Price     = entry * (1 + S.t1 / 100);
-  const bePrice     = entry;
+  document.getElementById('gateStopPrice').textContent=fmt(stopPrice);
+  document.getElementById('res-entry').textContent=fmt(entry);
+  document.getElementById('res-entry-detail').textContent=`${contracts} contracts × ${fmt(costPer)}/ea`;
+  document.getElementById('res-type-badge').textContent=optType;
+  document.getElementById('res-stop').textContent=fmt(stopPrice);
+  document.getElementById('res-stop-detail').textContent=`-${settings.stopPct}% from entry · Close ALL`;
+  document.getElementById('res-t1').textContent=fmt(t1Price);
+  document.getElementById('res-t1-detail').textContent=`+${settings.target1Pct}% · Sell ${t1Contracts} contracts`;
+  document.getElementById('res-be').textContent=fmt(bePrice);
+  document.getElementById('res-be-detail').textContent='After T1 hit, move stop here';
+  document.getElementById('res-contracts').textContent=contracts;
+  document.getElementById('res-allocation').textContent=fmt(actualAlloc,0);
+  document.getElementById('res-maxloss').textContent='-'+fmt(maxLoss,0);
+  document.getElementById('res-acct-risk').textContent=acctRisk.toFixed(1)+'%';
+  document.getElementById('res-t1-profit').textContent='+'+fmt(t1Profit,0);
+  document.getElementById('res-maxprofit').textContent='+'+fmt(maxProfit,0);
+  const barPct=Math.min((acctRisk/5)*100,100);
+  document.getElementById('riskBar').style.width=barPct+'%';
+  document.getElementById('rm-pct-label').textContent=acctRisk.toFixed(1)+'% of account';
+  const warnEl=document.getElementById('warningBanner'), warnTxt=document.getElementById('warningText');
+  if(contracts===0){warnEl.classList.add('visible');warnTxt.textContent=`Entry too high for $${allocation.toLocaleString()} allocation.`;}
+  else if(acctRisk>4){warnEl.classList.add('visible');warnTxt.textContent=`Max loss is ${acctRisk.toFixed(1)}% of account — above 3% guideline.`;}
+  else{warnEl.classList.remove('visible');}
 
-  const t1Contracts = Math.floor(contracts / 2);
-  const maxLoss     = contracts * (entry - stopPrice) * S.mult;
-  const acctRisk    = (maxLoss / S.account) * 100;
-  const t1Profit    = t1Contracts * (t1Price - entry) * S.mult;
-  const maxProfit   = contracts * (t1Price - entry) * S.mult;
-
-  // Gate
-  document.getElementById('gate-stop').textContent = f2(stopPrice);
-
-  // Plan cards
-  document.getElementById('pc-entry').textContent = f2(entry);
-  document.getElementById('pc-entry-sub').textContent = `${contracts} contracts · ${f0(actualCost)} total`;
-  document.getElementById('pc-type').textContent = type;
-  document.getElementById('pc-stop').textContent  = f2(stopPrice);
-  document.getElementById('pc-stop-sub').textContent  = `−${S.stop}% · Close ALL contracts`;
-  document.getElementById('pc-t1').textContent    = f2(t1Price);
-  document.getElementById('pc-t1-sub').textContent    = `+${S.t1}% · Sell ${t1Contracts} of ${contracts} contracts`;
-  document.getElementById('pc-be').textContent    = f2(bePrice);
-
-  // Sizing
-  document.getElementById('sz-contracts').textContent = contracts;
-  document.getElementById('sz-cost').textContent  = f0(actualCost);
-  document.getElementById('sz-loss').textContent  = '−' + f0(maxLoss);
-  document.getElementById('sz-risk').textContent  = acctRisk.toFixed(1) + '% of account';
-  document.getElementById('sz-t1p').textContent   = '+' + f0(t1Profit);
-  document.getElementById('sz-maxp').textContent  = '+' + f0(maxProfit);
-
-  const barPct = Math.min((acctRisk / 5) * 100, 100);
-  document.getElementById('riskBar').style.width = barPct + '%';
-  document.getElementById('riskLabel').textContent = acctRisk.toFixed(1) + '%';
-
-  // Warning
-  const warn = document.getElementById('warnBar');
-  if (contracts === 0) {
-    warn.textContent = `⚠️ Entry price too high for ${f0(allocation)} allocation. Lower entry or increase allocation in settings.`;
-    warn.classList.add('show');
-  } else if (acctRisk > 4) {
-    warn.textContent = `⚠️ Max loss is ${acctRisk.toFixed(1)}% of account — above 3% guideline. Consider smaller allocation.`;
-    warn.classList.add('show');
-  } else {
-    warn.classList.remove('show');
-  }
-
-  // Steps
-  const remaining = contracts - t1Contracts;
-  document.getElementById('stepsList').innerHTML = [
-    `<li><div class="step-n">1</div><div class="step-text">In Webull, buy <b>${contracts} ${ticker} ${type} contract${contracts !== 1 ? 's' : ''}</b> at <b>${f2(entry)}</b> (total: <b>${f0(actualCost)}</b>).</div></li>`,
-    `<li><div class="step-n">2</div><div class="step-text"><b>IMMEDIATELY set stop loss at ${f2(stopPrice)}</b> in Webull. Do not skip this. Max loss if stopped: <b style="color:var(--red)">${f0(maxLoss)}</b>.</div></li>`,
-    `<li><div class="step-n">3</div><div class="step-text">When price reaches <b>${f2(t1Price)}</b> (+${S.t1}%), sell <b>${t1Contracts} contract${t1Contracts !== 1 ? 's' : ''}</b>. Lock in <b style="color:var(--green)">+${f0(t1Profit)}</b>.</div></li>`,
-    `<li><div class="step-n">4</div><div class="step-text">After selling half, move stop on remaining <b>${remaining} contract${remaining !== 1 ? 's' : ''}</b> to your entry <b>${f2(bePrice)}</b>. You are now <b>risk-free</b> on the rest.</div></li>`,
-    `<li><div class="step-n">5</div><div class="step-text">Let the remaining position ride. Walk away. Worst case is breakeven. Only close early if your thesis breaks.</div></li>`,
+  const steps=[
+    `<li><div class="step-num">1</div><div class="step-text">In Webull, buy ${ticker} ${optType} at <strong>${fmt(entry)}</strong>. Buy <strong>${contracts} contract${contracts!==1?'s':''}</strong> (total: <strong>${fmt(actualAlloc,0)}</strong>).</div></li>`,
+    `<li><div class="step-num">2</div><div class="step-text">Set stop loss at <strong>${fmt(stopPrice)}</strong> immediately. Max loss if stopped: <strong style="color:var(--red)">${fmt(maxLoss,0)}</strong>.</div></li>`,
+    `<li><div class="step-num">3</div><div class="step-text">At <strong>${fmt(t1Price)}</strong> (+${settings.target1Pct}%), sell <strong>${t1Contracts} contract${t1Contracts!==1?'s':''}</strong>. Lock in <strong style="color:var(--green)">${fmt(t1Profit,0)}</strong>.</div></li>`,
+    `<li><div class="step-num">4</div><div class="step-text">Move stop on remaining <strong>${contracts-t1Contracts}</strong> to entry price <strong>${fmt(bePrice)}</strong>. You're now risk-free.</div></li>`,
+    `<li><div class="step-num">5</div><div class="step-text">Let rest ride. Close only if thesis changes or you hit your next target.</div></li>`,
   ].join('');
-
-  // Store for journal
-  window._lastPlan = { ticker, type, entry, stopPrice, t1Price, contracts, t1Contracts, maxLoss, t1Profit, acctRisk,
-    strike: document.getElementById('strike').value,
-    expiry: document.getElementById('expiry').value,
-    thesis: document.getElementById('thesis').value,
-    timestamp: new Date().toISOString()
-  };
-
-  document.getElementById('results').classList.add('show');
-  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('stepsList').innerHTML=steps;
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function saveToJournal() {
-  if (!window._lastPlan) return;
-  const trades = JSON.parse(localStorage.getItem('trades') || '[]');
-  trades.unshift({ ...window._lastPlan, status: 'planned', id: Date.now() });
-  localStorage.setItem('trades', JSON.stringify(trades));
-  window.location.href = 'journal.html';
+  if (!lastResult) { alert('Calculate a plan first.'); return; }
+  const trades = JSON.parse(localStorage.getItem('ts_trades')||'[]');
+  const draft = {
+    id: Date.now(),
+    date: new Date().toISOString().split('T')[0],
+    ticker: lastResult.ticker,
+    direction: lastResult.optType,
+    entry: lastResult.entry,
+    contracts: lastResult.contracts,
+    stopPrice: lastResult.stopPrice,
+    t1Price: lastResult.t1Price,
+    allocation: lastResult.actualAlloc,
+    maxLoss: lastResult.maxLoss,
+    pnl: null, // to be filled in journal
+    notes: lastResult.notes,
+    status: 'planned'
+  };
+  trades.push(draft);
+  localStorage.setItem('ts_trades', JSON.stringify(trades));
+  alert('Trade plan saved to journal! Open Journal to update the result.');
 }
 
-// Keyboard shortcut
-document.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
-document.getElementById('ticker').addEventListener('input', function() { this.value = this.value.toUpperCase(); });
+document.addEventListener('keydown', function(e) { if(e.key==='Enter') calculate(); });
+document.getElementById('ticker').addEventListener('input', function() { this.value=this.value.toUpperCase(); });
 
-// Market badge
-function updateMarket() {
-  const now = new Date();
-  const dst = now.getTimezoneOffset() < new Date(now.getFullYear(), 0, 1).getTimezoneOffset();
-  const et = new Date(now.getTime() + (now.getTimezoneOffset() + (dst ? -4 : -5) * 60) * 60000);
-  const h = et.getHours(), m = et.getMinutes();
-  const b = document.getElementById('marketBadge');
-  const open = (h > 9 || (h === 9 && m >= 30)) && h < 16;
-  const pre  = h >= 4 && (h < 9 || (h === 9 && m < 30));
-  const aft  = h >= 16 && h < 20;
-  if (open)     { b.textContent = '● Market Open';   b.className = 'market-badge open'; }
-  else if (pre) { b.textContent = '● Pre-Market';    b.className = 'market-badge pre'; }
-  else if (aft) { b.textContent = '● After Hours';   b.className = 'market-badge after'; }
-  else          { b.textContent = '● Market Closed'; b.className = 'market-badge closed'; }
+// Nav clock
+function isDST(d){const j=new Date(d.getFullYear(),0,1),jul=new Date(d.getFullYear(),6,1);return d.getTimezoneOffset()<Math.max(j.getTimezoneOffset(),jul.getTimezoneOffset());}
+function updateClock(){
+  const now=new Date(),etOff=-5*60+(isDST(now)?60:0),et=new Date(now.getTime()+(now.getTimezoneOffset()+etOff)*60000);
+  document.getElementById('navClock').textContent=et.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})+' ET';
 }
-updateMarket(); setInterval(updateMarket, 30000);
+updateClock(); setInterval(updateClock,1000);
 </script>
 </body>
 </html>

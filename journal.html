@@ -6,383 +6,620 @@
 <title>Trade Journal — Trading Suite</title>
 <link rel="stylesheet" href="shared.css">
 <style>
-.page { max-width: 960px; margin: 0 auto; padding: 24px 20px 60px; }
-.page-header { margin-bottom: 24px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.page-header h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-.page-header p { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
-.page-header-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.page-wrap { padding: 20px 16px; max-width: 900px; margin: 0 auto; }
 
-/* Stats strip */
-.stats-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
-.stat-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px; }
-.stat-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 5px; }
-.stat-val { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
-.stat-val.green  { color: var(--green); }
-.stat-val.red    { color: var(--red); }
-.stat-val.blue   { color: var(--blue); }
-.stat-val.yellow { color: var(--yellow); }
-.stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-/* Log a trade form */
-.log-form { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; margin-bottom: 20px; }
-.log-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px; }
-.log-form-row  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-
-/* Rule checkboxes */
-.rule-checks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-.rule-check { display: flex; align-items: center; gap: 6px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 7px 12px; cursor: pointer; transition: all 0.12s; }
-.rule-check input { display: none; }
-.rule-check .tick { width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid var(--text-faint); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.rule-check input:checked + .tick { background: var(--green); border-color: var(--green); }
-.rule-check input:checked + .tick::after { content: '✓'; font-size: 10px; font-weight: 900; color: #000; }
-.rule-check .rc-label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
-.rule-check:has(input:checked) { border-color: #1a4a28; background: #0a1f12; }
-.rule-check:has(input:checked) .rc-label { color: #4ade80; }
-
-/* Trade table */
-.trades-section { }
-.trades-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.trades-header h3 { font-size: 14px; font-weight: 700; color: var(--text-secondary); }
-.filter-row { display: flex; gap: 6px; }
-.filter-btn { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 5px 12px; font-size: 12px; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
-.filter-btn.active { background: rgba(56,189,248,0.1); border-color: var(--blue); color: var(--blue); }
-
-.trades-table { width: 100%; border-collapse: collapse; }
-.trades-table th {
-  text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;
-  color: var(--text-muted); padding: 0 12px 10px; border-bottom: 1px solid var(--border); white-space: nowrap;
+/* ─── STATS BAR ─── */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
 }
-.trades-table td { padding: 12px; border-bottom: 1px solid #0d1525; font-size: 13px; vertical-align: middle; }
-.trades-table tr:hover td { background: rgba(255,255,255,0.02); }
-.trades-table tr:last-child td { border-bottom: none; }
 
-.sym-cell { display: flex; align-items: center; gap: 7px; }
-.sym-cell .sym { font-size: 15px; font-weight: 900; color: var(--text-primary); }
-.sym-cell .type-tag { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
-.sym-cell .type-tag.call { background: #0d2010; color: #4ade80; }
-.sym-cell .type-tag.put  { background: #200d0d; color: #f87171; }
-
-.pnl-cell { font-weight: 800; font-size: 14px; }
-.pnl-cell.win  { color: var(--green); }
-.pnl-cell.loss { color: var(--red); }
-.pnl-cell.open { color: var(--blue); }
-
-.rules-cell { display: flex; gap: 3px; flex-wrap: wrap; }
-.rule-dot { width: 7px; height: 7px; border-radius: 50%; }
-.rule-dot.ok { background: var(--green); }
-.rule-dot.fail { background: var(--red); }
-.rule-dot.na { background: var(--text-faint); }
-
-.status-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; }
-.status-badge.win     { background: #0d2718; color: #4ade80; }
-.status-badge.loss    { background: #2d0f0f; color: #f87171; }
-.status-badge.planned { background: #0d1f30; color: #38bdf8; }
-.status-badge.open    { background: #2d1f00; color: #fbbf24; }
-
-.del-btn { background: none; border: none; color: var(--text-faint); cursor: pointer; font-size: 14px; padding: 4px; border-radius: 4px; }
-.del-btn:hover { color: var(--red); background: rgba(239,68,68,0.1); }
-
-.empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
-.empty-state p { font-size: 14px; line-height: 1.7; }
-.empty-state a { color: var(--blue); text-decoration: none; }
-
-/* Compliance bar */
-.compliance-bar { height: 4px; border-radius: 2px; overflow: hidden; background: var(--bg-raised); margin-top: 2px; }
-.compliance-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.4s; }
-
-@media (max-width: 700px) {
-  .log-form-grid { grid-template-columns: 1fr 1fr; }
-  .log-form-row  { grid-template-columns: 1fr 1fr; }
-  .trades-table th:nth-child(n+6),
-  .trades-table td:nth-child(n+6) { display: none; }
+.stat-tile {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  text-align: center;
 }
+
+.st-val { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-bottom: 3px; }
+.st-label { font-size: 11px; font-weight: 600; color: var(--text-mute); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ─── TWO-COL LAYOUT ─── */
+.journal-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .journal-layout { grid-template-columns: 1fr; }
+}
+
+/* ─── LOG FORM ─── */
+.form-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  position: sticky;
+  top: 68px;
+}
+
+.form-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.fg { margin-bottom: 12px; }
+
+.fg label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-mute);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fg input, .fg select, .fg textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  font-family: inherit;
+}
+.fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--accent); }
+.fg input::placeholder, .fg textarea::placeholder { color: var(--text-faint); }
+.fg textarea { resize: vertical; min-height: 70px; }
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+.tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.tag-opt {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-mute);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+.tag-opt.selected { background: #0d1f30; border-color: var(--accent); color: var(--accent); }
+
+.submit-btn {
+  width: 100%;
+  background: var(--grad);
+  border: none;
+  border-radius: 10px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: opacity 0.15s;
+}
+.submit-btn:hover { opacity: 0.9; }
+
+.clear-form-btn {
+  width: 100%;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 13px;
+  color: var(--text-mute);
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.15s;
+}
+.clear-form-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* ─── TRADE LIST ─── */
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.list-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.header-actions { display: flex; gap: 8px; }
+
+.export-btn, .clear-all-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--text-mute);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.export-btn:hover { border-color: var(--accent); color: var(--accent); }
+.clear-all-btn:hover { border-color: var(--red); color: var(--red); }
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #2a3a55;
+  font-size: 14px;
+  line-height: 1.7;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+/* ─── TRADE ITEM ─── */
+.trade-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+  transition: border-color 0.15s;
+}
+.trade-item:hover { border-color: var(--border-hi); }
+
+.trade-item.win  { border-left: 3px solid var(--green); }
+.trade-item.loss { border-left: 3px solid var(--red); }
+.trade-item.be   { border-left: 3px solid var(--yellow); }
+.trade-item.planned { border-left: 3px solid var(--accent); }
+
+.ti-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+
+.ti-left { display: flex; align-items: center; gap: 10px; }
+
+.ti-ticker {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.ti-dir {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+.ti-dir.call { background: #0d1f30; color: var(--accent); }
+.ti-dir.put  { background: #1a0e0e; color: var(--red); }
+
+.ti-date { font-size: 12px; color: var(--text-mute); }
+
+.ti-pnl {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.ti-pnl.pos { color: var(--green); }
+.ti-pnl.neg { color: var(--red); }
+.ti-pnl.zero { color: var(--yellow); }
+.ti-pnl.planned { color: var(--accent); font-size: 13px; }
+
+.ti-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.ti-cell {
+  background: var(--bg-input);
+  border-radius: 7px;
+  padding: 6px 8px;
+}
+.ti-cell .tc-label { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.ti-cell .tc-val   { font-size: 13px; font-weight: 700; color: var(--text-dim); }
+
+.ti-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.ti-tag { background: var(--bg-input); border: 1px solid var(--border); border-radius: 5px; padding: 2px 8px; font-size: 11px; color: var(--text-mute); }
+
+.ti-notes { font-size: 12px; color: var(--text-mute); font-style: italic; line-height: 1.4; }
+
+.ti-actions { display: flex; gap: 6px; margin-top: 10px; }
+.ti-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 11px;
+  color: var(--text-mute);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ti-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ti-btn.del:hover { border-color: var(--red); color: var(--red); }
+
+/* ─── FILTER BAR ─── */
+.filter-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-mute);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-btn.active { background: #0d1f30; border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <a class="topbar-logo" href="index.html">⚡ <span class="accent">Trading</span> Suite</a>
-  <nav class="topbar-nav">
-    <a class="nav-link" href="index.html">🏠 Home</a>
-    <a class="nav-link" href="scanner.html">📡 Scanner</a>
-    <a class="nav-link" href="planner.html">📋 Trade Planner</a>
-    <a class="nav-link active" href="journal.html">📓 Journal</a>
-  </nav>
-  <div class="topbar-right">
-    <div class="market-badge closed" id="mktBadge">–</div>
+<!-- SHARED NAV -->
+<nav class="nav">
+  <div class="nav-logo">⚡ <span>Trading</span> Suite</div>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html">Dashboard</a>
+    <a class="nav-link" href="scanner.html">Scanner</a>
+    <a class="nav-link" href="planner.html">Planner</a>
+    <a class="nav-link active" href="journal.html">Journal</a>
   </div>
-</div>
-
-<div class="page">
-
-  <div class="page-header">
-    <div>
-      <h2>📓 Trade Journal</h2>
-      <p>Track every trade. Measure your edge. Enforce your rules.</p>
-    </div>
-    <div class="page-header-actions">
-      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
-      <a href="planner.html" class="btn btn-primary btn-sm">+ New Trade</a>
-    </div>
+  <div class="nav-right">
+    <span class="nav-clock" id="navClock">–</span>
   </div>
+</nav>
 
-  <!-- Stats strip -->
+<div class="page-wrap">
+
+  <!-- STATS STRIP -->
   <div class="stats-strip" id="statsStrip">
-    <div class="stat-card"><div class="stat-lbl">Total Trades</div><div class="stat-val blue" id="st-total">0</div></div>
-    <div class="stat-card"><div class="stat-lbl">Win Rate</div><div class="stat-val" id="st-wr">–</div></div>
-    <div class="stat-card"><div class="stat-lbl">Total P&L</div><div class="stat-val" id="st-pnl">$0</div></div>
-    <div class="stat-card"><div class="stat-lbl">Avg Win</div><div class="stat-val green" id="st-avgw">–</div></div>
-    <div class="stat-card"><div class="stat-lbl">Avg Loss</div><div class="stat-val red" id="st-avgl">–</div></div>
-    <div class="stat-card">
-      <div class="stat-lbl">Rule Compliance</div>
-      <div class="stat-val blue" id="st-comp">–</div>
-      <div class="compliance-bar"><div class="compliance-fill" id="compBar" style="width:0%"></div></div>
-    </div>
+    <div class="stat-tile"><div class="st-val" id="s-trades">0</div><div class="st-label">Total Trades</div></div>
+    <div class="stat-tile"><div class="st-val" id="s-winrate">–</div><div class="st-label">Win Rate</div></div>
+    <div class="stat-tile"><div class="st-val" id="s-pnl" style="color:var(--green)">$0</div><div class="st-label">Total P&L</div></div>
+    <div class="stat-tile"><div class="st-val" id="s-avgwin" style="color:var(--green)">–</div><div class="st-label">Avg Win</div></div>
+    <div class="stat-tile"><div class="st-val" id="s-avgloss" style="color:var(--red)">–</div><div class="st-label">Avg Loss</div></div>
+    <div class="stat-tile"><div class="st-val" id="s-streak">–</div><div class="st-label">Streak</div></div>
   </div>
 
-  <!-- Log a trade -->
-  <div class="log-form">
-    <div class="card-title">Log a Trade</div>
-    <div class="log-form-grid">
-      <div class="field">
-        <label>Ticker</label>
-        <input class="input" type="text" id="f-ticker" placeholder="AAPL" style="text-transform:uppercase;font-weight:700;">
+  <div class="journal-layout">
+
+    <!-- ADD TRADE FORM -->
+    <div class="form-card" id="formCard">
+      <div class="form-title" id="formTitle">📒 Log a Trade</div>
+
+      <div class="row2">
+        <div class="fg">
+          <label>Ticker</label>
+          <input type="text" id="f-ticker" placeholder="SPY" style="text-transform:uppercase">
+        </div>
+        <div class="fg">
+          <label>Date</label>
+          <input type="date" id="f-date">
+        </div>
       </div>
-      <div class="field">
-        <label>Type</label>
-        <select class="input" id="f-type">
-          <option value="CALL">📈 Call</option>
-          <option value="PUT">📉 Put</option>
+
+      <div class="row3">
+        <div class="fg">
+          <label>Direction</label>
+          <select id="f-dir">
+            <option value="CALL">📈 Call</option>
+            <option value="PUT">📉 Put</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Entry $</label>
+          <input type="number" id="f-entry" placeholder="1.50" step="0.01">
+        </div>
+        <div class="fg">
+          <label>Exit $</label>
+          <input type="number" id="f-exit" placeholder="2.00" step="0.01">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="fg">
+          <label>Contracts</label>
+          <input type="number" id="f-contracts" placeholder="2" min="1">
+        </div>
+        <div class="fg">
+          <label>P&L ($)</label>
+          <input type="number" id="f-pnl" placeholder="auto-calc" step="0.01">
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Result</label>
+        <select id="f-result">
+          <option value="win">✅ Win</option>
+          <option value="loss">❌ Loss</option>
+          <option value="be">🟡 Breakeven</option>
+          <option value="planned">📋 Planned (no result yet)</option>
         </select>
       </div>
-      <div class="field">
-        <label>Entry Price</label>
-        <div class="input-wrap"><span class="input-prefix">$</span><input class="input prefix" type="number" id="f-entry" placeholder="1.50" step="0.01"></div>
+
+      <div class="fg">
+        <label>Setup Tags</label>
+        <div class="tag-row" id="tagRow">
+          <span class="tag-opt" onclick="toggleTag(this,'EMA Cross')">EMA Cross</span>
+          <span class="tag-opt" onclick="toggleTag(this,'VWAP Play')">VWAP Play</span>
+          <span class="tag-opt" onclick="toggleTag(this,'ORB')">ORB</span>
+          <span class="tag-opt" onclick="toggleTag(this,'Gap Fill')">Gap Fill</span>
+          <span class="tag-opt" onclick="toggleTag(this,'Momentum')">Momentum</span>
+          <span class="tag-opt" onclick="toggleTag(this,'Stop Hunt')">Stop Hunt</span>
+          <span class="tag-opt" onclick="toggleTag(this,'Revenge')">⚠️ Revenge</span>
+          <span class="tag-opt" onclick="toggleTag(this,'FOMO')">⚠️ FOMO</span>
+        </div>
       </div>
-      <div class="field">
-        <label>Exit Price</label>
-        <div class="input-wrap"><span class="input-prefix">$</span><input class="input prefix" type="number" id="f-exit" placeholder="2.10" step="0.01"></div>
+
+      <div class="fg">
+        <label>Notes</label>
+        <textarea id="f-notes" placeholder="Thesis, what worked, what didn't, lesson learned..."></textarea>
       </div>
-      <div class="field">
-        <label>Contracts</label>
-        <input class="input" type="number" id="f-contracts" placeholder="13" min="1">
-      </div>
-      <div class="field">
-        <label>Date</label>
-        <input class="input" type="date" id="f-date">
-      </div>
+
+      <button class="submit-btn" onclick="submitTrade()">Save Trade</button>
+      <button class="clear-form-btn" onclick="clearForm()">Clear Form</button>
     </div>
 
-    <!-- Rule compliance -->
-    <div class="card-title" style="margin-bottom:10px;">Did you follow your rules?</div>
-    <div class="rule-checks">
-      <label class="rule-check"><input type="checkbox" id="r-stop" checked><span class="tick"></span><span class="rc-label">Set stop loss first</span></label>
-      <label class="rule-check"><input type="checkbox" id="r-size" checked><span class="tick"></span><span class="rc-label">Used $4k allocation</span></label>
-      <label class="rule-check"><input type="checkbox" id="r-t1" checked><span class="tick"></span><span class="rc-label">Sold 50% at +20%</span></label>
-      <label class="rule-check"><input type="checkbox" id="r-be" checked><span class="tick"></span><span class="rc-label">Moved stop to BE</span></label>
-      <label class="rule-check"><input type="checkbox" id="r-vwap" checked><span class="tick"></span><span class="rc-label">Entry above VWAP</span></label>
+    <!-- TRADE LIST -->
+    <div>
+      <div class="list-header">
+        <div class="list-title">Trade History</div>
+        <div class="header-actions">
+          <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+          <button class="clear-all-btn" onclick="clearAll()">🗑 Clear All</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('win',this)">Wins</button>
+        <button class="filter-btn" onclick="setFilter('loss',this)">Losses</button>
+        <button class="filter-btn" onclick="setFilter('planned',this)">Planned</button>
+      </div>
+
+      <div id="tradeList"></div>
     </div>
 
-    <div class="field" style="margin-bottom:14px;">
-      <label>Notes</label>
-      <input class="input" type="text" id="f-notes" placeholder="Why you took it, what you learned...">
-    </div>
-
-    <button class="btn btn-success btn-full" onclick="logTrade()">Log Trade</button>
   </div>
-
-  <!-- Trades table -->
-  <div class="trades-section">
-    <div class="trades-header">
-      <h3 id="tradesCount">Trade History</h3>
-      <div class="filter-row">
-        <button class="filter-btn active" id="f-all" onclick="setFilter('all')">All</button>
-        <button class="filter-btn" id="f-win" onclick="setFilter('win')">Wins</button>
-        <button class="filter-btn" id="f-loss" onclick="setFilter('loss')">Losses</button>
-        <button class="filter-btn" id="f-open" onclick="setFilter('open')">Open</button>
-      </div>
-    </div>
-
-    <table class="trades-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Symbol</th>
-          <th>Entry</th>
-          <th>Exit</th>
-          <th>Contracts</th>
-          <th>P&L</th>
-          <th>Rules</th>
-          <th>Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="tradesTbody"></tbody>
-    </table>
-
-    <div class="empty-state" id="emptyState">
-      <p>No trades logged yet.<br>
-      Start from the <a href="planner.html">Trade Planner</a> — your plans save here automatically,<br>
-      or log a trade manually above.</p>
-    </div>
-  </div>
-
 </div>
 
 <script>
-let filter = 'all';
-let trades = JSON.parse(localStorage.getItem('trades') || '[]');
+let trades = JSON.parse(localStorage.getItem('ts_trades')||'[]');
+let editId = null;
+let activeFilter = 'all';
 
-// Set today's date as default
+// Set today's date
 document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
 
-// Uppercase ticker
-document.getElementById('f-ticker').addEventListener('input', function() { this.value = this.value.toUpperCase(); });
+// Auto-calculate P&L when entry/exit/contracts change
+['f-entry','f-exit','f-contracts'].forEach(id => {
+  document.getElementById(id).addEventListener('input', autoPnl);
+});
 
-function logTrade() {
-  const ticker   = document.getElementById('f-ticker').value.toUpperCase().trim();
-  const type     = document.getElementById('f-type').value;
-  const entry    = parseFloat(document.getElementById('f-entry').value);
-  const exit     = parseFloat(document.getElementById('f-exit').value) || null;
-  const contracts= parseInt(document.getElementById('f-contracts').value) || 1;
-  const date     = document.getElementById('f-date').value;
-  const notes    = document.getElementById('f-notes').value.trim();
-
-  if (!ticker || !entry) {
-    if (!ticker) document.getElementById('f-ticker').style.borderColor = 'var(--red)';
-    if (!entry)  document.getElementById('f-entry').style.borderColor  = 'var(--red)';
-    setTimeout(() => { document.getElementById('f-ticker').style.borderColor=''; document.getElementById('f-entry').style.borderColor=''; }, 1500);
-    return;
+function autoPnl() {
+  const entry = parseFloat(document.getElementById('f-entry').value);
+  const exit  = parseFloat(document.getElementById('f-exit').value);
+  const qty   = parseFloat(document.getElementById('f-contracts').value)||1;
+  if (entry && exit) {
+    const pnl = (exit - entry) * qty * 100;
+    document.getElementById('f-pnl').value = pnl.toFixed(2);
+    const resEl = document.getElementById('f-result');
+    if (pnl > 0) resEl.value = 'win';
+    else if (pnl < 0) resEl.value = 'loss';
+    else resEl.value = 'be';
   }
+}
 
-  const rules = {
-    stop:  document.getElementById('r-stop').checked,
-    size:  document.getElementById('r-size').checked,
-    t1:    document.getElementById('r-t1').checked,
-    be:    document.getElementById('r-be').checked,
-    vwap:  document.getElementById('r-vwap').checked,
+function toggleTag(el, tag) { el.classList.toggle('selected'); }
+
+function getSelectedTags() {
+  return [...document.querySelectorAll('.tag-opt.selected')].map(el => el.textContent.replace('⚠️ ',''));
+}
+
+function clearForm() {
+  document.getElementById('f-ticker').value='';
+  document.getElementById('f-entry').value='';
+  document.getElementById('f-exit').value='';
+  document.getElementById('f-contracts').value='';
+  document.getElementById('f-pnl').value='';
+  document.getElementById('f-notes').value='';
+  document.getElementById('f-result').value='win';
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+  document.querySelectorAll('.tag-opt.selected').forEach(el=>el.classList.remove('selected'));
+  editId=null;
+  document.getElementById('formTitle').textContent='📒 Log a Trade';
+  document.querySelector('.submit-btn').textContent='Save Trade';
+}
+
+function submitTrade() {
+  const ticker = document.getElementById('f-ticker').value.trim().toUpperCase();
+  if (!ticker) { document.getElementById('f-ticker').focus(); return; }
+
+  const trade = {
+    id: editId || Date.now(),
+    ticker,
+    date: document.getElementById('f-date').value,
+    direction: document.getElementById('f-dir').value,
+    entry: parseFloat(document.getElementById('f-entry').value)||0,
+    exit:  parseFloat(document.getElementById('f-exit').value)||0,
+    contracts: parseInt(document.getElementById('f-contracts').value)||1,
+    pnl: parseFloat(document.getElementById('f-pnl').value)||0,
+    result: document.getElementById('f-result').value,
+    tags: getSelectedTags(),
+    notes: document.getElementById('f-notes').value.trim()
   };
 
-  const pnl = exit ? (exit - entry) * contracts * 100 : null;
-  const status = exit ? (pnl >= 0 ? 'win' : 'loss') : 'open';
+  if (editId) {
+    const idx = trades.findIndex(t=>t.id===editId);
+    if (idx>-1) trades[idx]=trade;
+  } else {
+    trades.unshift(trade);
+  }
 
-  const trade = { id: Date.now(), ticker, type, entry, exit, contracts, date, notes, rules, pnl, status, timestamp: new Date().toISOString() };
-  trades.unshift(trade);
-  saveTrades();
+  save(); clearForm(); renderAll();
+}
 
-  // Reset form
-  ['f-ticker','f-exit','f-notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-entry').value = '';
-  document.getElementById('f-contracts').value = '';
-  ['r-stop','r-size','r-t1','r-be','r-vwap'].forEach(id => document.getElementById(id).checked = true);
-
-  renderAll();
+function editTrade(id) {
+  const t = trades.find(t=>t.id===id); if (!t) return;
+  editId = id;
+  document.getElementById('f-ticker').value=t.ticker;
+  document.getElementById('f-date').value=t.date;
+  document.getElementById('f-dir').value=t.direction;
+  document.getElementById('f-entry').value=t.entry;
+  document.getElementById('f-exit').value=t.exit;
+  document.getElementById('f-contracts').value=t.contracts;
+  document.getElementById('f-pnl').value=t.pnl;
+  document.getElementById('f-result').value=t.result;
+  document.getElementById('f-notes').value=t.notes||'';
+  document.querySelectorAll('.tag-opt').forEach(el=>{
+    el.classList.toggle('selected', t.tags&&t.tags.includes(el.textContent.replace('⚠️ ','')));
+  });
+  document.getElementById('formTitle').textContent='✏️ Edit Trade';
+  document.querySelector('.submit-btn').textContent='Update Trade';
+  document.getElementById('formCard').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function deleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
-  trades = trades.filter(t => t.id !== id);
-  saveTrades(); renderAll();
+  trades = trades.filter(t=>t.id!==id);
+  save(); renderAll();
 }
 
-function saveTrades() { localStorage.setItem('trades', JSON.stringify(trades)); }
-
-function setFilter(f) {
-  filter = f;
-  ['all','win','loss','open'].forEach(x => document.getElementById('f-'+x).classList.toggle('active', x===f));
-  renderAll();
+function clearAll() {
+  if (!confirm('Delete ALL trades? This cannot be undone.')) return;
+  trades=[]; save(); renderAll();
 }
 
-function renderAll() { renderStats(); renderTable(); }
+function setFilter(f, btn) {
+  activeFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+function save() { localStorage.setItem('ts_trades', JSON.stringify(trades)); }
+
+function renderAll() { renderStats(); renderList(); }
 
 function renderStats() {
-  const closed = trades.filter(t => t.status==='win'||t.status==='loss');
-  const wins   = trades.filter(t => t.status==='win');
-  const losses = trades.filter(t => t.status==='loss');
-  const totalPnl = closed.reduce((s,t) => s+(t.pnl||0), 0);
+  const completed = trades.filter(t=>t.result!=='planned');
+  const wins  = completed.filter(t=>t.result==='win');
+  const losses = completed.filter(t=>t.result==='loss');
+  const totalPL = trades.reduce((s,t)=>s+(t.pnl||0),0);
+  const winRate = completed.length ? ((wins.length/completed.length)*100).toFixed(0) : '–';
+
+  document.getElementById('s-trades').textContent = trades.length;
+  document.getElementById('s-winrate').textContent = winRate==='–' ? '–' : winRate+'%';
+  document.getElementById('s-winrate').style.color = parseFloat(winRate)>=50 ? 'var(--green)' : 'var(--red)';
+  const plEl=document.getElementById('s-pnl');
+  plEl.textContent=(totalPL>=0?'+$':'-$')+Math.abs(totalPL).toFixed(0);
+  plEl.style.color=totalPL>=0?'var(--green)':'var(--red)';
+
   const avgWin  = wins.length  ? wins.reduce((s,t)=>s+(t.pnl||0),0)/wins.length   : null;
-  const avgLoss = losses.length? losses.reduce((s,t)=>s+(t.pnl||0),0)/losses.length: null;
-  const wr = closed.length ? (wins.length/closed.length*100) : null;
+  const avgLoss = losses.length ? losses.reduce((s,t)=>s+(t.pnl||0),0)/losses.length : null;
+  document.getElementById('s-avgwin').textContent  = avgWin!=null  ? '+$'+avgWin.toFixed(0)  : '–';
+  document.getElementById('s-avgloss').textContent = avgLoss!=null ? '-$'+Math.abs(avgLoss).toFixed(0) : '–';
 
-  // Rule compliance: avg % of rules followed across all trades
-  const allRuleScores = trades.map(t => {
-    if (!t.rules) return null;
-    const vals = Object.values(t.rules); return vals.filter(Boolean).length / vals.length;
-  }).filter(x=>x!==null);
-  const comp = allRuleScores.length ? allRuleScores.reduce((a,b)=>a+b,0)/allRuleScores.length*100 : null;
-
-  document.getElementById('st-total').textContent = trades.length;
-  document.getElementById('st-wr').textContent = wr != null ? wr.toFixed(0)+'%' : '–';
-  document.getElementById('st-wr').className = 'stat-val '+(wr>=55?'green':wr!=null?'red':'');
-  document.getElementById('st-pnl').textContent = totalPnl>=0 ? '+$'+totalPnl.toFixed(0) : '-$'+Math.abs(totalPnl).toFixed(0);
-  document.getElementById('st-pnl').className = 'stat-val '+(totalPnl>0?'green':totalPnl<0?'red':'');
-  document.getElementById('st-avgw').textContent = avgWin  != null ? '+$'+avgWin.toFixed(0) : '–';
-  document.getElementById('st-avgl').textContent = avgLoss != null ? '-$'+Math.abs(avgLoss).toFixed(0) : '–';
-  document.getElementById('st-comp').textContent = comp != null ? comp.toFixed(0)+'%' : '–';
-  document.getElementById('compBar').style.width = (comp||0)+'%';
-  document.getElementById('compBar').style.background = comp>=80?'var(--green)':comp>=60?'var(--yellow)':'var(--red)';
+  // Streak
+  let streak=0;
+  const sorted=[...trades].filter(t=>t.result!=='planned').sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if (sorted.length) {
+    const dir = sorted[0].result==='win' ? 'win' : 'loss';
+    for (const t of sorted) { if(t.result===dir) streak++; else break; }
+    const el=document.getElementById('s-streak');
+    el.textContent=streak+(dir==='win'?' W':' L');
+    el.style.color=dir==='win'?'var(--green)':'var(--red)';
+  } else {
+    document.getElementById('s-streak').textContent='–';
+  }
 }
 
-function renderTable() {
-  const filtered = filter==='all' ? trades : trades.filter(t=>t.status===filter);
-  const tbody = document.getElementById('tradesTbody');
-  const empty = document.getElementById('emptyState');
-
-  document.getElementById('tradesCount').textContent = `Trade History (${filtered.length})`;
+function renderList() {
+  const list = document.getElementById('tradeList');
+  const filtered = activeFilter==='all' ? trades : trades.filter(t=>t.result===activeFilter);
 
   if (!filtered.length) {
-    tbody.innerHTML = ''; empty.style.display = 'block'; return;
+    list.innerHTML=`<div class="empty-state">No trades yet.<br><br>Log your first trade using the form →<br><br><span style="font-size:12px">Or save a plan from the Trade Planner.</span></div>`;
+    return;
   }
-  empty.style.display = 'none';
 
-  tbody.innerHTML = filtered.map(t => {
-    const pnlText = t.pnl!=null ? (t.pnl>=0?'+$'+t.pnl.toFixed(0):'-$'+Math.abs(t.pnl).toFixed(0)) : '–';
-    const pnlClass = t.pnl==null?'open':t.pnl>=0?'win':'loss';
-    const rules = t.rules||{};
-    const ruleDots = ['stop','size','t1','be','vwap'].map(k =>
-      `<div class="rule-dot ${rules[k]?'ok':rules[k]===false?'fail':'na'}" title="${k}"></div>`
-    ).join('');
-    const date = t.date ? new Date(t.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '–';
-    return `<tr>
-      <td style="color:var(--text-muted);font-size:12px;">${date}</td>
-      <td><div class="sym-cell"><span class="sym">${t.ticker}</span><span class="type-tag ${(t.type||'call').toLowerCase()}">${t.type||'CALL'}</span></div></td>
-      <td>$${(t.entry||0).toFixed(2)}</td>
-      <td>${t.exit ? '$'+t.exit.toFixed(2) : '<span style="color:var(--text-faint)">Open</span>'}</td>
-      <td>${t.contracts||1}</td>
-      <td class="pnl-cell ${pnlClass}">${pnlText}</td>
-      <td><div class="rules-cell">${ruleDots}</div></td>
-      <td><span class="status-badge ${t.status||'open'}">${t.status||'open'}</span></td>
-      <td><button class="del-btn" onclick="deleteTrade(${t.id})" title="Delete">×</button></td>
-    </tr>`;
+  list.innerHTML = filtered.map(t => {
+    const pnlClass = t.result==='win' ? 'pos' : t.result==='loss' ? 'neg' : t.result==='be' ? 'zero' : 'planned';
+    const pnlText  = t.result==='planned' ? 'Open' : (t.pnl>=0?'+$':'-$')+Math.abs(t.pnl).toFixed(0);
+    const tags = (t.tags||[]).map(tag=>`<span class="ti-tag">${tag}</span>`).join('');
+    return `
+    <div class="trade-item ${t.result}">
+      <div class="ti-top">
+        <div class="ti-left">
+          <span class="ti-ticker">${t.ticker}</span>
+          <span class="ti-dir ${t.direction.toLowerCase()}">${t.direction}</span>
+          <span class="ti-date">${t.date}</span>
+        </div>
+        <div class="ti-pnl ${pnlClass}">${pnlText}</div>
+      </div>
+      <div class="ti-grid">
+        <div class="ti-cell"><div class="tc-label">Entry</div><div class="tc-val">${t.entry?'$'+t.entry.toFixed(2):'–'}</div></div>
+        <div class="ti-cell"><div class="tc-label">Exit</div><div class="tc-val">${t.exit?'$'+t.exit.toFixed(2):'–'}</div></div>
+        <div class="ti-cell"><div class="tc-label">Contracts</div><div class="tc-val">${t.contracts}</div></div>
+        <div class="ti-cell"><div class="tc-label">Result</div><div class="tc-val" style="color:${t.result==='win'?'var(--green)':t.result==='loss'?'var(--red)':t.result==='be'?'var(--yellow)':'var(--accent)'}">${t.result.charAt(0).toUpperCase()+t.result.slice(1)}</div></div>
+      </div>
+      ${tags ? `<div class="ti-tags">${tags}</div>` : ''}
+      ${t.notes ? `<div class="ti-notes">"${t.notes}"</div>` : ''}
+      <div class="ti-actions">
+        <button class="ti-btn" onclick="editTrade(${t.id})">✏️ Edit</button>
+        <button class="ti-btn del" onclick="deleteTrade(${t.id})">🗑 Delete</button>
+        ${t.result==='planned'?`<button class="ti-btn" onclick="openPlanner('${t.ticker}',${t.entry})">📋 Plan</button>`:''}
+      </div>
+    </div>`;
   }).join('');
 }
 
+function openPlanner(ticker, price) {
+  window.open('planner.html?ticker='+ticker+'&price='+price, '_blank');
+}
+
 function exportCSV() {
-  const headers = ['Date','Ticker','Type','Entry','Exit','Contracts','P&L','Stop','Size','T1','BE','VWAP','Status','Notes'];
-  const rows = trades.map(t => [
-    t.date||'', t.ticker||'', t.type||'', t.entry||'', t.exit||'', t.contracts||'', t.pnl?.toFixed(2)||'',
-    (t.rules?.stop?'Yes':'No'), (t.rules?.size?'Yes':'No'), (t.rules?.t1?'Yes':'No'), (t.rules?.be?'Yes':'No'), (t.rules?.vwap?'Yes':'No'),
-    t.status||'', (t.notes||'').replace(/,/g,' ')
-  ]);
-  const csv = [headers, ...rows].map(r=>r.join(',')).join('\n');
-  const a = document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download = 'trades-'+new Date().toISOString().split('T')[0]+'.csv'; a.click();
+  if (!trades.length) { alert('No trades to export.'); return; }
+  const headers=['Date','Ticker','Direction','Entry','Exit','Contracts','PnL','Result','Tags','Notes'];
+  const rows=trades.map(t=>[t.date,t.ticker,t.direction,t.entry,t.exit,t.contracts,t.pnl,t.result,(t.tags||[]).join('|'),`"${(t.notes||'').replace(/"/g,"'")}`]);
+  const csv=[headers.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='trade-journal-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
 }
 
-// Market badge
-function updateMarket() {
-  const now=new Date(), dst=now.getTimezoneOffset()<new Date(now.getFullYear(),0,1).getTimezoneOffset();
-  const et=new Date(now.getTime()+(now.getTimezoneOffset()+(dst?-4:-5)*60)*60000);
-  const h=et.getHours(),m=et.getMinutes(),b=document.getElementById('mktBadge');
-  const open=(h>9||(h===9&&m>=30))&&h<16,pre=h>=4&&(h<9||(h===9&&m<30)),aft=h>=16&&h<20;
-  if (open)     {b.textContent='● Market Open';b.className='market-badge open';}
-  else if (pre) {b.textContent='● Pre-Market';b.className='market-badge pre';}
-  else if (aft) {b.textContent='● After Hours';b.className='market-badge after';}
-  else          {b.textContent='● Market Closed';b.className='market-badge closed';}
+// Nav clock
+function isDST(d){const j=new Date(d.getFullYear(),0,1),jul=new Date(d.getFullYear(),6,1);return d.getTimezoneOffset()<Math.max(j.getTimezoneOffset(),jul.getTimezoneOffset());}
+function updateClock(){
+  const now=new Date(),etOff=-5*60+(isDST(now)?60:0),et=new Date(now.getTime()+(now.getTimezoneOffset()+etOff)*60000);
+  document.getElementById('navClock').textContent=et.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})+' ET';
 }
-updateMarket(); setInterval(updateMarket,30000);
+updateClock(); setInterval(updateClock,1000);
 
-// Init
 renderAll();
 </script>
 </body>
