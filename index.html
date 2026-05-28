@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Suite</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+.hero {
+  max-width: 900px;
+  margin: 60px auto 0;
+  padding: 0 24px;
+  text-align: center;
+}
+.hero h1 {
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+.hero h1 span { color: var(--blue); }
+.hero p {
+  font-size: 16px;
+  color: var(--text-muted);
+  max-width: 520px;
+  margin: 0 auto 40px;
+  line-height: 1.6;
+}
+
+.app-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.app-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 28px 24px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.app-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.app-card.scanner::before { background: linear-gradient(90deg, var(--green), var(--blue)); }
+.app-card.planner::before { background: linear-gradient(90deg, var(--blue), var(--indigo)); }
+.app-card.journal::before { background: linear-gradient(90deg, var(--purple), var(--blue)); }
+
+.app-card:hover {
+  border-color: var(--border-bright);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.app-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.app-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.app-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.app-features {
+  list-style: none;
+  margin-top: 4px;
+}
+.app-features li {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 3px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.app-features li::before {
+  content: '→';
+  color: var(--text-faint);
+  font-size: 10px;
+}
+
+.open-btn {
+  margin-top: 8px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-align: center;
+  transition: all 0.15s;
+}
+.app-card:hover .open-btn {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: rgba(56,189,248,0.06);
+}
+
+/* Rules summary */
+.rules-section {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 24px 60px;
+}
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.rule-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 16px;
+}
+
+.rule-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.rule-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--blue);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.rule-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* API key section */
+.api-section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.api-card {
+  background: #1c1200;
+  border: 1px solid #4a3010;
+  border-radius: var(--r-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.api-card .api-icon { font-size: 28px; flex-shrink: 0; }
+.api-card .api-text h3 { font-size: 14px; font-weight: 700; color: #fbbf24; margin-bottom: 3px; }
+.api-card .api-text p { font-size: 12px; color: #92400e; line-height: 1.4; }
+.api-card .api-input-row { display: flex; gap: 8px; flex: 1; min-width: 260px; }
+.api-card .api-input-row input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid #4a3010;
+  border-radius: var(--r-sm);
+  padding: 9px 14px;
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+  font-family: monospace;
+}
+.api-card .api-input-row input:focus { border-color: var(--yellow); }
+.api-card .api-input-row input::placeholder { color: #4a3010; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="topbar-logo" href="index.html">⚡ <span class="accent">Trading</span> Suite</a>
+  <nav class="topbar-nav">
+    <a class="nav-link active" href="index.html">🏠 Home</a>
+    <a class="nav-link" href="scanner.html">📡 Scanner</a>
+    <a class="nav-link" href="planner.html">📋 Trade Planner</a>
+    <a class="nav-link" href="journal.html">📓 Journal</a>
+  </nav>
+  <div class="topbar-right">
+    <div class="market-badge closed" id="marketBadge">Market Closed</div>
+    <div class="status-pill">
+      <div class="status-dot demo" id="statusDot"></div>
+      <span id="statusText">Demo</span>
+    </div>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>Your <span>Edge</span>,<br>Enforced.</h1>
+  <p>Momentum scanner, trade planner, and trade journal — built around your exact rules. Discipline automated.</p>
+</div>
+
+<div class="app-grid" style="margin-top: 32px;">
+
+  <a href="scanner.html" class="app-card scanner">
+    <div class="app-icon">📡</div>
+    <div class="app-name">Momentum Scanner</div>
+    <div class="app-desc">Live 5/20 EMA × VWAP crossover alerts across MAG7, SPY, QQQ, and IWM.</div>
+    <ul class="app-features">
+      <li>1-min and 5-min timeframes</li>
+      <li>Sound alerts on crossover</li>
+      <li>One-click → Trade Planner</li>
+      <li>Bull/Bear setup tagging</li>
+    </ul>
+    <div class="open-btn">Open Scanner →</div>
+  </a>
+
+  <a href="planner.html" class="app-card planner">
+    <div class="app-icon">📋</div>
+    <div class="app-name">Trade Planner</div>
+    <div class="app-desc">Enter a trade. The plan is locked in before you click buy — stop, targets, size, and steps.</div>
+    <ul class="app-features">
+      <li>$4,000 allocation enforced</li>
+      <li>30% stop auto-calculated</li>
+      <li>50% off at +20% rule built-in</li>
+      <li>Max loss shown before entry</li>
+    </ul>
+    <div class="open-btn">Open Planner →</div>
+  </a>
+
+  <a href="journal.html" class="app-card journal">
+    <div class="app-icon">📓</div>
+    <div class="app-name">Trade Journal</div>
+    <div class="app-desc">Log every trade. Track your edge over time — win rate, average R, and rule compliance.</div>
+    <ul class="app-features">
+      <li>Log entry, exit, and P&L</li>
+      <li>Did you follow your rules?</li>
+      <li>Running totals and win rate</li>
+      <li>Exportable CSV</li>
+    </ul>
+    <div class="open-btn">Open Journal →</div>
+  </a>
+
+</div>
+
+<!-- Your Rules -->
+<div class="rules-section">
+  <div class="card-title" style="padding: 0 0 4px 2px;">Your Rules</div>
+  <div class="rules-grid">
+    <div class="rule-card">
+      <div class="rule-label">Allocation / Trade</div>
+      <div class="rule-value">$4,000</div>
+      <div class="rule-sub">10% of $40k account</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-label">Stop Loss</div>
+      <div class="rule-value">−30%</div>
+      <div class="rule-sub">On premium paid</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-label">Target 1</div>
+      <div class="rule-value">+20%</div>
+      <div class="rule-sub">Sell 50% of contracts</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-label">After Target 1</div>
+      <div class="rule-value">BE Stop</div>
+      <div class="rule-sub">Move stop to entry price</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-label">Signal</div>
+      <div class="rule-value">5×20</div>
+      <div class="rule-sub">EMA cross above VWAP</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-label">Timeframes</div>
+      <div class="rule-value">1m / 5m</div>
+      <div class="rule-sub">Both for confirmation</div>
+    </div>
+  </div>
+</div>
+
+<!-- API key banner -->
+<div class="api-section" style="margin-bottom: 60px;">
+  <div class="api-card">
+    <div class="api-icon">🔑</div>
+    <div class="api-text">
+      <h3>Connect Polygon API for live data</h3>
+      <p>Paste your key once — it's shared across the Scanner and Planner.</p>
+    </div>
+    <div class="api-input-row">
+      <input type="password" id="apiKeyInput" placeholder="Paste Polygon API key here...">
+      <button class="btn btn-primary btn-sm" onclick="saveKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Shared API key via localStorage
+function saveKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) return;
+  localStorage.setItem('polygonKey', key);
+  document.getElementById('apiKeyInput').value = '•'.repeat(24);
+  document.getElementById('statusDot').className = 'status-dot live';
+  document.getElementById('statusText').textContent = 'Live';
+  alert('API key saved! Open the Scanner to start receiving live data.');
+}
+
+// Check if key is already saved
+if (localStorage.getItem('polygonKey')) {
+  document.getElementById('statusDot').className = 'status-dot live';
+  document.getElementById('statusText').textContent = 'Live';
+}
+
+// Market hours badge
+function updateMarket() {
+  const now = new Date();
+  const dst = now.getTimezoneOffset() < new Date(now.getFullYear(), 0, 1).getTimezoneOffset();
+  const etOffset = dst ? -4 : -5;
+  const et = new Date(now.getTime() + (now.getTimezoneOffset() + etOffset * 60) * 60000);
+  const h = et.getHours(), m = et.getMinutes();
+  const badge = document.getElementById('marketBadge');
+  const isOpen = (h > 9 || (h === 9 && m >= 30)) && h < 16;
+  const isPre  = h >= 4 && (h < 9 || (h === 9 && m < 30));
+  const isAft  = h >= 16 && h < 20;
+  if (isOpen)      { badge.textContent = '● Market Open';   badge.className = 'market-badge open'; }
+  else if (isPre)  { badge.textContent = '● Pre-Market';    badge.className = 'market-badge pre'; }
+  else if (isAft)  { badge.textContent = '● After Hours';   badge.className = 'market-badge after'; }
+  else             { badge.textContent = '● Market Closed'; badge.className = 'market-badge closed'; }
+}
+updateMarket();
+setInterval(updateMarket, 30000);
+</script>
+</body>
+</html>
