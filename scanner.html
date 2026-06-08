@@ -717,7 +717,7 @@ function renderMarketConditions() {
 async function fetchMarketConditions() {
   if (!apiKey) return;
   try {
-    const res = await fetch('https://api.massive.io/v3/snapshot/indices?ticker.any_of=I:SPX,I:VIX&apiKey=' + apiKey);
+    const res = await fetch('https://api.massive.com/v3/snapshot/indices?ticker.any_of=I:SPX,I:VIX&apiKey=' + apiKey);
     const j = await res.json();
     let spx = null, vix = null, proxy = false;
     if (j && j.results) {
