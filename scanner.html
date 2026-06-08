@@ -742,7 +742,7 @@ async function fetchMarketConditions() {
   } catch (e) { /* indices snapshot may require a separate plan tier */ }
 }
 
-function convictionScore(t, tf) {
+function convictionScore(t, TF) {
   const s = S[t] && S[t][tf];
   if (!s || !s.bars || s.bars.length < 20) return null;
   const bars = s.bars, last = bars[bars.length-1];
