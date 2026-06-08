@@ -270,6 +270,22 @@
 .ai-cell .val { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
 .ai-plan { width: 100%; background: var(--grad-blue); border: none; border-radius: 6px; padding: 7px; font-size: 11px; font-weight: 700; color: #fff; cursor: pointer; transition: opacity 0.15s; }
 .ai-plan:hover { opacity: 0.85; }
+.opts-section{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;}
+.opts-divider{border-top:2px solid var(--border);flex-shrink:0;}
+.opts-alert{border-radius:var(--r-md);padding:10px 12px;margin-bottom:7px;animation:fadeInUp 0.25s ease;}
+.call-alert{background:#081a0e;border:1px solid #1a4728;border-left:3px solid #4ade80;}
+.put-alert{background:#1a0808;border:1px solid #481a1a;border-left:3px solid #f87171;}
+.oa-top{display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;}
+.oa-dir-call{font-size:11px;font-weight:900;color:#4ade80;}
+.oa-dir-put{font-size:11px;font-weight:900;color:#f87171;}
+.oa-ticker{font-size:15px;font-weight:900;color:var(--text-primary);}
+.oa-score{font-size:11px;font-weight:700;background:#2d2000;border:1px solid #4a3800;padding:1px 7px;border-radius:8px;color:var(--yellow);margin-left:auto;}
+.oa-time{font-size:10px;color:var(--text-faint);}
+.oa-sigs{font-size:10px;color:var(--text-muted);line-height:1.5;margin-bottom:5px;}
+.oa-levels{display:flex;gap:10px;font-size:11px;color:var(--text-muted);margin-bottom:3px;}
+.oa-levels b{color:var(--text-secondary);}
+.oa-meta{font-size:10px;color:var(--text-faint);}
+.no-opts-msg{padding:20px 12px;text-align:center;color:var(--text-faint);font-size:11px;line-height:1.8;}
 .tc-levels {
   display: flex; gap: 5px; flex-wrap: wrap; align-items: center;
   font-size: 10px; font-family: 'SF Mono', Menlo, Consolas, monospace;
@@ -500,42 +516,31 @@
     </div>
   </div>
 
-  <!-- RIGHT: Alerts -->
-  <div class="alert-col">
-    <div class="alert-header">
-      <h3>🚨 Crossover Alerts</h3>
-      <div style="display:flex;align-items:center;gap:7px;">
-        <span class="alert-cnt" id="alertCnt">0</span>
-        <button class="clear-btn" onclick="clearAlerts()">Clear</button>
+  <!-- RIGHT: Options Alerts -->
+  <div class="alert-col" style="display:flex;flex-direction:column;overflow:hidden;">
+    <div class="opts-section">
+      <div class="alert-header">
+        <h3>🟢 Call Entries</h3>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="alert-cnt" id="callCnt">0</span>
+          <button class="clear-btn" onclick="clearOpts('call')">Clear</button>
+        </div>
+      </div>
+      <div class="alerts-feed" id="callFeed">
+        <div class="no-opts-msg">Watching for call entries…<br>Score ≥70 fires alert.</div>
       </div>
     </div>
-    <div class="alerts-feed" id="alertFeed">
-      <div class="no-alerts-msg">
-        Watching 10 tickers for<br>5 EMA × 20 EMA crossovers<br>above VWAP…<br><br>
-        Alerts fire here with sound.
+    <div class="opts-divider"></div>
+    <div class="opts-section">
+      <div class="alert-header">
+        <h3>🔴 Put Entries</h3>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="alert-cnt" id="putCnt">0</span>
+          <button class="clear-btn" onclick="clearOpts('put')">Clear</button>
+        </div>
       </div>
-    </div>
-  </div>
-
-</div>
-
-<div class="ticker-editor-overlay" id="tickerEditorOverlay">
-  <div class="ticker-editor-panel">
-    <div class="te-head">
-      <div class="te-title">📋 Edit Watchlist</div>
-      <button class="te-close" onclick="closeTickerEditor()" title="Close">✕</button>
-    </div>
-    <div class="te-sub">Add or remove symbols, then save to reload the scanner with your new list. <span id="tickerEditorCount"></span></div>
-    <div class="ticker-chips" id="tickerEditorChips"></div>
-    <div class="te-add-row">
-      <input type="text" id="tickerInput" class="te-input" placeholder="e.g. AMD" maxlength="6" onkeydown="if(event.key==='Enter') addEditorTicker();">
-      <button class="te-add-btn" onclick="addEditorTicker()">+ Add</button>
-    </div>
-    <div class="te-actions">
-      <button class="te-btn te-btn-ghost" onclick="resetTickerEditor()">Reset to default</button>
-      <div class="te-actions-right">
-        <button class="te-btn te-btn-ghost" onclick="closeTickerEditor()">Cancel</button>
-        <button class="te-btn te-btn-primary" onclick="saveTickerEditor()">Save &amp; Reload</button>
+      <div class="alerts-feed" id="putFeed">
+        <div class="no-opts-msg">Watching for put entries…<br>Score ≥70 fires alert.</div>
       </div>
     </div>
   </div>
@@ -814,9 +819,133 @@ function tickDemo() {
     const last = S[t][1].bars.at(-1);
     if (last) { S[t].price=last.c; S[t].change=last.c-S[t].open; S[t].changePct=S[t].change/S[t].open*100; }
   });
-  renderAll(); updateStats();
+  renderAll(); updateStats(); checkOptionsAlerts();
 }
 
+// ══ OPTIONS SCORING & ALERTS ══
+let optsLastAlert={}, totalCallAlerts=0, totalPutAlerts=0;
+const BT_CACHE={};
+
+function calcRVOL(bars){
+  if(bars.length<6)return null;
+  const lb=Math.min(20,bars.length-1);
+  const avg=bars.slice(-lb-1,-1).reduce((s,b)=>s+b.v,0)/lb;
+  return avg>0?bars[bars.length-1].v/avg:null;
+}
+
+function getORBLevels(bars){
+  if(bars.length<3)return null;
+  const ob=bars.slice(0,Math.min(30,bars.length));
+  return{high:Math.max(...ob.map(b=>b.h)),low:Math.min(...ob.map(b=>b.l))};
+}
+
+function miniBacktest(t,tf){
+  const s=S[t]&&S[t][tf];
+  if(!s||!s.bars||s.bars.length<35)return null;
+  const bars=s.bars,lf=Math.max(5,Math.floor(bars.length*0.07));
+  let cW=0,cT=0,pW=0,pT=0;
+  for(let i=22;i<bars.length-lf;i++){
+    const sl=bars.slice(0,i+1),e5=ema(sl,5),e20=ema(sl,20),vw=vwap(sl);
+    if(!e5||!e20||!vw)continue;
+    const last=sl[sl.length-1],fut=bars[i+lf],rv=calcRVOL(sl);
+    if(!rv||rv<1.0)continue;
+    if(e5>e20&&last.c>vw){cT++;if(fut.c>last.c*1.002)cW++;}
+    if(e5<e20&&last.c<vw){pT++;if(fut.c<last.c*0.998)pW++;}
+  }
+  return{callWR:cT>=5?Math.round(cW/cT*100):null,callN:cT,putWR:pT>=5?Math.round(pW/pT*100):null,putN:pT};
+}
+
+function getCachedBT(t,tf){
+  const key=t+'-'+tf,bars=S[t]&&S[t][tf]&&S[t][tf].bars;
+  if(!bars)return null;
+  const ck=key+'-'+bars.length;
+  if(!BT_CACHE[ck])BT_CACHE[ck]=miniBacktest(t,tf);
+  return BT_CACHE[ck];
+}
+
+function scoreDirection(t,tf,dir){
+  const s=S[t]&&S[t][tf];
+  if(!s||!s.bars||s.bars.length<20)return null;
+  const bars=s.bars,last=bars[bars.length-1],rv=calcRVOL(bars);
+  if(rv!==null&&rv<1.0)return{score:0,blocked:'RVOL<1.0',marks:[]};
+  let score=0,marks=[];
+  if(rv>=5){score+=30;marks.push('RVOL '+rv.toFixed(1)+'x \uD83D\uDD25');}
+  else if(rv>=4){score+=30;marks.push('RVOL '+rv.toFixed(1)+'x');}
+  else if(rv>=3){score+=20;marks.push('RVOL '+rv.toFixed(1)+'x');}
+  else if(rv>=1.5){score+=15;marks.push('RVOL '+rv.toFixed(1)+'x');}
+  const isCall=(dir==='CALL'),e9=ema(bars,9),e21=ema(bars,21);
+  if(isCall){
+    if(s.ema5!=null&&s.ema20!=null&&s.ema5>s.ema20){score+=20;marks.push('EMA5>20');}
+    if(e9!=null&&e21!=null&&e9>e21){score+=10;marks.push('EMA9>21');}
+    if(s.vwap!=null&&last.c>s.vwap){score+=20;marks.push('Above VWAP');}
+    const orb=getORBLevels(bars);
+    if(orb&&last.c>orb.high*1.001){score+=25;marks.push('ORB breakout');}
+    if(S[t].pdh&&last.c>S[t].pdh){score+=15;marks.push('PDH break');}
+    if(s.rsi&&s.rsi.value>=40&&s.rsi.value<=70){score+=10;marks.push('RSI '+s.rsi.value.toFixed(0));}
+    if(s.macd&&(s.macd.cross==='bull'||s.macd.hist>0)){score+=10;marks.push('MACD bull');}
+    if(MKT.regime&&MKT.regime.cls==='regime-high-conviction'){score+=10;marks.push('Bull regime');}
+  }else{
+    if(s.ema5!=null&&s.ema20!=null&&s.ema5<s.ema20){score+=20;marks.push('EMA5<20');}
+    if(e9!=null&&e21!=null&&e9<e21){score+=10;marks.push('EMA9<21');}
+    if(s.vwap!=null&&last.c<s.vwap){score+=20;marks.push('Below VWAP');}
+    const orb=getORBLevels(bars);
+    if(orb&&last.c<orb.low*0.999){score+=25;marks.push('ORB breakdown');}
+    if(S[t].pdl&&last.c<S[t].pdl){score+=15;marks.push('PDL break');}
+    if(s.rsi&&s.rsi.value>=30&&s.rsi.value<=60){score+=10;marks.push('RSI '+s.rsi.value.toFixed(0));}
+    if(s.macd&&(s.macd.cross==='bear'||s.macd.hist<0)){score+=10;marks.push('MACD bear');}
+    if(MKT.regime&&['regime-risk-off','regime-high-vol'].includes(MKT.regime.cls)){score+=10;marks.push('Bear regime');}
+  }
+  return{score,marks,rvol:rv};
+}
+
+function clearOpts(type){
+  const isCall=type==='call';
+  const fid=isCall?'callFeed':'putFeed',cid=isCall?'callCnt':'putCnt';
+  const msg=isCall?'Watching for call entries\u2026<br>Score \u226570 fires alert.':'Watching for put entries\u2026<br>Score \u226570 fires alert.';
+  const f=document.getElementById(fid);if(f)f.innerHTML='<div class="no-opts-msg">'+msg+'<\/div>';
+  const ct=document.getElementById(cid);if(ct){ct.textContent='0';ct.className='alert-cnt';}
+  if(isCall)totalCallAlerts=0;else totalPutAlerts=0;
+}
+
+function fireOptionsAlert(t,tf,dir,result,btResult){
+  const isCall=(dir==='CALL'),price=S[t]&&S[t].price!=null?S[t].price:0;
+  const time=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+  const rv=result.rvol!=null?result.rvol.toFixed(1)+'x':'\u2014';
+  const wr=btResult?(isCall?btResult.callWR:btResult.putWR):null;
+  const wrN=btResult?(isCall?btResult.callN:btResult.putN):0;
+  const wrTxt=wr!=null?wr+'% ('+wrN+' signals)':'insufficient data';
+  const stop=isCall?(price*0.992).toFixed(2):(price*1.008).toFixed(2);
+  const el=document.createElement('div');
+  el.className='opts-alert '+(isCall?'call-alert':'put-alert');
+  el.innerHTML='<div class="oa-top"><span class="'+(isCall?'oa-dir-call':'oa-dir-put')+'">'+(isCall?'\uD83D\uDFE2 CALL':'\uD83D\uDD34 PUT')+'<\/span><span class="oa-ticker">'+t+'<\/span><span class="oa-score">'+result.score+'pts<\/span><span class="oa-time">'+time+'<\/span><\/div><div class="oa-sigs">'+result.marks.join(' &middot; ')+'<\/div><div class="oa-levels"><span>Entry <b>$'+price.toFixed(2)+'<\/b><\/span><span>Stop <b>$'+stop+'<\/b><\/span><span>RVOL <b>'+rv+'<\/b><\/span><\/div><div class="oa-meta">Backtest WR: <b>'+wrTxt+'<\/b> &middot; Target: +40% on contract<\/div>';
+  const feed=document.getElementById(isCall?'callFeed':'putFeed');
+  if(!feed)return;
+  const noMsg=feed.querySelector('.no-opts-msg');if(noMsg)noMsg.remove();
+  feed.insertBefore(el,feed.firstChild);
+  const cnt=document.getElementById(isCall?'callCnt':'putCnt');
+  if(cnt){cnt.textContent=parseInt(cnt.textContent||'0')+1;cnt.className='alert-cnt hot';}
+  if(typeof totalAlerts!=='undefined')totalAlerts++;
+  totalCallAlerts+=(isCall?1:0);totalPutAlerts+=(isCall?0:1);
+  const sa=document.getElementById('statAlerts');if(sa)sa.textContent=typeof totalAlerts!=='undefined'?totalAlerts:'';
+  if(typeof playSound==='function')playSound();
+}
+
+function checkOptionsAlerts(){
+  if(typeof S==='undefined'||typeof TICKERS==='undefined'||typeof TF==='undefined')return;
+  const now=Date.now();
+  TICKERS.forEach(function(t){
+    if(!S[t])return;
+    const bt=getCachedBT(t,TF);
+    ['CALL','PUT'].forEach(function(dir){
+      const key=dir+'-'+t+'-'+TF;
+      if(optsLastAlert[key]&&now-optsLastAlert[key]<120000)return;
+      const result=scoreDirection(t,TF,dir);
+      if(!result||result.blocked||result.score<70)return;
+      optsLastAlert[key]=now;
+      fireOptionsAlert(t,TF,dir,result,bt);
+    });
+  });
+}
 // ══ CROSSOVER ══
 function checkCross(t, tf, p5, p20, close) {
   const s = S[t][tf];
@@ -830,42 +959,21 @@ function checkCross(t, tf, p5, p20, close) {
   fireAlert(t, tf, close, s.ema5, s.ema20, s.vwap);
 }
 
-function fireAlert(t, tf, price, e5, e20, vw) {
-  totalAlerts++;
-  playSound();
-  const card = document.getElementById('c-'+t);
-  if (card) { card.classList.remove('signal'); void card.offsetWidth; card.classList.add('signal'); }
-  const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
-  const el = document.createElement('div');
-  el.className = 'alert-item';
-  el.innerHTML = `
-    <div class="ai-top"><span class="ai-sym">${t}</span><span class="ai-time">${time}</span></div>
-    <div class="ai-sig">🚀 5 EMA × 20 EMA Crossover · ${tf}min · Above VWAP</div>
-    <div class="ai-grid">
-      <div class="ai-cell"><div class="lbl">Price</div><div class="val">${fmt(price)}</div></div>
-      <div class="ai-cell"><div class="lbl">EMA5</div><div class="val">${fmt(e5)}</div></div>
-      <div class="ai-cell"><div class="lbl">VWAP</div><div class="val">${fmt(vw)}</div></div>
-    </div>
-    <button class="ai-plan" onclick="openPlanner('${t}',${price.toFixed(2)})">📋 Plan This Trade →</button>`;
-  const feed = document.getElementById('alertFeed');
-  const noMsg = feed.querySelector('.no-alerts-msg');
-  if (noMsg) noMsg.remove();
-  feed.insertBefore(el, feed.firstChild);
-  document.getElementById('alertCnt').textContent = totalAlerts;
-  document.getElementById('alertCnt').className = 'alert-cnt hot';
-  document.getElementById('statAlerts').textContent = totalAlerts;
+function fireAlert(t,tf,price,e5,e20,vw){
+  const card=document.getElementById('c-'+t);
+  if(card){card.classList.remove('signal');void card.offsetWidth;card.classList.add('signal');}
+  checkOptionsAlerts();
 }
 
 function openPlanner(t, price) {
   window.open(`planner.html?ticker=${t}&price=${price}`, '_blank');
 }
 
-function clearAlerts() {
-  document.getElementById('alertFeed').innerHTML = '<div class="no-alerts-msg">Watching 10 tickers for<br>5 EMA × 20 EMA crossovers<br>above VWAP…<br><br>Alerts fire here with sound.</div>';
-  totalAlerts = 0;
-  document.getElementById('alertCnt').textContent = '0';
-  document.getElementById('alertCnt').className = 'alert-cnt';
-  document.getElementById('statAlerts').textContent = '0';
+function clearAlerts(){
+  clearOpts('call');
+  clearOpts('put');
+  totalAlerts=0;
+  const sa=document.getElementById('statAlerts');if(sa)sa.textContent='0';
 }
 
 // ══ SOUND ══
@@ -1028,7 +1136,7 @@ async function connectLive() {
     const y = today.getFullYear(), m = String(today.getMonth()+1).padStart(2,'0'), d = String(today.getDate()).padStart(2,'0');
     const date = y + '-' + m + '-' + d;
     await Promise.allSettled(TICKERS.map(sym => seedBars(sym, date)));
-    renderAll(); updateStats();
+    renderAll(); updateStats(); checkOptionsAlerts();
 
     // 3. Open the real-time push stream — every trade & minute bar arrives the instant it happens, no polling
     openSocket();
@@ -1260,6 +1368,7 @@ updateMarket(); setInterval(updateMarket,30000);
 // ══ INIT ══
 buildCards(); initDemo(); renderAll(); updateStats();
 setInterval(() => { if (!isLive) tickDemo(); }, 3000);
+setInterval(checkOptionsAlerts, 5000);
 </script>
 </body>
 </html>
