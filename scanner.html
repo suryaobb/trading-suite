@@ -542,50 +542,150 @@ function switchTF(tf) {
   renderAll();
 }
 
-// ══ LIVE DATA ══
+// ══ LIVE DATA (WebSocket streaming — Massive/Polygon Stocks Advanced, real-time push) ══
+let ws = null, wsReconnectDelay = 2000, wsSubscribed = false;
+
 async function connectLive() {
-  const key = apiKey;
-if (!key) return;
+  if (!apiKey) return;
   document.getElementById('sLabel').textContent = 'Connecting...';
   document.getElementById('sDot').className = 'status-dot';
   try {
-    const r = await fetch(`https://api.polygon.io/v2/aggs/ticker/SPY/range/1/minute/2024-01-02/2024-01-02?limit=1&apiKey=${apiKey}`);
-    const d = await r.json();
-    if (d.status==='ERROR'||d.status==='FORBIDDEN') { document.getElementById('sDot').className='status-dot error'; return; }
-  } catch(e) { return; }
-  isLive = true;
-  document.getElementById('sLabel').textContent = 'LIVE';
-  document.getElementById('sDot').className = 'status-dot live';
-  document.getElementById('demoStrip').classList.add('live');
-  await fetchAll();
-  setInterval(fetchAll, 20000);
+    // 1. Snapshot — instant current price & day-change for the whole watchlist in ONE request
+    const snapUrl = 'https://api.massive.com/v2/snapshot/locale/us/markets/stocks/tickers?tickers=' + TICKERS.join(',') + '&apiKey=' + apiKey;
+    const sr = await fetch(snapUrl);
+    const sj = await sr.json();
+    if (sj.status === 'ERROR' || sj.status === 'FORBIDDEN' || sj.status === 'NOT_AUTHORIZED') {
+      document.getElementById('sDot').className = 'status-dot error';
+      return;
+    }
+    (sj.tickers || []).forEach(snap => {
+      const sym = snap.ticker; if (!S[sym]) return;
+      const px = (snap.lastTrade && snap.lastTrade.p) || (snap.min && snap.min.c) || (snap.day && snap.day.c) || S[sym].price;
+      const openPx = (snap.day && snap.day.o) || (snap.prevDay && snap.prevDay.c) || S[sym].open;
+      S[sym].price = px; S[sym].open = openPx;
+      S[sym].change = px - openPx; S[sym].changePct = openPx ? (S[sym].change/openPx*100) : 0;
+      const ts = snap.updated ? Math.floor(snap.updated/1e6) : Date.now();
+      if (!lastDataTime || ts > lastDataTime) lastDataTime = ts;
+    });
+    renderAll(); updateStats();
+
+    // 2. One-time history pull to seed EMA/VWAP (most-recent bars, restored to chronological order)
+    const today = new Date();
+    const y = today.getFullYear(), m = String(today.getMonth()+1).padStart(2,'0'), d = String(today.getDate()).padStart(2,'0');
+    const date = y + '-' + m + '-' + d;
+    await Promise.allSettled(TICKERS.map(sym => seedBars(sym, date)));
+    renderAll(); updateStats();
+
+    // 3. Open the real-time push stream — every trade & minute bar arrives the instant it happens, no polling
+    openSocket();
+  } catch(e) { document.getElementById('sDot').className = 'status-dot error'; }
 }
 
-async function fetchAll() {
-  const today = new Date(); const y=today.getFullYear(), m=String(today.getMonth()+1).padStart(2,'0'), d=String(today.getDate()).padStart(2,'0');
-  const date = `${y}-${m}-${d}`;
-  await Promise.allSettled(TICKERS.map(t => fetchTicker(t, date)));
+async function seedBars(sym, date) {
+  try {
+    const url = 'https://api.massive.com/v2/aggs/ticker/' + sym + '/range/1/minute/' + date + '/' + date + '?adjusted=true&sort=desc&limit=300&apiKey=' + apiKey;
+    const r = await fetch(url);
+    const d = await r.json(); if (!d.results || !d.results.length) return;
+    const mins = d.results.slice().reverse().map(b=>({o:b.o,h:b.h,l:b.l,c:b.c,v:b.v,t:b.t}));
+    S[sym][5].bars = aggregateTo5Min(mins);
+    recalc(sym, 5);
+    S[sym][1].bars = mins.slice(-80);
+    recalc(sym, 1);
+    const lb = mins[mins.length-1];
+    if (lb && (!lastDataTime || lb.t > lastDataTime)) lastDataTime = lb.t;
+  } catch(e) {}
+}
+
+// Roll consecutive 1-minute bars up into 5-minute bars (chronological in → chronological out)
+function aggregateTo5Min(mins) {
+  const out = [];
+  for (let i=0; i<mins.length; i+=5) {
+    const chunk = mins.slice(i, i+5); if (!chunk.length) continue;
+    out.push({
+      o: chunk[0].o, c: chunk[chunk.length-1].c,
+      h: Math.max.apply(null, chunk.map(b=>b.h)), l: Math.min.apply(null, chunk.map(b=>b.l)),
+      v: chunk.reduce((sum,b)=>sum+b.v,0), t: chunk[0].t,
+      _bucket: Math.floor(chunk[0].t/300000)*300000
+    });
+  }
+  return out.slice(-80);
+}
+
+function openSocket() {
+  if (ws) { try { ws.close(); } catch(e){} }
+  wsSubscribed = false;
+  ws = new WebSocket('wss://socket.massive.com/stocks');
+  ws.onopen = () => ws.send(JSON.stringify({ action: 'auth', params: apiKey }));
+  ws.onmessage = (msg) => {
+    let events;
+    try { events = JSON.parse(msg.data); } catch(e) { return; }
+    (Array.isArray(events) ? events : [events]).forEach(handleWsEvent);
+  };
+  ws.onclose = scheduleReconnect;
+  ws.onerror = () => { try { ws.close(); } catch(e){} };
+}
+
+function scheduleReconnect() {
+  if (!apiKey) return;
+  setTimeout(() => { if (isLive) openSocket(); }, wsReconnectDelay);
+  wsReconnectDelay = Math.min(wsReconnectDelay * 1.5, 30000);
+}
+
+function handleWsEvent(ev) {
+  if (ev.ev === 'status') {
+    if (ev.status === 'auth_success' && !wsSubscribed) {
+      wsSubscribed = true; wsReconnectDelay = 2000;
+      const chans = [];
+      TICKERS.forEach(sym => { chans.push('T.'+sym, 'AM.'+sym); });
+      ws.send(JSON.stringify({ action: 'subscribe', params: chans.join(',') }));
+      isLive = true;
+      document.getElementById('sLabel').textContent = 'LIVE';
+      document.getElementById('sDot').className = 'status-dot live';
+      document.getElementById('demoStrip').classList.add('live');
+    }
+    return;
+  }
+  if (ev.ev === 'T') return handleTrade(ev);
+  if (ev.ev === 'AM') return handleMinuteBar(ev);
+}
+
+function handleTrade(ev) {
+  const s = S[ev.sym]; if (!s) return;
+  s.price = ev.p;
+  s.change = s.price - s.open;
+  s.changePct = s.open ? (s.change/s.open*100) : 0;
+  if (!lastDataTime || ev.t > lastDataTime) lastDataTime = ev.t;
+  renderCard(ev.sym);
+}
+
+function handleMinuteBar(ev) {
+  const sym = ev.sym; const s = S[sym]; if (!s) return;
+  const bar = { o: ev.o, h: ev.h, l: ev.l, c: ev.c, v: ev.v, t: ev.s };
+
+  const s1 = s[1];
+  const prev5_1 = s1.ema5, prev20_1 = s1.ema20;
+  s1.bars.push(bar); if (s1.bars.length > 80) s1.bars.shift();
+  recalc(sym, 1);
+  if (prev5_1 && prev20_1) checkCross(sym, 1, prev5_1, prev20_1, bar.c);
+
+  const s5 = s[5];
+  const bucketStart = Math.floor(bar.t/300000)*300000;
+  const last5 = s5.bars[s5.bars.length-1];
+  const prev5_5 = s5.ema5, prev20_5 = s5.ema20;
+  if (last5 && last5._bucket === bucketStart) {
+    last5.c = bar.c; last5.h = Math.max(last5.h, bar.h); last5.l = Math.min(last5.l, bar.l); last5.v += bar.v;
+  } else {
+    s5.bars.push({ o: bar.o, h: bar.h, l: bar.l, c: bar.c, v: bar.v, t: bar.t, _bucket: bucketStart });
+    if (s5.bars.length > 80) s5.bars.shift();
+  }
+  recalc(sym, 5);
+  if (prev5_5 && prev20_5) checkCross(sym, 5, prev5_5, prev20_5, bar.c);
+
+  if (!lastDataTime || ev.e > lastDataTime) lastDataTime = ev.e;
   renderAll(); updateStats();
 }
 
-async function fetchTicker(t, date) {
-  await Promise.all([fetchBars(t,1,date), fetchBars(t,5,date)]);
-}
-
-async function fetchBars(t, tf, date) {
-  try {
-    const r = await fetch(`https://api.polygon.io/v2/aggs/ticker/${t}/range/${tf}/minute/${date}/${date}?adjusted=true&sort=desc&limit=300&apiKey=${apiKey}`);
-    const d = await r.json(); if (!d.results?.length) return;
-    const prev5=S[t][tf].ema5, prev20=S[t][tf].ema20;
-    S[t][tf].bars = d.results.slice().reverse().map(b=>({o:b.o,h:b.h,l:b.l,c:b.c,v:b.v,t:b.t}));
-if (tf===1) { const lb = S[t][tf].bars.at(-1); if (lb && (!lastDataTime || lb.t > lastDataTime)) lastDataTime = lb.t; }
-    recalc(t, tf);
-    if (tf===1) { const last=S[t][tf].bars.at(-1); S[t].price=last.c; S[t].change=last.c-S[t][tf].bars[0].o; S[t].changePct=S[t].change/S[t][tf].bars[0].o*100; }
-    if (prev5&&prev20) checkCross(t, tf, prev5, prev20, S[t][tf].bars.at(-1).c);
-  } catch(e){}
-}
-
-// Auto-connect using the built-in key (no UI, ever)
+// Auto-connect using the built-in key — silent, real-time, push-based (no polling, no UI)
 connectLive();
 
 // ══ CLOCK ══
