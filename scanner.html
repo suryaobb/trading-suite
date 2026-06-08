@@ -32,21 +32,6 @@
   flex-shrink: 0;
 }
 
-.api-row { display: flex; gap: 6px; flex: 1; min-width: 200px; }
-.api-row input {
-  flex: 1;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 7px 12px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  outline: none;
-  font-family: monospace;
-  transition: border-color 0.15s;
-}
-.api-row input:focus { border-color: var(--blue); }
-.api-row input::placeholder { color: var(--text-faint); }
 
 .tf-tabs { display: flex; gap: 3px; }
 .tf-tab {
@@ -269,11 +254,7 @@
   <!-- LEFT -->
   <div class="left-panel">
     <div class="scanner-toolbar">
-      <div class="api-row">
-        <input type="password" id="apiKey" placeholder="Paste Polygon API key to go live...">
-        <button class="btn btn-primary btn-sm" onclick="connectLive()">Connect</button>
-      </div>
-      <div class="tf-tabs">
+            <div class="tf-tabs">
         <button class="tf-tab active" id="tab1" onclick="switchTF(1)">1 Min</button>
         <button class="tf-tab" id="tab5" onclick="switchTF(5)">5 Min</button>
       </div>
@@ -319,7 +300,7 @@ const TICKERS = ['AAPL','MSFT','GOOGL','AMZN','META','NVDA','TSLA','SPY','QQQ','
 const SEED = { AAPL:211, MSFT:449, GOOGL:178, AMZN:198, META:617, NVDA:1080, TSLA:348, SPY:585, QQQ:510, IWM:209 };
 
 // ══ STATE ══
-let TF = 1, muted = false, apiKey = '', isLive = false, totalAlerts = 0, audioCtx = null;
+let TF = 1, muted = false, apiKey = 'eaJZCtLOOObYTtDAeHfSqnUDIo2pVx9O', isLive = false, totalAlerts = 0, audioCtx = null;
 
 const S = {}; // per-ticker state
 TICKERS.forEach(t => {
@@ -560,21 +541,19 @@ function switchTF(tf) {
 
 // ══ LIVE DATA ══
 async function connectLive() {
-  const key = document.getElementById('apiKey').value.trim() || localStorage.getItem('polygonKey');
-  if (!key) { alert('Enter your Polygon API key.'); return; }
-  apiKey = key; localStorage.setItem('polygonKey', key);
+  const key = apiKey;
+if (!key) return;
   document.getElementById('sLabel').textContent = 'Connecting...';
   document.getElementById('sDot').className = 'status-dot';
   try {
     const r = await fetch(`https://api.polygon.io/v2/aggs/ticker/SPY/range/1/minute/2024-01-02/2024-01-02?limit=1&apiKey=${apiKey}`);
     const d = await r.json();
-    if (d.status==='ERROR'||d.status==='FORBIDDEN') { alert('Invalid API key.'); document.getElementById('sDot').className='status-dot error'; return; }
-  } catch(e) { alert('Connection failed.'); return; }
+    if (d.status==='ERROR'||d.status==='FORBIDDEN') { document.getElementById('sDot').className='status-dot error'; return; }
+  } catch(e) { return; }
   isLive = true;
   document.getElementById('sLabel').textContent = 'LIVE';
   document.getElementById('sDot').className = 'status-dot live';
   document.getElementById('demoStrip').classList.add('live');
-  document.getElementById('apiKey').value = '•'.repeat(20);
   await fetchAll();
   setInterval(fetchAll, 20000);
 }
@@ -602,11 +581,8 @@ async function fetchBars(t, tf, date) {
   } catch(e){}
 }
 
-// Auto-connect if key saved
-if (localStorage.getItem('polygonKey')) {
-  document.getElementById('apiKey').value = localStorage.getItem('polygonKey');
-  connectLive();
-}
+// Auto-connect using the built-in key (no UI, ever)
+connectLive();
 
 // ══ CLOCK ══
 function updateMarket() {
