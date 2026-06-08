@@ -571,10 +571,10 @@ async function fetchTicker(t, date) {
 
 async function fetchBars(t, tf, date) {
   try {
-    const r = await fetch(`https://api.polygon.io/v2/aggs/ticker/${t}/range/${tf}/minute/${date}/${date}?adjusted=true&sort=asc&limit=300&apiKey=${apiKey}`);
+    const r = await fetch(`https://api.polygon.io/v2/aggs/ticker/${t}/range/${tf}/minute/${date}/${date}?adjusted=true&sort=desc&limit=300&apiKey=${apiKey}`);
     const d = await r.json(); if (!d.results?.length) return;
     const prev5=S[t][tf].ema5, prev20=S[t][tf].ema20;
-    S[t][tf].bars = d.results.map(b=>({o:b.o,h:b.h,l:b.l,c:b.c,v:b.v,t:b.t}));
+    S[t][tf].bars = d.results.slice().reverse().map(b=>({o:b.o,h:b.h,l:b.l,c:b.c,v:b.v,t:b.t}));
     recalc(t, tf);
     if (tf===1) { const last=S[t][tf].bars.at(-1); S[t].price=last.c; S[t].change=last.c-S[t][tf].bars[0].o; S[t].changePct=S[t].change/S[t][tf].bars[0].o*100; }
     if (prev5&&prev20) checkCross(t, tf, prev5, prev20, S[t][tf].bars.at(-1).c);
