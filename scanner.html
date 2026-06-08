@@ -649,6 +649,12 @@ function handleWsEvent(ev) {
   if (ev.ev === 'AM') return handleMinuteBar(ev);
 }
 
+function touchClock() {
+  const st = document.getElementById('statTime'); const sd = document.getElementById('statDataTime');
+  if (st) st.textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+  if (sd && lastDataTime) sd.textContent = new Date(lastDataTime).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+}
+
 function handleTrade(ev) {
   const s = S[ev.sym]; if (!s) return;
   s.price = ev.p;
@@ -656,6 +662,7 @@ function handleTrade(ev) {
   s.changePct = s.open ? (s.change/s.open*100) : 0;
   if (!lastDataTime || ev.t > lastDataTime) lastDataTime = ev.t;
   renderCard(ev.sym);
+  touchClock();
 }
 
 function handleMinuteBar(ev) {
