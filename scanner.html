@@ -149,6 +149,38 @@
   border: 1px solid var(--border);
   color: var(--text-muted);
 }
+.mkt-strip {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+  margin: 10px 0 16px; padding: 10px 14px;
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px;
+  font-size: 12px;
+}
+.mkt-strip:empty { display: none; }
+.mkt-item { color: var(--text-muted); }
+.mkt-item b { color: var(--text); margin-right: 4px; }
+.mkt-item.muted { font-style: italic; }
+.mkt-item .pos { color: #2ecc71; font-weight: 700; }
+.mkt-item .neg { color: #e74c3c; font-weight: 700; }
+.mkt-regime {
+  margin-left: auto; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px;
+  border: 1px solid var(--border);
+}
+.regime-high-conviction { background: #0a1f12; color: #2ecc71; border-color: #1d6b3d; }
+.regime-choppy { background: #2a2310; color: #f1c40f; border-color: #6b5a1d; }
+.regime-high-vol { background: #2a1212; color: #e74c3c; border-color: #6b1d1d; }
+.regime-risk-off { background: #2a1c10; color: #e67e22; border-color: #6b421d; }
+.regime-mixed { background: var(--bg-input); color: var(--text-muted); }
+.tc-conviction {
+  margin-top: 6px; display: none; flex-direction: column; gap: 3px; font-size: 10px;
+}
+.tc-conviction.show { display: flex; }
+.conv-badge {
+  align-self: flex-start; padding: 2px 7px; border-radius: 5px; font-weight: 700; letter-spacing: .2px;
+}
+.conv-badge.conv-high { background: #0a1f12; color: #2ecc71; }
+.conv-badge.conv-mid { background: #2a2310; color: #f1c40f; }
+.conv-badge.conv-low { background: var(--bg-input); color: var(--text-muted); }
+.conv-marks { color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tc-vwap-pill.above { background: #0a1f12; border-color: #1a4a28; color: #4ade80; }
 .tc-vwap-pill.below { background: #1a0a0a; border-color: #4a1a1a; color: #f87171; }
 
@@ -438,6 +470,8 @@
       🟡 <b>DEMO MODE</b> — Simulated data. Paste your Polygon key above to go live.
     </div>
 
+    <div class="mkt-strip" id="mktConditions"></div>
+
     <div class="ticker-grid" id="tickerGrid"></div>
 
     <div class="stats-bar">
@@ -594,8 +628,134 @@ function recalc(t, tf) {
   const s = S[t][tf]; const bs = s.bars;
   if (bs.length < 20) return;
   s.ema5 = ema(bs, 5); s.ema20 = ema(bs, 20); s.vwap = vwap(bs);
+  s.macd = macdCalc(bs);
+  s.rsi = rsiCalc(bs, 14);
+  s.divergence = s.rsi ? detectDivergence(bs, s.rsi.series) : null;
 }
-function fmt(n) { return n != null ? '$'+n.toFixed(2) : '–'; }
+
+function emaSeries(bars, n) {
+  if (bars.length < n) return [];
+  const k = 2/(n+1);
+  const out = []; let e = bars[0].c; out.push(e);
+  for (let i=1; i<bars.length; i++) { e = bars[i].c*k + e*(1-k); out.push(e); }
+  return out;
+}
+
+function macdCalc(bars) {
+  if (bars.length < 35) return null;
+  const ema12 = emaSeries(bars, 12), ema26 = emaSeries(bars, 26);
+  const macdLine = bars.map((_, i) => ema12[i] - ema26[i]);
+  const k = 2/(9+1);
+  let sig = macdLine[0]; const sigLine = [sig];
+  for (let i=1; i<macdLine.length; i++) { sig = macdLine[i]*k + sig*(1-k); sigLine.push(sig); }
+  const hist = macdLine.map((m,i) => m - sigLine[i]);
+  const n = hist.length;
+  const cross = n >= 2 ? (hist[n-2] <= 0 && hist[n-1] > 0 ? 'bull' : (hist[n-2] >= 0 && hist[n-1] < 0 ? 'bear' : null)) : null;
+  return { macd: macdLine[n-1], signal: sigLine[n-1], hist: hist[n-1], cross };
+}
+
+function rsiCalc(bars, period) {
+  period = period || 14;
+  if (bars.length < period+1) return null;
+  let avgGain = 0, avgLoss = 0;
+  for (let i=1; i<=period; i++) { const ch = bars[i].c - bars[i-1].c; if (ch > 0) avgGain += ch; else avgLoss -= ch; }
+  avgGain /= period; avgLoss /= period;
+  const series = [];
+  for (let i=period+1; i<bars.length; i++) {
+    const ch = bars[i].c - bars[i-1].c;
+    const gain = ch > 0 ? ch : 0, loss = ch < 0 ? -ch : 0;
+    avgGain = (avgGain*(period-1) + gain) / period;
+    avgLoss = (avgLoss*(period-1) + loss) / period;
+    const rsi = avgLoss === 0 ? 100 : (100 - 100/(1 + avgGain/avgLoss));
+    series.push(rsi);
+  }
+  return series.length ? { value: series[series.length-1], series } : null;
+}
+
+function detectDivergence(bars, rsiSeries) {
+  if (!rsiSeries || rsiSeries.length < 10 || bars.length < rsiSeries.length) return null;
+  const n = rsiSeries.length, off = bars.length - n, half = Math.floor(n/2);
+  const w1p = bars.slice(off, off+half), w1r = rsiSeries.slice(0, half);
+  const w2p = bars.slice(off+half), w2r = rsiSeries.slice(half);
+  const lo1 = w1p.reduce((b,c,i,a)=> a[i].l < a[b].l ? i : b, 0);
+  const lo2 = w2p.reduce((b,c,i,a)=> a[i].l < a[b].l ? i : b, 0);
+  const hi1 = w1p.reduce((b,c,i,a)=> a[i].h > a[b].h ? i : b, 0);
+  const hi2 = w2p.reduce((b,c,i,a)=> a[i].h > a[b].h ? i : b, 0);
+  if (w2p[lo2].l < w1p[lo1].l && w2r[lo2] > w1r[lo1]) return 'bullish';
+  if (w2p[hi2].h > w1p[hi1].h && w2r[hi2] < w1r[hi1]) return 'bearish';
+  return null;
+}
+
+const MKT = { spx: null, vix: null, regime: null };
+
+function classifyRegime(spxChg, vixVal, proxy) {
+  let volTag = null, trendTag = null;
+  if (vixVal != null) { volTag = vixVal < 15 ? 'low' : vixVal < 20 ? 'normal' : vixVal < 28 ? 'elevated' : 'high'; }
+  if (spxChg != null) { trendTag = spxChg > 0.15 ? 'up' : spxChg < -0.15 ? 'down' : 'flat'; }
+  const p = proxy ? ' (proxy: SPY)' : '';
+  if (volTag === 'high') return { label: '🔴 High Volatility / Caution' + p, cls: 'regime-high-vol' };
+  if (volTag === 'elevated' && trendTag === 'down') return { label: '🟠 Risk-Off / Downtrend' + p, cls: 'regime-risk-off' };
+  if ((volTag === 'low' || volTag === 'normal' || volTag === null) && trendTag === 'up') return { label: '🟢 High-Conviction / Trending' + p, cls: 'regime-high-conviction' };
+  if (trendTag === 'flat') return { label: '🟡 Choppy / Range-Bound' + p, cls: 'regime-choppy' };
+  if (trendTag === 'down') return { label: '🟠 Risk-Off / Downtrend' + p, cls: 'regime-risk-off' };
+  return { label: '⚪ Mixed Conditions' + p, cls: 'regime-mixed' };
+}
+
+function renderMarketConditions() {
+  const el = document.getElementById('mktConditions');
+  if (!el) return;
+  if (!MKT.spx || !MKT.regime) { el.innerHTML = '<span class="mkt-item muted">Market conditions unavailable' + ELLIP + '</span>'; return; }
+  const spx = MKT.spx, vix = MKT.vix, r = MKT.regime;
+  const spxChg = spx.changePct;
+  const vixTxt = vix ? (vix.value.toFixed(2) + ' (' + (vix.changePct>=0?'+':'') + vix.changePct.toFixed(2) + '%)') : 'unavailable';
+  el.innerHTML =
+    '<span class="mkt-item"><b>SPX</b> ' + spx.value.toFixed(2) + ' <span class="' + (spxChg>=0?'pos':'neg') + '">' + (spxChg>=0?'+':'') + spxChg.toFixed(2) + '%</span></span>' +
+    '<span class="mkt-item"><b>VIX</b> ' + vixTxt + '</span>' +
+    '<span class="mkt-regime ' + r.cls + '">' + r.label + '</span>';
+}
+
+async function fetchMarketConditions() {
+  if (!apiKey) return;
+  try {
+    const res = await fetch('https://api.massive.io/v3/snapshot/indices?ticker.any_of=I:SPX,I:VIX&apiKey=' + apiKey);
+    const j = await res.json();
+    let spx = null, vix = null, proxy = false;
+    if (j && j.results) {
+      j.results.forEach(r => {
+        const v = r.value, chg = (r.session && r.session.change_percent != null) ? r.session.change_percent : null;
+        if (r.ticker === 'I:SPX') spx = { value: v, changePct: chg };
+        if (r.ticker === 'I:VIX') vix = { value: v, changePct: chg };
+      });
+    }
+    if (!spx) {
+      const spy = S['SPY'] && S['SPY']['1D'];
+      if (spy && spy.bars && spy.bars.length > 1) {
+        const last = spy.bars[spy.bars.length-1], first = spy.bars[0];
+        const chg = first.c ? ((last.c - first.c)/first.c*100) : 0;
+        spx = { value: last.c, changePct: chg };
+        proxy = true;
+      }
+    }
+    MKT.spx = spx; MKT.vix = vix;
+    MKT.regime = spx ? classifyRegime(spx.changePct, vix ? vix.value : null, proxy) : null;
+    renderMarketConditions();
+  } catch (e) { /* indices snapshot may require a separate plan tier */ }
+}
+
+function convictionScore(t, tf) {
+  const s = S[t] && S[t][tf];
+  if (!s || !s.bars || s.bars.length < 20) return null;
+  const bars = s.bars, last = bars[bars.length-1];
+  let score = 0; const marks = [];
+  if (s.ema5 != null && s.ema20 != null && s.ema5 > s.ema20) { score++; marks.push('EMA5>EMA20 (uptrend)'); }
+  if (s.vwap != null && last.c > s.vwap) { score++; marks.push('Price above VWAP'); }
+  if (s.macd && (s.macd.cross === 'bull' || s.macd.hist > 0)) { score++; marks.push('MACD bullish'); }
+  if (s.rsi && ((s.rsi.value > 50 && s.rsi.value < 70) || s.divergence === 'bullish')) { score++; marks.push(s.divergence === 'bullish' ? 'Bullish RSI divergence' : 'RSI supportive (50-70)'); }
+  const recentHigh = bars.length >= 20 ? Math.max.apply(null, bars.slice(-20).map(b=>b.h)) : null;
+  if (recentHigh && Math.abs(last.c - recentHigh)/recentHigh < 0.005) { score++; marks.push('Near breakout level'); }
+  if (MKT.regime && MKT.regime.cls === 'regime-high-conviction') { score++; marks.push('Favorable market regime'); }
+  return { score, max: 6, marks };
+}
 
 // ══ DEMO ══
 function demoBar(t) {
@@ -729,7 +889,8 @@ function buildCards() {
         <div class="tc-ind"><div class="tc-ind-lbl">EMA Δ</div><div class="tc-ind-val muted" id="spread-${t}">–</div></div>
       </div>
       <div class="tc-levels" id="levels-${t}">PDH – · PDL – · OR –</div>
-      <div class="tc-vwap-pill" id="pill-${t}">Loading…</div>`;
+      <div class="tc-vwap-pill" id="pill-${t}">Loading…</div>
+      <div class="tc-conviction" id="conv-${t}"></div>`;
     g.appendChild(d);
   });
 }
@@ -779,6 +940,18 @@ function renderCard(t) {
     pill.textContent = aboveVWAP ? '▲ Above VWAP' : '▼ Below VWAP';
     pill.className = 'tc-vwap-pill '+(aboveVWAP?'above':'below');
   }
+  const conv = document.getElementById('conv-'+t);
+  if (conv) {
+    const cs = convictionScore(t, tf);
+    if (cs) {
+      const tier = cs.score >= 5 ? 'high' : cs.score >= 3 ? 'mid' : 'low';
+      conv.innerHTML = '<span class="conv-badge conv-' + tier + '">' + cs.score + '/' + cs.max + ' confluence</span>' +
+        '<span class="conv-marks" title="' + cs.marks.join(' – ') + '">' + (cs.marks.length ? cs.marks.join(' · ') : 'No aligned signals yet') + '</span>';
+      conv.className = 'tc-conviction show';
+    } else {
+      conv.innerHTML = ''; conv.className = 'tc-conviction';
+    }
+  }
 }
 
 function updateStats() {
@@ -807,6 +980,8 @@ let ws = null, wsReconnectDelay = 2000, wsSubscribed = false;
 
 async function connectLive() {
   if (!apiKey) return;
+  fetchMarketConditions();
+  setInterval(fetchMarketConditions, 60000);
   document.getElementById('sLabel').textContent = 'Connecting...';
   document.getElementById('sDot').className = 'status-dot';
   try {
