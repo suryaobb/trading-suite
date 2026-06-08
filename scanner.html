@@ -728,7 +728,7 @@ async function fetchMarketConditions() {
       });
     }
     if (!spx) {
-      const spy = S['SPY'] && S['SPY']['1D'];
+      const spy = S['SPY'] && S['SPY']['1'];
       if (spy && spy.bars && spy.bars.length > 1) {
         const last = spy.bars[spy.bars.length-1], first = spy.bars[0];
         const chg = first.c ? ((last.c - first.c)/first.c*100) : 0;
