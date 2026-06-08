@@ -272,6 +272,7 @@
       <span>Near Cross: <b class="yellow" id="statNear">0</b></span>
       <span>Alerts: <b class="yellow" id="statAlerts">0</b></span>
       <span>Updated: <b id="statTime">–</b></span>
+<span>Data as of: <b id="statDataTime">–</b></span>
     </div>
   </div>
 
@@ -301,6 +302,7 @@ const SEED = { AAPL:211, MSFT:449, GOOGL:178, AMZN:198, META:617, NVDA:1080, TSL
 
 // ══ STATE ══
 let TF = 1, muted = false, apiKey = 'eaJZCtLOOObYTtDAeHfSqnUDIo2pVx9O', isLive = false, totalAlerts = 0, audioCtx = null;
+let lastDataTime = null;
 
 const S = {}; // per-ticker state
 TICKERS.forEach(t => {
@@ -529,6 +531,7 @@ function updateStats() {
   document.getElementById('statBull').textContent = bulls;
   document.getElementById('statNear').textContent = near;
   document.getElementById('statTime').textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+document.getElementById('statDataTime').textContent = lastDataTime ? new Date(lastDataTime).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}) : '–';
 }
 
 // ══ TIMEFRAME ══
@@ -575,6 +578,7 @@ async function fetchBars(t, tf, date) {
     const d = await r.json(); if (!d.results?.length) return;
     const prev5=S[t][tf].ema5, prev20=S[t][tf].ema20;
     S[t][tf].bars = d.results.slice().reverse().map(b=>({o:b.o,h:b.h,l:b.l,c:b.c,v:b.v,t:b.t}));
+if (tf===1) { const lb = S[t][tf].bars.at(-1); if (lb && (!lastDataTime || lb.t > lastDataTime)) lastDataTime = lb.t; }
     recalc(t, tf);
     if (tf===1) { const last=S[t][tf].bars.at(-1); S[t].price=last.c; S[t].change=last.c-S[t][tf].bars[0].o; S[t].changePct=S[t].change/S[t][tf].bars[0].o*100; }
     if (prev5&&prev20) checkCross(t, tf, prev5, prev20, S[t][tf].bars.at(-1).c);
