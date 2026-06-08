@@ -131,6 +131,72 @@ body {
 .hot-text p { font-size: 12px; color: #c8a030; line-height: 1.5; }
 .hot-text a { color: var(--gold); font-weight: 700; }
 
+/* STYLE PROFILE PANEL */
+.style-profile {
+  margin: 12px 16px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.style-profile-header {
+  padding: 10px 14px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.style-profile-header span { font-size: 14px; }
+.style-tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.track-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.track-row:last-child { border-bottom: none; }
+.track-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.track-dot.loft { background: var(--blue); }
+.track-dot.victorian { background: var(--purple); }
+.track-dot.unique { background: var(--green); }
+.track-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.track-desc { font-size: 11px; color: var(--muted); line-height: 1.45; }
+.track-keywords { font-size: 10px; color: var(--faint); margin-top: 3px; }
+.track-keywords span {
+  display: inline-block;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin: 2px 2px 0 0;
+  color: var(--muted);
+}
+.style-hard-pass {
+  padding: 8px 14px 10px;
+  font-size: 11px;
+  color: var(--muted);
+  background: #0f0f18;
+  border-top: 1px solid var(--border);
+}
+.style-hard-pass strong { color: var(--red); }
+
 /* SECTION LABEL */
 .section-label {
   font-size: 10px;
@@ -163,6 +229,7 @@ body {
 .card.track-loft { border-left: 3px solid var(--blue); }
 .card.track-victorian { border-left: 3px solid var(--purple); }
 .card.track-unique { border-left: 3px solid var(--green); }
+.card.track-watch { border-left: 3px solid var(--muted); }
 .card.hidden { display: none; }
 
 .card-img {
@@ -213,6 +280,7 @@ body {
 .badge-hot     { background: #2d1a00; color: var(--gold); border: 1px solid #5a3a00; }
 .badge-gone    { background: var(--raised); color: var(--muted); border: 1px solid var(--border); }
 .badge-watch   { background: #2a1a00; color: #f59e0b; border: 1px solid #4a3000; }
+.badge-verify  { background: #1a1a00; color: #a0a020; border: 1px solid #3a3a00; }
 
 .card-address {
   font-size: 14px;
@@ -254,6 +322,11 @@ body {
   padding: 3px 8px;
   color: var(--muted);
 }
+.feature.highlight {
+  background: #0d1a3a;
+  border-color: #1a3060;
+  color: var(--blue);
+}
 
 .card-note {
   font-size: 12px;
@@ -263,6 +336,7 @@ body {
   padding-top: 10px;
   margin-top: 2px;
 }
+.card-note .warn { color: #a0a020; }
 
 .card-actions {
   display: flex;
@@ -328,7 +402,7 @@ body {
     <div class="move-date">Aug 24 Move-in</div>
   </div>
   <div class="filters">
-    <button class="filter-btn active" onclick="filter('all', this)">All (10)</button>
+    <button class="filter-btn active" onclick="filter('all', this)">All (11)</button>
     <button class="filter-btn" onclick="filter('loft', this)">🏭 Loft</button>
     <button class="filter-btn" onclick="filter('victorian', this)">🏡 Victorian</button>
     <button class="filter-btn" onclick="filter('unique', this)">✨ Unique</button>
@@ -339,7 +413,7 @@ body {
 
 <div class="stats">
   <div class="stat">
-    <div class="stat-val">10</div>
+    <div class="stat-val">11</div>
     <div class="stat-label">Listings</div>
   </div>
   <div class="stat">
@@ -361,7 +435,50 @@ body {
   <div class="hot-icon">🔥</div>
   <div class="hot-text">
     <h3>Action Required — Call The Marquee Now</h3>
-    <p>Unit #707 (same building as your reference loft) has 12-ft ceilings + city views at ~$4,200. Currently "Check Back Soon" — call to get on their notice list before it's listed: <a href="tel:4158285080">(415) 828-5080</a> (Wendy Willbanks, Vesta Asset Mgmt)</p>
+    <p>Unit #707 (same building as your reference loft) has 12-ft ceilings + city views at ~$4,200. Currently "Check Back Soon" — call to get on their notice list before it lists: <a href="tel:4158285080">(415) 828-5080</a> (Wendy Willbanks, Vesta Asset Mgmt)</p>
+  </div>
+</div>
+
+<!-- STYLE PROFILE -->
+<div class="style-profile">
+  <div class="style-profile-header" onclick="toggleStyle()">
+    <span>🎯 What You're Looking For — 3 Tracks</span>
+    <span id="style-toggle">▾</span>
+  </div>
+  <div class="style-tracks" id="style-body">
+    <div class="track-row">
+      <div class="track-dot loft"></div>
+      <div>
+        <div class="track-title">Track 1 — Modern Loft Conversion</div>
+        <div class="track-desc">Historic commercial/industrial building converted to lofts. The Marquee is the gold standard — 1920s Cadillac showroom → SOHO-style units. Soaring ceilings, raw structure, massive windows, open plan.</div>
+        <div class="track-keywords">
+          <span>12ft+ ceilings</span><span>concrete columns</span><span>loft windows</span><span>open plan</span><span>warehouse conversion</span><span>live/work</span>
+        </div>
+      </div>
+    </div>
+    <div class="track-row">
+      <div class="track-dot victorian"></div>
+      <div>
+        <div class="track-title">Track 2 — Renovated Victorian (character intact)</div>
+        <div class="track-desc">Not generic Victorians — needs a gut remodel OR original details preserved: exposed wood, bay windows, railroad flat layout, built-in hutches, skylights, non-rectangular rooms. Modern finish + old bones.</div>
+        <div class="track-keywords">
+          <span>railroad flat</span><span>original detail</span><span>gut remodel</span><span>bay windows</span><span>skylight</span><span>built-in</span><span>period features</span>
+        </div>
+      </div>
+    </div>
+    <div class="track-row">
+      <div class="track-dot unique"></div>
+      <div>
+        <div class="track-title">Track 3 — Converted / Unique Layout</div>
+        <div class="track-desc">Carriage houses, ADUs, converted warehouses, penthouse lofts — anything where the layout itself is the feature. If it couldn't exist in any other city, it qualifies.</div>
+        <div class="track-keywords">
+          <span>carriage house</span><span>penthouse</span><span>top floor</span><span>converted</span><span>unique floorplan</span>
+        </div>
+      </div>
+    </div>
+    <div class="style-hard-pass">
+      <strong>Hard pass:</strong> Standard apartment-building units, cookie-cutter new construction, anything that looks like it could be in any city. Budget: $5k firm — $5k–$5.5k only if the unit is genuinely exceptional.
+    </div>
   </div>
 </div>
 
@@ -380,28 +497,30 @@ body {
         </div>
         <div class="card-badges">
           <span class="badge badge-hot">🔥 Hot</span>
-          <span class="badge badge-loft">Loft</span>
+          <span class="badge badge-loft">Track 1</span>
         </div>
       </div>
       <div class="card-address">151 Alice B Toklas Pl #707</div>
-      <div class="card-hood">The Marquee · Hayes Valley / Polk Gulch</div>
+      <div class="card-hood">The Marquee · Civic Center / Polk Gulch / Hayes Valley</div>
       <div class="card-specs">
         <div class="spec">🛏 <strong>1BR</strong></div>
         <div class="spec">🚿 <strong>1BA</strong></div>
         <div class="spec">📐 <strong>~880 sqft</strong></div>
       </div>
       <div class="card-features">
-        <span class="feature">12-ft ceilings</span>
-        <span class="feature">Concrete columns</span>
-        <span class="feature">City views</span>
+        <span class="feature highlight">12-ft ceilings</span>
+        <span class="feature highlight">Concrete columns</span>
+        <span class="feature highlight">Loft windows</span>
+        <span class="feature">City Hall + Bay views</span>
         <span class="feature">In-unit W/D</span>
-        <span class="feature">Parking incl.</span>
-        <span class="feature">Loft windows</span>
+        <span class="feature">Tandem parking</span>
+        <span class="feature">Roof deck</span>
+        <span class="feature">Gym</span>
       </div>
-      <div class="card-note">Same building as your reference unit (#511). This is the one to chase — call now to get on their list before it officially lists.</div>
+      <div class="card-note">Same building as your reference unit (#511) — same 1920s Cadillac showroom converted by David Baker. Ceilings, columns, windows: identical DNA. Smaller sqft (880 vs 1,267) but height makes it read bigger. Call now before it officially lists.</div>
     </div>
     <div class="card-actions">
-      <a href="tel:4158285080" class="btn btn-call">📞 Call (415) 828-5080</a>
+      <a href="tel:4158285080" class="btn btn-call">📞 (415) 828-5080</a>
       <a href="https://www.apartments.com/151-alice-b-toklas-pl-san-francisco-ca-unit-707/m8b3qsl/" target="_blank" class="btn btn-ghost">View →</a>
     </div>
   </div>
@@ -415,24 +534,26 @@ body {
           <div class="card-price">$4,500</div>
         </div>
         <div class="card-badges">
-          <span class="badge badge-victorian">Victorian</span>
+          <span class="badge badge-victorian">Track 2</span>
           <span class="badge badge-hot">⭐ Top Pick</span>
         </div>
       </div>
       <div class="card-address">779–783 Guerrero St</div>
-      <div class="card-hood">Dolores Heights / Mission</div>
+      <div class="card-hood">Dolores Heights / Mission · Liberty St Historic District</div>
       <div class="card-specs">
         <div class="spec">🛏 <strong>2BR</strong></div>
         <div class="spec">🚿 <strong>1BA</strong></div>
-        <div class="spec">📐 <strong>~1,100 sqft</strong></div>
+        <div class="spec">📐 <strong>~1,008 sqft</strong></div>
       </div>
       <div class="card-features">
-        <span class="feature">Railroad flat layout</span>
-        <span class="feature">Period details</span>
-        <span class="feature">High ceilings</span>
+        <span class="feature highlight">Railroad flat layout</span>
+        <span class="feature highlight">Built-in hutch</span>
+        <span class="feature highlight">Period details throughout</span>
+        <span class="feature">Hardwood floors</span>
         <span class="feature">Near Dolores Park</span>
+        <span class="feature">Walk score 99</span>
       </div>
-      <div class="card-note">Classic SF railroad flat — long open layout with original Victorian details. One block from Mission Dolores Park. The layout IS the feature.</div>
+      <div class="card-note">Listed with "charming light-filled railroad flat, built-in hutch, period details, hardwood floors throughout" — that's the exact copy to look for. Liberty St Historic District. SF Rent Ordinance applies (good for tenant protections).</div>
     </div>
     <div class="card-actions">
       <a href="https://www.zillow.com/apartments/san-francisco-ca/guerrero-street/9pkjgQ/" target="_blank" class="btn btn-primary">View on Zillow →</a>
@@ -448,23 +569,26 @@ body {
           <div class="card-price">$4,250</div>
         </div>
         <div class="card-badges">
-          <span class="badge badge-victorian">Victorian</span>
+          <span class="badge badge-victorian">Track 2</span>
+          <span class="badge badge-hot">⭐ Top Pick</span>
         </div>
       </div>
       <div class="card-address">444 Fell St #B</div>
-      <div class="card-hood">Hayes Valley</div>
+      <div class="card-hood">Hayes Valley · Steps to Patricia's Green</div>
       <div class="card-specs">
         <div class="spec">🛏 <strong>1BR</strong></div>
         <div class="spec">🚿 <strong>1BA</strong></div>
-        <div class="spec">📐 <strong>~900 sqft</strong></div>
+        <div class="spec">📐 <strong>~940 sqft</strong></div>
       </div>
       <div class="card-features">
-        <span class="feature">Skylight</span>
-        <span class="feature">Original trim</span>
-        <span class="feature">Renovated kitchen</span>
-        <span class="feature">Panhandle views</span>
+        <span class="feature highlight">Skylight</span>
+        <span class="feature highlight">Victorian detail throughout</span>
+        <span class="feature highlight">Beautiful stairway</span>
+        <span class="feature">Renovated kitchen + bath</span>
+        <span class="feature">Hardwood floors</span>
+        <span class="feature">Walk score 99</span>
       </div>
-      <div class="card-note">Victorian with a skylight — gets incredible natural light. Gut-renovated kitchen and bath, original details kept. Right on the Panhandle, walkable to Hayes Valley and Duboce Triangle.</div>
+      <div class="card-note">Listed with "Victorian detail throughout" + skylight + "beautiful stairway" — exactly the renovated-with-character profile you want. Dead-center of Hayes Valley's best blocks. This exact unit is probably gone but use it as a template for alert keywords.</div>
     </div>
     <div class="card-actions">
       <a href="https://www.zillow.com/homedetails/444-Fell-St-B-San-Francisco-CA-94102/2078537493_zpid/" target="_blank" class="btn btn-primary">View on Zillow →</a>
@@ -480,29 +604,63 @@ body {
           <div class="card-price">$3,900</div>
         </div>
         <div class="card-badges">
-          <span class="badge badge-unique">Unique</span>
+          <span class="badge badge-unique">Track 3</span>
+          <span class="badge badge-hot">Rare</span>
         </div>
       </div>
       <div class="card-address">156 Dolores St #B</div>
-      <div class="card-hood">Castro / Mission Dolores</div>
+      <div class="card-hood">Castro / Mission Dolores · Steps to Dolores Park</div>
       <div class="card-specs">
         <div class="spec">🛏 <strong>1BR</strong></div>
         <div class="spec">🚿 <strong>1BA</strong></div>
       </div>
       <div class="card-features">
-        <span class="feature">Carriage house</span>
+        <span class="feature highlight">Carriage house</span>
+        <span class="feature highlight">Private entrance</span>
         <span class="feature">Renovated</span>
-        <span class="feature">Private entrance</span>
-        <span class="feature">Dolores Park steps</span>
+        <span class="feature">Tucked behind main house</span>
+        <span class="feature">Large storage</span>
       </div>
-      <div class="card-note">Elegantly renovated carriage house — private entrance, unique architecture. This is exactly the kind of "interesting layout" you're after. Steps from Dolores Park.</div>
+      <div class="card-note">Converted carriage house — original horse/carriage structure behind a Victorian row house. These are rare in SF and exactly the "non-cookie-cutter layout" you want. Private entrance, unique architecture.</div>
     </div>
     <div class="card-actions">
       <a href="https://www.zumper.com/apartment-buildings/p1049693/elegently-redone-carriage-house-castro-district-san-francisco-ca" target="_blank" class="btn btn-primary">View on Zumper →</a>
     </div>
   </div>
 
-  <!-- 5. Duboce Ave 2BR -->
+  <!-- 5. Waller St total remodel -->
+  <div class="card track-victorian" data-track="victorian" data-price="4100" data-status="available">
+    <div class="card-img">🔨</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div>
+          <div class="card-price">$4,100</div>
+        </div>
+        <div class="card-badges">
+          <span class="badge badge-victorian">Track 2</span>
+        </div>
+      </div>
+      <div class="card-address">275B Waller St</div>
+      <div class="card-hood">Duboce Triangle / Lower Haight border</div>
+      <div class="card-specs">
+        <div class="spec">🛏 <strong>1BR</strong></div>
+        <div class="spec">🚿 <strong>1BA</strong></div>
+      </div>
+      <div class="card-features">
+        <span class="feature highlight">Total gut remodel</span>
+        <span class="feature">New kitchen + bath</span>
+        <span class="feature">In-unit W/D</span>
+        <span class="feature">Victorian shell</span>
+        <span class="feature">3 blocks to Duboce Park</span>
+      </div>
+      <div class="card-note">Total gut remodel in a Victorian-era flat — modern finishes, original structure kept. The "renovated Victorian" profile exactly. Listed now, likely gone by August, but use as a template for alerts on this block.</div>
+    </div>
+    <div class="card-actions">
+      <a href="https://sfbay.craigslist.org/sfc/apa/d/san-francisco-total-remodel-1br-1ba/7938067133.html" target="_blank" class="btn btn-primary">View on Craigslist →</a>
+    </div>
+  </div>
+
+  <!-- 6. Duboce Ave 2BR -->
   <div class="card track-victorian" data-track="victorian" data-price="4800" data-status="available">
     <div class="card-img">🌳</div>
     <div class="card-body">
@@ -511,30 +669,63 @@ body {
           <div class="card-price">$4,800</div>
         </div>
         <div class="card-badges">
-          <span class="badge badge-victorian">Victorian</span>
+          <span class="badge badge-victorian">Track 2</span>
           <span class="badge badge-hot">📍 Best Hood</span>
+          <span class="badge badge-verify">Verify photos</span>
         </div>
       </div>
       <div class="card-address">134 Duboce Ave</div>
-      <div class="card-hood">⭐ Duboce Triangle — your #1 hood</div>
+      <div class="card-hood">⭐ Duboce Triangle — your #1 neighborhood</div>
       <div class="card-specs">
         <div class="spec">🛏 <strong>2BR</strong></div>
         <div class="spec">🚿 <strong>1BA</strong></div>
         <div class="spec">📐 <strong>~1,300 sqft</strong></div>
       </div>
       <div class="card-features">
+        <span class="feature">1905-era building</span>
         <span class="feature">Spacious 2BR</span>
-        <span class="feature">Living room</span>
         <span class="feature">Duboce Triangle</span>
+        <span class="feature">Corner unit</span>
       </div>
-      <div class="card-note">In your top neighborhood. Spacious 2BR means you could use the extra room as an office or have guests. Check Craigslist listing for photos to gauge character.</div>
+      <div class="card-note"><span class="warn">⚠ Verify photos:</span> Right neighborhood, 1905 building — but listing copy doesn't call out specific Victorian character. Could be renovated with charm or could be generic. Check interior photos before pursuing. Avail. Jun 12 — too early for Aug 24, but worth watching for a relist.</div>
     </div>
     <div class="card-actions">
       <a href="https://sfbay.craigslist.org/sfc/apa/d/san-francisco-spacious-2br-living-rm/7938981479.html" target="_blank" class="btn btn-primary">View on Craigslist →</a>
     </div>
   </div>
 
-  <!-- 6. Dorland St Castro -->
+  <!-- 7. Steiner St Alamo Square -->
+  <div class="card track-victorian" data-track="victorian" data-price="4800" data-status="available">
+    <div class="card-img">🎨</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div>
+          <div class="card-price">$4,800</div>
+        </div>
+        <div class="card-badges">
+          <span class="badge badge-victorian">Track 2</span>
+          <span class="badge badge-hot">📍 Painted Lady</span>
+        </div>
+      </div>
+      <div class="card-address">700 Steiner St</div>
+      <div class="card-hood">Alamo Square · Painted Ladies block</div>
+      <div class="card-specs">
+        <div class="spec">🛏 <strong>2BR</strong></div>
+        <div class="spec">🚿 <strong>1BA</strong></div>
+      </div>
+      <div class="card-features">
+        <span class="feature highlight">Painted Ladies block</span>
+        <span class="feature">Alamo Square Park views</span>
+        <span class="feature">Victorian row house</span>
+      </div>
+      <div class="card-note">On the most photographed block in SF, directly facing Alamo Square Park. Victorian character doesn't get more authentic than this address. Check whether interior has been renovated or is dated — either way the location is irreplaceable.</div>
+    </div>
+    <div class="card-actions">
+      <a href="https://www.zillow.com/apartments/san-francisco-ca/700-stiner-st.-san-francisco/CkBDB8/" target="_blank" class="btn btn-primary">View on Zillow →</a>
+    </div>
+  </div>
+
+  <!-- 8. Dorland St Castro -->
   <div class="card track-victorian" data-track="victorian" data-price="4200" data-status="available">
     <div class="card-img">🏘️</div>
     <div class="card-body">
@@ -543,7 +734,8 @@ body {
           <div class="card-price">$4,200</div>
         </div>
         <div class="card-badges">
-          <span class="badge badge-victorian">Victorian</span>
+          <span class="badge badge-victorian">Track 2</span>
+          <span class="badge badge-verify">Verify photos</span>
         </div>
       </div>
       <div class="card-address">258 Dorland St #7</div>
@@ -555,15 +747,16 @@ body {
       <div class="card-features">
         <span class="feature">Castro location</span>
         <span class="feature">Tree-lined block</span>
+        <span class="feature">Steps to Dolores Park</span>
       </div>
-      <div class="card-note">Heart of the Castro. Check photos carefully for interior character — the block has strong Victorian streetscape. Good fallback if primary picks fall through.</div>
+      <div class="card-note"><span class="warn">⚠ Verify photos:</span> Strong Victorian streetscape on this block, but listing copy is thin on interior character details. Could be great or generic — check photos. Good fallback if the top picks don't come through.</div>
     </div>
     <div class="card-actions">
       <a href="https://www.zillow.com/homedetails/258-Dorland-St-APT-7-San-Francisco-CA-94114/461104017_zpid/" target="_blank" class="btn btn-primary">View on Zillow →</a>
     </div>
   </div>
 
-  <!-- 7. Castro St -->
+  <!-- 9. Castro St -->
   <div class="card track-unique" data-track="unique" data-price="3950" data-status="available">
     <div class="card-img">🌈</div>
     <div class="card-body">
@@ -572,7 +765,8 @@ body {
           <div class="card-price">$3,950</div>
         </div>
         <div class="card-badges">
-          <span class="badge badge-unique">Unique</span>
+          <span class="badge badge-unique">Track 3</span>
+          <span class="badge badge-verify">Verify photos</span>
         </div>
       </div>
       <div class="card-address">107 Castro St</div>
@@ -585,70 +779,10 @@ body {
         <span class="feature">Castro location</span>
         <span class="feature">Under budget</span>
       </div>
-      <div class="card-note">Right on Castro St — one of SF's most iconic addresses. Verify interior photos for character before pursuing.</div>
+      <div class="card-note"><span class="warn">⚠ Verify photos:</span> Right on Castro St but listing copy is light on character details. Only worth pursuing if interior photos show genuine character — otherwise too generic for your criteria.</div>
     </div>
     <div class="card-actions">
       <a href="https://www.zillow.com/homedetails/107-Castro-St-San-Francisco-CA-94114/462419092_zpid/" target="_blank" class="btn btn-primary">View on Zillow →</a>
-    </div>
-  </div>
-
-  <!-- 8. Waller St total remodel -->
-  <div class="card track-victorian" data-track="victorian" data-price="4100" data-status="available">
-    <div class="card-img">🔨</div>
-    <div class="card-body">
-      <div class="card-top">
-        <div>
-          <div class="card-price">$4,100</div>
-        </div>
-        <div class="card-badges">
-          <span class="badge badge-victorian">Renovated</span>
-        </div>
-      </div>
-      <div class="card-address">275B Waller St</div>
-      <div class="card-hood">Duboce Triangle / Lower Haight</div>
-      <div class="card-specs">
-        <div class="spec">🛏 <strong>1BR</strong></div>
-        <div class="spec">🚿 <strong>1BA</strong></div>
-      </div>
-      <div class="card-features">
-        <span class="feature">Total remodel</span>
-        <span class="feature">Duboce Triangle adjacent</span>
-      </div>
-      <div class="card-note">Craigslist listing describes a total remodel — modern finishes in a Victorian shell. Duboce Triangle adjacent block. Worth viewing for the gut-renovated aesthetic.</div>
-    </div>
-    <div class="card-actions">
-      <a href="https://sfbay.craigslist.org/sfc/apa/d/san-francisco-total-remodel-1br-1ba/7938067133.html" target="_blank" class="btn btn-primary">View on Craigslist →</a>
-    </div>
-  </div>
-
-  <!-- 9. Steiner St Alamo Square -->
-  <div class="card track-victorian" data-track="victorian" data-price="4800" data-status="available">
-    <div class="card-img">🎨</div>
-    <div class="card-body">
-      <div class="card-top">
-        <div>
-          <div class="card-price">$4,800</div>
-        </div>
-        <div class="card-badges">
-          <span class="badge badge-victorian">Victorian</span>
-          <span class="badge badge-hot">📍 Painted Lady</span>
-        </div>
-      </div>
-      <div class="card-address">700 Steiner St</div>
-      <div class="card-hood">Alamo Square</div>
-      <div class="card-specs">
-        <div class="spec">🛏 <strong>2BR</strong></div>
-        <div class="spec">🚿 <strong>1BA</strong></div>
-      </div>
-      <div class="card-features">
-        <span class="feature">Alamo Square Park views</span>
-        <span class="feature">Victorian row house</span>
-        <span class="feature">Painted Lady block</span>
-      </div>
-      <div class="card-note">On the Painted Ladies block facing Alamo Square Park — one of the most iconic addresses in SF. Victorian character doesn't get more real than this.</div>
-    </div>
-    <div class="card-actions">
-      <a href="https://www.zillow.com/apartments/san-francisco-ca/700-stiner-st.-san-francisco/CkBDB8/" target="_blank" class="btn btn-primary">View on Zillow →</a>
     </div>
   </div>
 
@@ -661,7 +795,8 @@ body {
           <div class="card-price">$4,400</div>
         </div>
         <div class="card-badges">
-          <span class="badge badge-victorian">Victorian</span>
+          <span class="badge badge-victorian">Track 2</span>
+          <span class="badge badge-verify">Verify photos</span>
         </div>
       </div>
       <div class="card-address">1935 15th St #2</div>
@@ -671,13 +806,44 @@ body {
         <div class="spec">🚿 <strong>1BA</strong></div>
       </div>
       <div class="card-features">
-        <span class="feature">Castro</span>
-        <span class="feature">Upper Market</span>
+        <span class="feature">Castro / Upper Market</span>
+        <span class="feature">Walk score 99</span>
       </div>
-      <div class="card-note">Upper Castro — elevated position gives some units city views. Victorian streetscape, close to everything. Check photos for interior character before reaching out.</div>
+      <div class="card-note"><span class="warn">⚠ Verify photos:</span> Strong neighborhood, Victorian streetscape — but listing copy doesn't confirm interior character. Check photos before pursuing. Two blocks from Dolores Park.</div>
     </div>
     <div class="card-actions">
       <a href="https://www.zillow.com/homedetails/1935-15th-St-APT-2-San-Francisco-CA-94114/448010987_zpid/" target="_blank" class="btn btn-primary">View on Zillow →</a>
+    </div>
+  </div>
+
+  <!-- 11. Guerrero rooftop 1BR -->
+  <div class="card track-unique" data-track="unique" data-price="4495" data-status="available">
+    <div class="card-img">🌆</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div>
+          <div class="card-price">$4,495</div>
+        </div>
+        <div class="card-badges">
+          <span class="badge badge-unique">Track 3</span>
+        </div>
+      </div>
+      <div class="card-address">2 Guerrero St #301</div>
+      <div class="card-hood">Mission / Dolores Heights border</div>
+      <div class="card-specs">
+        <div class="spec">🛏 <strong>1BR</strong></div>
+        <div class="spec">🚿 <strong>1BA</strong></div>
+      </div>
+      <div class="card-features">
+        <span class="feature highlight">Private deck</span>
+        <span class="feature highlight">Rooftop views</span>
+        <span class="feature">In-unit laundry</span>
+        <span class="feature">Converted building</span>
+      </div>
+      <div class="card-note">Private deck + rooftop views in a converted Mission building — the outdoor space adds genuine personality. Re-search by address closer to August since the direct link may rotate.</div>
+    </div>
+    <div class="card-actions">
+      <a href="https://www.zumper.com/apartments-for-rent/san-francisco-ca/duboce-triangle" target="_blank" class="btn btn-primary">Search Zumper →</a>
     </div>
   </div>
 
@@ -702,21 +868,59 @@ body {
         </div>
       </div>
       <div class="card-address">151 Alice B Toklas Pl #511</div>
-      <div class="card-hood">The Marquee · Hayes Valley / Polk Gulch</div>
+      <div class="card-hood">The Marquee · 1920s Cadillac showroom conversion</div>
       <div class="card-specs">
         <div class="spec">🛏 <strong>1BR</strong></div>
         <div class="spec">🚿 <strong>1BA</strong></div>
         <div class="spec">📐 <strong>1,267 sqft</strong></div>
       </div>
       <div class="card-features">
-        <span class="feature">Soaring ceilings</span>
-        <span class="feature">Oversized windows</span>
-        <span class="feature">SF City Hall view</span>
+        <span class="feature highlight">Soaring ceilings</span>
+        <span class="feature highlight">Oversized windows</span>
+        <span class="feature highlight">SF City Hall view</span>
         <span class="feature">Open loft layout</span>
+        <span class="feature">Hardwood floors</span>
         <span class="feature">In-unit W/D</span>
         <span class="feature">Parking incl.</span>
       </div>
-      <div class="card-note">This is your reference — the gold standard for what you're looking for. Gone now, but #707 in the same building is the next best bet.</div>
+      <div class="card-note">The gold standard. This is what you're looking for — Track 1 loft conversion. #707 in the same building is the closest current match. When writing alert keywords, use the features above as your template.</div>
+    </div>
+  </div>
+</div>
+
+<!-- BUILDING TO WATCH -->
+<div class="section-label">Building to Watch</div>
+<div class="cards">
+  <div class="card track-watch" data-track="loft" data-price="6400" data-status="gone">
+    <div class="card-img">🏭</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div>
+          <div class="card-price over">$6,400</div>
+          <div class="card-price-note">2BR — over budget, but note the building</div>
+        </div>
+        <div class="card-badges">
+          <span class="badge badge-watch">Watch</span>
+          <span class="badge badge-loft">Track 1</span>
+        </div>
+      </div>
+      <div class="card-address">Stagehouse Lofts — 465 10th St</div>
+      <div class="card-hood">SoMa · 1920s stage scenery factory conversion</div>
+      <div class="card-specs">
+        <div class="spec">🛏 <strong>2BR listed</strong></div>
+        <div class="spec">🏢 <strong>18 units total</strong></div>
+      </div>
+      <div class="card-features">
+        <span class="feature highlight">Corrugated steel ceilings</span>
+        <span class="feature highlight">Exposed concrete walls</span>
+        <span class="feature highlight">Split-level open loft</span>
+        <span class="feature">Metal open staircase</span>
+        <span class="feature">Historic Landmark</span>
+      </div>
+      <div class="card-note">Current 2BR listing is $6,400 and out of range — but this building has the exact same industrial conversion DNA as The Marquee. If a 1BR ever comes up here it belongs in your top 3. Watch for it on Craigslist and Apartments.com.</div>
+    </div>
+    <div class="card-actions">
+      <a href="https://sfbay.craigslist.org/sfc/apa/d/san-francisco-landmark-w-loft-enclosed/7923267704.html" target="_blank" class="btn btn-ghost">View listing →</a>
     </div>
   </div>
 </div>
@@ -727,27 +931,27 @@ body {
   <div class="tips-header">Key Actions — Next 6 Weeks</div>
   <div class="tip">
     <div class="tip-icon">📞</div>
-    <div class="tip-text"><strong>Call The Marquee now.</strong> (415) 828-5080, ask for Wendy. Explain you're relocating Aug 24, loved unit #511, want to know when #707 or anything similar lists. This is your #1 action today.</div>
+    <div class="tip-text"><strong>Call The Marquee now.</strong> (415) 828-5080, ask for Wendy Willbanks. Say you're relocating Aug 24, loved unit #511, want to be notified when #707 or any similar unit lists. This is your #1 action today.</div>
   </div>
   <div class="tip">
     <div class="tip-icon">🗓️</div>
-    <div class="tip-text"><strong>Real listings hit mid-July.</strong> SF landlords list 30–45 days before move-in. Your window opens ~July 10. Right now, focus on setting up alerts and making calls.</div>
+    <div class="tip-text"><strong>Real listings hit mid-July.</strong> SF landlords list 30–45 days before move-in. Your window opens ~July 10. Right now is for prep, not panic.</div>
   </div>
   <div class="tip">
     <div class="tip-icon">🔔</div>
-    <div class="tip-text"><strong>Set Zillow + Zumper alerts today.</strong> On Zillow: filter Hayes Valley, Castro, Mission, Duboce Triangle → $3k–$5k → Save Search → enable email alerts. Same on Zumper for instant text alerts.</div>
+    <div class="tip-text"><strong>Set parallel alerts — two tracks.</strong> Track 1 (loft): search Craigslist SF for "loft", "soaring ceilings", "concrete columns", "12 foot", "live work", "151 Alice B Toklas". Track 2 (renovated Victorian): "railroad flat", "original detail", "gut remodel", "bay windows", "skylight", "built-in". Save searches on Zillow + Zumper (Zumper does SMS alerts).</div>
   </div>
   <div class="tip">
     <div class="tip-icon">✈️</div>
-    <div class="tip-text"><strong>Plan a 3-day SF trip July 18–22.</strong> Most landlords require in-person tours. Block those days now. You can do 6–8 viewings in 3 days and apply on the spot.</div>
+    <div class="tip-text"><strong>Plan a 3-day SF trip July 18–22.</strong> Most landlords require in-person tours. Block those days now — you can do 6–8 viewings and apply on the spot.</div>
   </div>
   <div class="tip">
     <div class="tip-icon">📁</div>
-    <div class="tip-text"><strong>Get your docs ready now.</strong> SF landlords move fast: 2 recent pay stubs, last 2 bank statements, 2 reference letters, letter from employer confirming salary, ID. Have these as PDFs on your phone.</div>
+    <div class="tip-text"><strong>Get docs ready now.</strong> 2 recent pay stubs, last 2 bank statements, 2 reference letters, employer letter confirming salary, photo ID. Have these as PDFs on your phone so you can apply within minutes of a showing.</div>
   </div>
   <div class="tip">
     <div class="tip-icon">💰</div>
-    <div class="tip-text"><strong>SF requirement: 3× gross monthly income.</strong> At $5k rent that's $15k/month income. Have proof ready. Many landlords also want first + last + security deposit upfront — budget ~$15k cash to secure a place.</div>
+    <div class="tip-text"><strong>SF requires 3× gross monthly income.</strong> At $5k rent that's $15k/month. Many landlords also want first + last + deposit upfront — budget ~$15k cash to secure a place.</div>
   </div>
 </div>
 
@@ -770,6 +974,14 @@ function filter(type, btn) {
 
     card.classList.toggle('hidden', !show);
   });
+}
+
+function toggleStyle() {
+  const body = document.getElementById('style-body');
+  const toggle = document.getElementById('style-toggle');
+  const hidden = body.style.display === 'none';
+  body.style.display = hidden ? '' : 'none';
+  toggle.textContent = hidden ? '▾' : '▸';
 }
 </script>
 </body>
