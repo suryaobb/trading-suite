@@ -156,6 +156,13 @@
   font-size: 12px;
 }
 .mkt-strip:empty { display: none; }
+.conf-legend-strip { background: var(--bg-surface); border-bottom: 1px solid var(--border); padding: 8px 16px 10px; display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: flex-start; }
+.conf-item { display: flex; align-items: baseline; gap: 5px; font-size: 11px; min-width: 175px; }
+.ci-num { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: var(--border); color: var(--text-muted); font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.ci-label { color: var(--accent); font-weight: 600; }
+.ci-desc { color: var(--text-muted); }
+.conf-score-key { width: 100%; display: flex; gap: 10px; align-items: center; font-size: 11px; color: var(--text-muted); padding-top: 4px; border-top: 1px solid var(--border); margin-top: 2px; }
+.mkt-regime-desc { font-size: 11px; color: var(--text-muted); font-style: italic; }
 .mkt-item { color: var(--text-muted); }
 .mkt-item b { color: var(--text); margin-right: 4px; }
 .mkt-item.muted { font-style: italic; }
@@ -472,6 +479,16 @@
 
     <div class="mkt-strip" id="mktConditions"></div>
 
+    <div id="confLegend" class="conf-legend-strip">
+      <div class="conf-item"><span class="ci-num">1</span><span class="ci-label">EMA5 &gt; EMA20</span><span class="ci-desc">&mdash; Short-term uptrend in place</span></div>
+      <div class="conf-item"><span class="ci-num">2</span><span class="ci-label">Price above VWAP</span><span class="ci-desc">&mdash; Buyers control intraday avg price</span></div>
+      <div class="conf-item"><span class="ci-num">3</span><span class="ci-label">MACD bullish</span><span class="ci-desc">&mdash; Histogram positive or just crossed up</span></div>
+      <div class="conf-item"><span class="ci-num">4</span><span class="ci-label">RSI 50&ndash;70 / divergence</span><span class="ci-desc">&mdash; Healthy zone or bullish reversal forming</span></div>
+      <div class="conf-item"><span class="ci-num">5</span><span class="ci-label">Near breakout</span><span class="ci-desc">&mdash; Within 0.5% of 20-bar high</span></div>
+      <div class="conf-item"><span class="ci-num">6</span><span class="ci-label">Regime favorable</span><span class="ci-desc">&mdash; SPX trending up, VIX low</span></div>
+      <div class="conf-score-key"><span class="conv-badge conv-high" style="padding:1px 7px">5&ndash;6</span> High conviction &mdash; favor entry &nbsp; <span class="conv-badge conv-mid" style="padding:1px 7px">3&ndash;4</span> Medium &mdash; wait for confirmation &nbsp; <span class="conv-badge conv-low" style="padding:1px 7px">0&ndash;2</span> Low &mdash; skip or stand aside</div>
+    </div>
+
     <div class="ticker-grid" id="tickerGrid"></div>
 
     <div class="stats-bar">
@@ -711,7 +728,8 @@ function renderMarketConditions() {
   el.innerHTML =
     '<span class="mkt-item"><b>SPX</b> ' + spx.value.toFixed(2) + ' <span class="' + (spxChg>=0?'pos':'neg') + '">' + (spxChg>=0?'+':'') + spxChg.toFixed(2) + '%</span></span>' +
     '<span class="mkt-item"><b>VIX</b> ' + vixTxt + '</span>' +
-    '<span class="mkt-regime ' + r.cls + '">' + r.label + '</span>';
+    '<span class="mkt-regime ' + r.cls + '">' + r.label + '</span>' +
+    '<span class="mkt-regime-desc">' + ({"regime-high-conviction":"Strong trend, low fear — favor breakouts.","regime-choppy":"No direction — fade extremes, skip chases.","regime-high-vol":"Fear elevated — reduce size, widen stops.","regime-risk-off":"Selling off — defensive only.","regime-mixed":"Mixed signals — wait for clean setups."}[r.cls] || '') + '</span>';
 }
 
 async function fetchMarketConditions() {
