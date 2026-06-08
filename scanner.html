@@ -231,6 +231,25 @@
 .ai-cell .val { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
 .ai-plan { width: 100%; background: var(--grad-blue); border: none; border-radius: 6px; padding: 7px; font-size: 11px; font-weight: 700; color: #fff; cursor: pointer; transition: opacity 0.15s; }
 .ai-plan:hover { opacity: 0.85; }
+.tc-levels {
+  display: flex; gap: 5px; flex-wrap: wrap; align-items: center;
+  font-size: 10px; font-family: 'SF Mono', Menlo, Consolas, monospace;
+  color: var(--text-faint); margin: 7px 0; padding: 6px 8px;
+  background: rgba(148,163,184,0.06);
+  border-radius: var(--r-sm); border: 1px solid var(--border);
+}
+.tc-levels .lvl-pdh { color: var(--green); font-weight: 700; }
+.tc-levels .lvl-pdl { color: var(--red); font-weight: 700; }
+.tc-levels .lvl-or  { color: var(--blue); font-weight: 700; }
+.tc-levels .lvl-sep { color: var(--text-faint); opacity: 0.5; }
+
+.t-card.breakout-flash { animation: breakoutPulse 1.2s ease-in-out 4; border-color: #a78bfa; }
+@keyframes breakoutPulse {
+  0%,100% { box-shadow: none; }
+  50%     { box-shadow: 0 0 18px rgba(167,139,250,0.45); }
+}
+.breakout-item { border-left: 3px solid #a78bfa; }
+.breakout-item .ai-sig { color: #c4b5fd; }
 </style>
 </head>
 <body>
@@ -308,6 +327,7 @@ const S = {}; // per-ticker state
 TICKERS.forEach(t => {
   S[t] = {
     price: SEED[t], open: SEED[t], change: 0, changePct: 0, lastAlert: 0,
+    pdHigh: null, pdLow: null, orHigh: null, orLow: null, lastBreakoutAlert: 0,
     1: { bars:[], ema5:null, ema20:null, vwap:null },
     5: { bars:[], ema5:null, ema20:null, vwap:null }
   };
@@ -469,12 +489,13 @@ function buildCards() {
         <div class="tc-ind"><div class="tc-ind-lbl">VWAP</div><div class="tc-ind-val muted" id="vwap-${t}">–</div></div>
         <div class="tc-ind"><div class="tc-ind-lbl">EMA Δ</div><div class="tc-ind-val muted" id="spread-${t}">–</div></div>
       </div>
+      <div class="tc-levels" id="levels-${t}">PDH – · PDL – · OR –</div>
       <div class="tc-vwap-pill" id="pill-${t}">Loading…</div>`;
     g.appendChild(d);
   });
 }
 
-function renderAll() { TICKERS.forEach(t => renderCard(t)); }
+function renderAll() { TICKERS.forEach(t => { renderCard(t); updateLevelsDisplay(t); }); }
 
 function renderCard(t) {
   const card = document.getElementById('c-'+t); if (!card) return;
@@ -564,6 +585,7 @@ async function connectLive() {
       const openPx = (snap.day && snap.day.o) || (snap.prevDay && snap.prevDay.c) || S[sym].open;
       S[sym].price = px; S[sym].open = openPx;
       S[sym].change = px - openPx; S[sym].changePct = openPx ? (S[sym].change/openPx*100) : 0;
+      if (snap.prevDay) { S[sym].pdHigh = snap.prevDay.h || null; S[sym].pdLow = snap.prevDay.l || null; }
       const ts = snap.updated ? Math.floor(snap.updated/1e6) : Date.now();
       if (!lastDataTime || ts > lastDataTime) lastDataTime = ts;
     });
@@ -581,12 +603,28 @@ async function connectLive() {
   } catch(e) { document.getElementById('sDot').className = 'status-dot error'; }
 }
 
+function etHM(ms) {
+  const dt = new Date(ms);
+  const dst = dt.getTimezoneOffset() < new Date(dt.getFullYear(),0,1).getTimezoneOffset();
+  const et = new Date(dt.getTime() + (dt.getTimezoneOffset() + (dst ? -4 : -5)*60) * 60000);
+  return et.getHours()*60 + et.getMinutes();
+}
+function inOpeningRange(ms) {
+  const m = etHM(ms);
+  return m >= 9*60+30 && m < 9*60+45;
+}
+
 async function seedBars(sym, date) {
   try {
     const url = 'https://api.massive.com/v2/aggs/ticker/' + sym + '/range/1/minute/' + date + '/' + date + '?adjusted=true&sort=desc&limit=300&apiKey=' + apiKey;
     const r = await fetch(url);
     const d = await r.json(); if (!d.results || !d.results.length) return;
     const mins = d.results.slice().reverse().map(b=>({o:b.o,h:b.h,l:b.l,c:b.c,v:b.v,t:b.t}));
+    const orBars = mins.filter(b => inOpeningRange(b.t));
+    if (orBars.length) {
+      S[sym].orHigh = Math.max.apply(null, orBars.map(b=>b.h));
+      S[sym].orLow = Math.min.apply(null, orBars.map(b=>b.l));
+    }
     S[sym][5].bars = aggregateTo5Min(mins);
     recalc(sym, 5);
     S[sym][1].bars = mins.slice(-80);
@@ -657,17 +695,24 @@ function touchClock() {
 
 function handleTrade(ev) {
   const s = S[ev.sym]; if (!s) return;
+  const prevPrice = s.price;
   s.price = ev.p;
   s.change = s.price - s.open;
   s.changePct = s.open ? (s.change/s.open*100) : 0;
   if (!lastDataTime || ev.t > lastDataTime) lastDataTime = ev.t;
+  checkBreakout(ev.sym, prevPrice, s.price);
   renderCard(ev.sym);
+  updateLevelsDisplay(ev.sym);
   touchClock();
 }
 
 function handleMinuteBar(ev) {
   const sym = ev.sym; const s = S[sym]; if (!s) return;
   const bar = { o: ev.o, h: ev.h, l: ev.l, c: ev.c, v: ev.v, t: ev.s };
+  if (inOpeningRange(bar.t)) {
+    s.orHigh = (s.orHigh != null) ? Math.max(s.orHigh, bar.h) : bar.h;
+    s.orLow  = (s.orLow  != null) ? Math.min(s.orLow,  bar.l) : bar.l;
+  }
 
   const s1 = s[1];
   const prev5_1 = s1.ema5, prev20_1 = s1.ema20;
@@ -690,6 +735,76 @@ function handleMinuteBar(ev) {
 
   if (!lastDataTime || ev.e > lastDataTime) lastDataTime = ev.e;
   renderAll(); updateStats();
+}
+
+function checkBreakout(sym, prevPrice, price) {
+  const s = S[sym];
+  const now = Date.now();
+  if (now - s.lastBreakoutAlert < 120000) return; // debounce 2min
+  const levels = [
+    [s.pdHigh, 'Prior-Day High', 'up'],
+    [s.pdLow,  'Prior-Day Low',  'down'],
+    [s.orHigh, 'Opening-Range High', 'up'],
+    [s.orLow,  'Opening-Range Low',  'down']
+  ];
+  for (let i=0; i<levels.length; i++) {
+    const level = levels[i][0], name = levels[i][1], dir = levels[i][2];
+    if (level == null) continue;
+    if (dir === 'up' && prevPrice <= level && price > level) { s.lastBreakoutAlert = now; fireBreakoutAlert(sym, name, level, price, 'up'); return; }
+    if (dir === 'down' && prevPrice >= level && price < level) { s.lastBreakoutAlert = now; fireBreakoutAlert(sym, name, level, price, 'down'); return; }
+  }
+}
+
+function playBreakoutSound() {
+  if (muted) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    [[523,0],[784,0.11],[1047,0.22]].forEach(([freq,del]) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'triangle'; o.frequency.value = freq;
+      const tt = audioCtx.currentTime+del;
+      g.gain.setValueAtTime(0,tt); g.gain.linearRampToValueAtTime(0.2,tt+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001,tt+0.26);
+      o.start(tt); o.stop(tt+0.26);
+    });
+  } catch(e){}
+}
+
+function fireBreakoutAlert(sym, levelName, levelPrice, price, dir) {
+  totalAlerts++;
+  playBreakoutSound();
+  const card = document.getElementById('c-'+sym);
+  if (card) { card.classList.remove('breakout-flash'); void card.offsetWidth; card.classList.add('breakout-flash'); }
+  const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+  const arrow = dir === 'up' ? '🚀' : '🔻';
+  const verb = dir === 'up' ? 'broke ABOVE' : 'broke BELOW';
+  const el = document.createElement('div');
+  el.className = 'alert-item breakout-item';
+  el.innerHTML = `
+    <div class="ai-top"><span class="ai-sym">${sym}</span><span class="ai-time">${time}</span></div>
+    <div class="ai-sig">${arrow} ${verb} ${levelName} ($${levelPrice.toFixed(2)})</div>
+    <div class="ai-grid">
+      <div class="ai-cell"><div class="lbl">Price</div><div class="val">$${price.toFixed(2)}</div></div>
+      <div class="ai-cell"><div class="lbl">Level</div><div class="val">$${levelPrice.toFixed(2)}</div></div>
+      <div class="ai-cell"><div class="lbl">Type</div><div class="val">${levelName}</div></div>
+    </div>`;
+  const feed = document.getElementById('alertFeed');
+  const noMsg = feed.querySelector('.no-alerts-msg');
+  if (noMsg) noMsg.remove();
+  feed.insertBefore(el, feed.firstChild);
+  document.getElementById('alertCnt').textContent = totalAlerts;
+  document.getElementById('alertCnt').className = 'alert-cnt hot';
+  document.getElementById('statAlerts').textContent = totalAlerts;
+}
+
+function updateLevelsDisplay(sym) {
+  const el = document.getElementById('levels-'+sym); if (!el) return;
+  const s = S[sym];
+  const pdh = s.pdHigh != null ? '$'+s.pdHigh.toFixed(2) : '–';
+  const pdl = s.pdLow  != null ? '$'+s.pdLow.toFixed(2)  : '–';
+  const orr = (s.orHigh != null && s.orLow != null) ? ('$'+s.orLow.toFixed(2)+' – $'+s.orHigh.toFixed(2)) : '–';
+  el.innerHTML = '<span class="lvl-pdh">PDH ' + pdh + '</span><span class="lvl-sep">·</span><span class="lvl-pdl">PDL ' + pdl + '</span><span class="lvl-sep">·</span><span class="lvl-or">OR ' + orr + '</span>';
 }
 
 // Auto-connect using the built-in key — silent, real-time, push-based (no polling, no UI)
