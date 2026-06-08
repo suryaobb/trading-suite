@@ -250,6 +250,57 @@
 }
 .breakout-item { border-left: 3px solid #a78bfa; }
 .breakout-item .ai-sig { color: #c4b5fd; }
+.edit-tickers-btn {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.edit-tickers-btn:hover { border-color: var(--blue); color: var(--blue); }
+.ticker-editor-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(8,12,20,0.6);
+  backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.15s ease;
+}
+.ticker-editor-overlay.open { opacity: 1; pointer-events: all; }
+.ticker-editor-panel {
+  width: min(440px, 92vw);
+  max-height: 86vh; overflow: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+}
+.te-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.te-title { font-size: 15px; font-weight: 800; color: var(--text-primary); }
+.te-close { background: transparent; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer; padding: 4px 8px; border-radius: var(--r-sm); }
+.te-close:hover { color: var(--text-primary); background: var(--bg-input); }
+.te-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5; }
+.ticker-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; margin-bottom: 14px; padding: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r-sm); }
+.ticker-chip { display: inline-flex; align-items: center; gap: 6px; background: rgba(56,189,248,0.12); color: var(--blue); border: 1px solid rgba(56,189,248,0.3); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 12px; font-weight: 700; font-family: monospace; }
+.ticker-chip button { background: rgba(255,255,255,0.08); border: none; color: inherit; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; font-size: 10px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.ticker-chip button:hover { background: var(--red); color: #fff; }
+.ticker-empty-msg { font-size: 12px; color: var(--text-faint); padding: 6px 2px; }
+.te-add-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.te-input { flex: 1; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 9px 12px; font-size: 13px; font-weight: 700; font-family: monospace; letter-spacing: 0.04em; color: var(--text-primary); text-transform: uppercase; }
+.te-input:focus { outline: none; border-color: var(--blue); }
+.te-add-btn { background: rgba(56,189,248,0.12); border: 1px solid var(--blue); color: var(--blue); border-radius: var(--r-sm); padding: 9px 16px; font-size: 12px; font-weight: 800; cursor: pointer; }
+.te-add-btn:hover { background: rgba(56,189,248,0.22); }
+.te-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.te-actions-right { display: flex; gap: 8px; }
+.te-btn { border-radius: var(--r-sm); padding: 9px 16px; font-size: 12px; font-weight: 800; cursor: pointer; border: 1px solid var(--border); }
+.te-btn-ghost { background: transparent; color: var(--text-muted); }
+.te-btn-ghost:hover { color: var(--text-primary); border-color: var(--text-muted); }
+.te-btn-primary { background: var(--blue); border-color: var(--blue); color: #06222f; }
+.te-btn-primary:hover { filter: brightness(1.08); }
 </style>
 </head>
 <body>
@@ -278,6 +329,7 @@
         <button class="tf-tab" id="tab5" onclick="switchTF(5)">5 Min</button>
       </div>
       <button class="mute-toggle" id="muteBtn" onclick="toggleMute()" title="Toggle alerts">🔔</button>
+      <button class="edit-tickers-btn" id="editTickersBtn" onclick="openTickerEditor()" title="Edit watchlist">⚙️ Tickers</button>
     </div>
 
     <div class="demo-strip" id="demoStrip">
@@ -314,10 +366,95 @@
 
 </div>
 
+<div class="ticker-editor-overlay" id="tickerEditorOverlay">
+  <div class="ticker-editor-panel">
+    <div class="te-head">
+      <div class="te-title">📋 Edit Watchlist</div>
+      <button class="te-close" onclick="closeTickerEditor()" title="Close">✕</button>
+    </div>
+    <div class="te-sub">Add or remove symbols, then save to reload the scanner with your new list. <span id="tickerEditorCount"></span></div>
+    <div class="ticker-chips" id="tickerEditorChips"></div>
+    <div class="te-add-row">
+      <input type="text" id="tickerInput" class="te-input" placeholder="e.g. AMD" maxlength="6" onkeydown="if(event.key==='Enter') addEditorTicker();">
+      <button class="te-add-btn" onclick="addEditorTicker()">+ Add</button>
+    </div>
+    <div class="te-actions">
+      <button class="te-btn te-btn-ghost" onclick="resetTickerEditor()">Reset to default</button>
+      <div class="te-actions-right">
+        <button class="te-btn te-btn-ghost" onclick="closeTickerEditor()">Cancel</button>
+        <button class="te-btn te-btn-primary" onclick="saveTickerEditor()">Save &amp; Reload</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══ CONFIG ══
-const TICKERS = ['AAPL','MSFT','GOOGL','AMZN','META','NVDA','TSLA','SPY','QQQ','IWM'];
+const DEFAULT_TICKERS = ['AAPL','MSFT','GOOGL','AMZN','META','NVDA','TSLA','SPY','QQQ','IWM'];
+function loadWatchlist() {
+  try {
+    const raw = localStorage.getItem('scanner_watchlist');
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length) return arr.map(function(s){ return String(s).toUpperCase().trim(); }).filter(Boolean);
+    }
+  } catch (e) {}
+  return DEFAULT_TICKERS.slice();
+}
+function saveWatchlist(arr) {
+  try { localStorage.setItem('scanner_watchlist', JSON.stringify(arr)); } catch (e) {}
+}
+const TICKERS = loadWatchlist();
+
+let _editorList = [];
+function openTickerEditor() {
+  _editorList = TICKERS.slice();
+  renderTickerEditorList();
+  document.getElementById('tickerEditorOverlay').classList.add('open');
+  const inp = document.getElementById('tickerInput');
+  inp.value = '';
+  setTimeout(function(){ inp.focus(); }, 50);
+}
+function closeTickerEditor() {
+  document.getElementById('tickerEditorOverlay').classList.remove('open');
+}
+function renderTickerEditorList() {
+  const wrap = document.getElementById('tickerEditorChips');
+  if (_editorList.length) {
+    wrap.innerHTML = _editorList.map(function(s) {
+      return '<span class="ticker-chip">' + s + '<button onclick="removeEditorTicker(\'' + s + '\')" title="Remove ' + s + '">✕</button></span>';
+    }).join('');
+  } else {
+    wrap.innerHTML = '<span class="ticker-empty-msg">No tickers yet — add one below.</span>';
+  }
+  document.getElementById('tickerEditorCount').textContent = _editorList.length + (_editorList.length === 1 ? ' ticker' : ' tickers');
+}
+function addEditorTicker() {
+  const input = document.getElementById('tickerInput');
+  const sym = input.value.toUpperCase().trim().replace(/[^A-Z.]/g, '');
+  if (!sym) return;
+  if (_editorList.includes(sym)) { input.value = ''; return; }
+  if (_editorList.length >= 24) { alert('Watchlist limit is 24 tickers.'); return; }
+  _editorList.push(sym);
+  renderTickerEditorList();
+  input.value = '';
+  input.focus();
+}
+function removeEditorTicker(sym) {
+  _editorList = _editorList.filter(function(s){ return s !== sym; });
+  renderTickerEditorList();
+}
+function saveTickerEditor() {
+  if (!_editorList.length) { alert('Add at least one ticker before saving.'); return; }
+  saveWatchlist(_editorList);
+  location.reload();
+}
+function resetTickerEditor() {
+  _editorList = DEFAULT_TICKERS.slice();
+  renderTickerEditorList();
+}
 const SEED = { AAPL:211, MSFT:449, GOOGL:178, AMZN:198, META:617, NVDA:1080, TSLA:348, SPY:585, QQQ:510, IWM:209 };
+TICKERS.forEach(t => { if (!(t in SEED)) SEED[t] = 100; });
 
 // ══ STATE ══
 let TF = 1, muted = false, apiKey = 'eaJZCtLOOObYTtDAeHfSqnUDIo2pVx9O', isLive = false, totalAlerts = 0, audioCtx = null;
