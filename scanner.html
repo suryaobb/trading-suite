@@ -942,7 +942,7 @@ function renderCard(t) {
   }
   const conv = document.getElementById('conv-'+t);
   if (conv) {
-    const cs = convictionScore(t, tf);
+    const cs = convictionScore(t, TF);
     if (cs) {
       const tier = cs.score >= 5 ? 'high' : cs.score >= 3 ? 'mid' : 'low';
       conv.innerHTML = '<span class="conv-badge conv-' + tier + '">' + cs.score + '/' + cs.max + ' confluence</span>' +
