@@ -1,0 +1,26 @@
+name: Daily Apartment Scan
+
+on:
+  schedule:
+    - cron: '0 15 * * *'   # 8 am PT (15:00 UTC) every day
+  workflow_dispatch:         # also allow manual "Run workflow" button
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # needed to commit apartments.html
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run apartment scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python apt_scanner.py
