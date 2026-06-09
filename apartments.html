@@ -3,25 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SF Apartment Hunt â Surya</title>
+<title>SF Apartment Hunt</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0a0a0f;
-  --surface: #13131a;
-  --raised: #1a1a24;
-  --border: #252535;
-  --border-bright: #3a3a55;
-  --text: #f0f0f8;
-  --muted: #7070a0;
-  --faint: #303050;
-  --gold: #f5c842;
-  --green: #34d399;
+  --bg: #0f0f13;
+  --card: #18181f;
+  --card-hover: #1e1e27;
+  --border: #2a2a38;
+  --text: #e8e8f0;
+  --muted: #6868a0;
+  --label: #9090c0;
+  --gold: #f0b429;
+  --green: #22c55e;
   --blue: #60a5fa;
   --red: #f87171;
   --purple: #a78bfa;
-  --r: 14px;
 }
 
 body {
@@ -30,1230 +28,945 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  padding-bottom: 60px;
 }
 
-/* HEADER */
+/* ââ HEADER âââââââââââââââââââââââââââââââââââââââ */
 .header {
-  background: var(--surface);
+  background: #13131a;
   border-bottom: 1px solid var(--border);
-  padding: 16px 20px 14px;
+  padding: 16px 24px;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 50;
 }
-.header-top {
+.header-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
-.header h1 {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
+.header-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
 }
-.header h1 span { color: var(--gold); }
-.move-date {
-  font-size: 11px;
-  background: #1a1500;
-  border: 1px solid #3a2e00;
-  color: var(--gold);
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-weight: 700;
+.header-sub {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
 }
+.stats {
+  display: flex;
+  gap: 16px;
+  margin-left: auto;
+}
+.stat { font-size: 13px; color: var(--muted); }
+.stat strong { color: var(--text); font-weight: 600; }
 
-/* FILTERS */
 .filters {
   display: flex;
   gap: 6px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 2px;
-  scrollbar-width: none;
+  margin-top: 12px;
+  flex-wrap: wrap;
 }
-.filters::-webkit-scrollbar { display: none; }
 .filter-btn {
-  flex-shrink: 0;
-  background: var(--raised);
+  background: transparent;
   border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
+  color: var(--label);
   cursor: pointer;
+  font-size: 13px;
+  padding: 5px 14px;
   transition: all 0.15s;
-  white-space: nowrap;
 }
+.filter-btn:hover { border-color: #4a4a70; color: var(--text); }
 .filter-btn.active {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: #000;
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+  font-weight: 500;
 }
 
-/* STATS BAR */
-.stats {
-  display: flex;
-  gap: 0;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
-}
-.stat {
-  flex: 1;
-  padding: 10px 0;
-  text-align: center;
-}
-.stat + .stat { border-left: 1px solid var(--border); }
-.stat-val { font-size: 18px; font-weight: 800; color: var(--text); }
-.stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-/* HOT LEAD BANNER */
-.hot-banner {
-  margin: 16px 16px 0;
-  background: linear-gradient(135deg, #2d1a00, #1a1200);
-  border: 1px solid #5a3a00;
-  border-radius: var(--r);
-  padding: 14px 16px;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  animation: pulse-gold 3s infinite;
-}
-@keyframes pulse-gold {
-  0%,100% { box-shadow: 0 0 0 0 rgba(245,200,66,0); }
-  50%      { box-shadow: 0 0 16px 0 rgba(245,200,66,0.2); }
-}
-.hot-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
-.hot-text h3 { font-size: 13px; font-weight: 800; color: var(--gold); margin-bottom: 3px; }
-.hot-text p { font-size: 12px; color: #c8a030; line-height: 1.5; }
-.hot-text a { color: var(--gold); font-weight: 700; }
-
-/* TASTE METER */
-.taste-meter {
-  margin: 12px 16px 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-  display: none;
-}
-.taste-meter.visible { display: block; }
-.taste-header {
-  padding: 10px 14px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--muted);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.taste-body {
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.taste-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.taste-label {
-  font-size: 11px;
-  color: var(--muted);
-  width: 80px;
-  flex-shrink: 0;
-}
-.taste-bar-wrap {
-  flex: 1;
-  height: 6px;
-  background: var(--raised);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.taste-bar {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.4s ease;
-}
-.taste-bar.love { background: var(--green); }
-.taste-bar.pass { background: var(--red); }
-.taste-score {
-  font-size: 11px;
-  font-weight: 700;
-  width: 30px;
-  text-align: right;
-}
-.taste-insight {
-  margin-top: 4px;
-  padding: 8px 10px;
-  background: var(--raised);
-  border-radius: 8px;
-  font-size: 11px;
-  color: var(--muted);
-  line-height: 1.5;
-}
-.taste-insight strong { color: var(--text); }
-.search-query {
-  margin-top: 8px;
-  padding: 8px 10px;
-  background: #0d1a0d;
-  border: 1px solid #1a3a1a;
-  border-radius: 8px;
-  font-size: 11px;
-  color: var(--green);
-  font-family: monospace;
-  cursor: pointer;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-.search-query-label {
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #1a5a1a;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.search-query-text { flex: 1; word-break: break-all; }
-.copy-hint { font-size: 9px; color: #1a4a1a; flex-shrink: 0; margin-top: 1px; }
-
-/* STYLE PROFILE PANEL */
-.style-profile {
-  margin: 12px 16px 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-}
-.style-profile-header {
-  padding: 10px 14px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--muted);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-}
-.style-profile-header span { font-size: 14px; }
-.style-tracks {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.track-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 11px 14px;
-  border-bottom: 1px solid var(--border);
-}
-.track-row:last-child { border-bottom: none; }
-.track-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-top: 4px;
-  flex-shrink: 0;
-}
-.track-dot.loft { background: var(--blue); }
-.track-dot.victorian { background: var(--purple); }
-.track-dot.unique { background: var(--green); }
-.track-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
-.track-desc { font-size: 11px; color: var(--muted); line-height: 1.45; }
-.track-keywords { font-size: 10px; color: var(--faint); margin-top: 3px; }
-.track-keywords span {
-  display: inline-block;
-  background: var(--raised);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 1px 5px;
-  margin: 2px 2px 0 0;
-  color: var(--muted);
-}
-.style-hard-pass {
-  padding: 8px 14px 10px;
-  font-size: 11px;
-  color: var(--muted);
-  background: #0f0f18;
-  border-top: 1px solid var(--border);
-}
-.style-hard-pass strong { color: var(--red); }
-
-/* SECTION LABEL */
-.section-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--muted);
-  padding: 16px 20px 8px;
+/* ââ GRID âââââââââââââââââââââââââââââââââââââââââ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-/* SAVED SECTION */
-.saved-section { display: none; }
-.saved-section.visible { display: block; }
-.saved-header {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--green);
-  padding: 16px 20px 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.saved-count {
-  background: #0d2a1a;
-  border: 1px solid #1a4a2a;
-  color: var(--green);
-  border-radius: 20px;
-  padding: 1px 7px;
-  font-size: 10px;
-}
-
-/* CARDS */
-.cards {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 0 16px;
-}
-
+/* ââ CARD âââââââââââââââââââââââââââââââââââââââââ */
 .card {
-  background: var(--surface);
+  background: var(--card);
   border: 1px solid var(--border);
-  border-radius: var(--r);
+  border-radius: 12px;
   overflow: hidden;
-  transition: border-color 0.2s, opacity 0.3s, transform 0.3s, max-height 0.4s;
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  max-height: 1000px;
+  transition: border-color 0.2s, transform 0.2s;
+  display: flex;
+  flex-direction: column;
 }
-.card:hover { border-color: var(--border-bright); }
-.card.track-loft { border-left: 3px solid var(--blue); }
-.card.track-victorian { border-left: 3px solid var(--purple); }
-.card.track-unique { border-left: 3px solid var(--green); }
-.card.track-watch { border-left: 3px solid var(--muted); }
+.card:hover { border-color: #3a3a55; transform: translateY(-1px); }
+.card.loved { border-color: #22c55e60; background: #18201c; }
+.card.loved:hover { border-color: #22c55e; }
+.card.passed { opacity: 0; pointer-events: none; height: 0; overflow: hidden; padding: 0; margin: 0; border: none; transition: all 0.3s ease; }
 .card.hidden { display: none; }
 
-/* LOVED / PASSED STATE */
-.card.loved {
-  border-color: var(--green);
-  border-left: 3px solid var(--green);
-}
-.card.passed {
-  opacity: 0;
-  max-height: 0;
-  transform: translateX(60px);
-  pointer-events: none;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-.card-img {
+/* Photo */
+.card-photo {
   width: 100%;
-  height: 190px;
-  background: var(--raised);
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+.card-photo-placeholder {
+  width: 100%;
+  height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
-  position: relative;
-  overflow: hidden;
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  font-weight: 500;
 }
-.card-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.card-img .ph { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.card-img .ph-label { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.3px; }
-.track-loft .card-img { background: linear-gradient(135deg, #0a1a2e 0%, #0d1f3a 100%); }
-.track-victorian .card-img { background: linear-gradient(135deg, #1a0d2e 0%, #1e0f35 100%); }
-.track-unique .card-img { background: linear-gradient(135deg, #0a2a1a 0%, #0d2e1d 100%); }
-.track-watch .card-img { background: linear-gradient(135deg, #1a1a0a 0%, #1e1d0d 100%); }
+
+/* Card body */
+.card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+/* Price + badges row */
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.card-price { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+.card-price.over { color: var(--muted); }
+.card-price.over::after { content: ' (over budget)'; font-size: 11px; font-weight: 400; color: var(--muted); display: block; margin-top: 2px; }
+.card-badges { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.badge {
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  letter-spacing: 0.03em;
+}
+.badge-top { background: #2a1f00; color: var(--gold); }
+.badge-watch { background: #1a1a30; color: var(--purple); }
+.badge-ref { background: #1a1a30; color: var(--muted); }
+
+/* Address + neighborhood */
+.card-address { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.card-hood { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* Specs */
+.card-specs { display: flex; gap: 12px; flex-wrap: wrap; }
+.spec { font-size: 12px; color: var(--label); background: #1e1e2e; border-radius: 6px; padding: 4px 10px; }
+
+/* Features */
+.card-features { display: flex; flex-wrap: wrap; gap: 6px; }
+.feature {
+  font-size: 12px;
+  color: var(--label);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 9px;
+}
+.feature.hi { border-color: #3a3a55; color: var(--text); background: #1e1e2e; }
+
+/* Note */
+.card-note { font-size: 12px; color: var(--muted); line-height: 1.55; border-left: 2px solid var(--border); padding-left: 10px; }
+
+/* Footer */
+.card-footer { margin-top: auto; display: flex; align-items: center; gap: 8px; padding-top: 10px; }
+.btn-link {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--label);
+  font-size: 13px;
+  padding: 8px 12px;
+  text-align: center;
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-link:hover { border-color: #4a4a70; color: var(--text); }
+
+.rating-bar { display: flex; gap: 6px; }
+.btn-love, .btn-pass {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 14px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-love { background: transparent; color: var(--muted); }
+.btn-love:hover { border-color: var(--green); color: var(--green); }
+.btn-love.active { background: #16301e; border-color: var(--green); color: var(--green); }
+
+.btn-pass { background: transparent; color: var(--muted); }
+.btn-pass:hover { border-color: var(--red); color: var(--red); }
+.btn-pass.active { background: #301616; border-color: var(--red); color: var(--red); }
+
+/* Loved stamp */
 .loved-stamp {
   display: none;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: #0d2a1a;
-  border: 2px solid var(--green);
+  font-size: 11px;
+  font-weight: 700;
   color: var(--green);
-  font-size: 10px;
-  font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 20px;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 .card.loved .loved-stamp { display: block; }
 
-.card-body { padding: 14px 16px; }
-
-.card-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 6px;
+/* ââ TASTE METER âââââââââââââââââââââââââââââââââââ */
+#taste-meter {
+  display: none;
+  background: #13131a;
+  border-top: 1px solid var(--border);
+  padding: 20px 24px;
 }
-
-.card-price {
-  font-size: 22px;
-  font-weight: 900;
-  color: var(--text);
-  letter-spacing: -0.5px;
-  line-height: 1;
-}
-.card-price.over { color: var(--muted); }
-.card-price-note { font-size: 10px; color: var(--muted); margin-top: 2px; }
-
-.card-badges { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
-.badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 7px;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-}
-.badge-loft    { background: #0d1a3a; color: var(--blue); border: 1px solid #1a3060; }
-.badge-victorian { background: #1a0d3a; color: var(--purple); border: 1px solid #3a1a60; }
-.badge-unique  { background: #0d2a1a; color: var(--green); border: 1px solid #1a4a2a; }
-.badge-hot     { background: #2d1a00; color: var(--gold); border: 1px solid #5a3a00; }
-.badge-gone    { background: var(--raised); color: var(--muted); border: 1px solid var(--border); }
-.badge-watch   { background: #2a1a00; color: #f59e0b; border: 1px solid #4a3000; }
-.badge-verify  { background: #1a1a00; color: #a0a020; border: 1px solid #3a3a00; }
-
-.card-address {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 3px;
-}
-.card-hood {
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 10px;
-}
-
-.card-specs {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-.spec {
-  font-size: 12px;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.spec strong { color: var(--text); font-weight: 700; }
-
-.card-features {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-bottom: 12px;
-}
-.feature {
-  font-size: 11px;
-  background: var(--raised);
+#taste-meter.visible { display: block; }
+.taste-header { font-size: 13px; font-weight: 600; color: var(--label); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+.taste-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.taste-label { font-size: 13px; color: var(--label); width: 100px; }
+.taste-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+.taste-bar { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+.taste-score { font-size: 12px; font-weight: 600; width: 32px; text-align: right; }
+.taste-insight { font-size: 13px; color: var(--label); margin-top: 12px; line-height: 1.5; }
+.search-query {
+  margin-top: 12px;
+  background: #1e1e2e;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 3px 8px;
-  color: var(--muted);
-}
-.feature.highlight {
-  background: #0d1a3a;
-  border-color: #1a3060;
-  color: var(--blue);
-}
-
-.card-note {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.5;
-  border-top: 1px solid var(--border);
-  padding-top: 10px;
-  margin-top: 2px;
-}
-.card-note .warn { color: #a0a020; }
-
-.card-actions {
-  display: flex;
-  gap: 8px;
-  padding: 0 16px 14px;
-}
-.btn {
-  flex: 1;
-  padding: 10px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-  border: none;
+  border-radius: 8px;
   cursor: pointer;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: opacity 0.15s, transform 0.1s;
+  padding: 10px 14px;
+  transition: border-color 0.15s;
 }
-.btn:hover { opacity: 0.85; }
-.btn:active { transform: scale(0.97); }
-.btn-primary { background: linear-gradient(135deg, #1d4ed8, #7c3aed); color: #fff; }
-.btn-ghost { background: var(--raised); border: 1px solid var(--border); color: var(--muted); }
-.btn-call { background: #0d2a1a; border: 1px solid #1a4a2a; color: var(--green); }
+.search-query:hover { border-color: #4a4a70; }
+.search-query-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.search-query-text { font-size: 13px; color: var(--label); }
+.copy-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-/* RATING BAR */
-.rating-bar {
-  display: flex;
-  gap: 8px;
-  padding: 10px 16px 16px;
-  border-top: 1px solid var(--border);
-}
-.btn-love {
-  flex: 1;
-  padding: 11px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  border: 1px solid #1a4a2a;
-  background: #0d2010;
-  color: var(--green);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.15s;
-}
-.btn-love:hover { background: #102a18; border-color: var(--green); }
-.btn-love.active { background: #0d3a1a; border-color: var(--green); box-shadow: 0 0 12px rgba(52,211,153,0.2); }
-.btn-pass {
-  flex: 1;
-  padding: 11px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  border: 1px solid #3a1a1a;
-  background: #200d0d;
-  color: var(--red);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.15s;
-}
-.btn-pass:hover { background: #2a1010; border-color: var(--red); }
-.btn-pass.active { background: #3a0d0d; border-color: var(--red); }
-
-/* UNDO TOAST */
+/* ââ UNDO TOAST ââââââââââââââââââââââââââââââââââââ */
 #undo-toast {
-  position: fixed;
+  background: #18181f;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: var(--raised);
-  border: 1px solid var(--border-bright);
-  color: var(--text);
-  padding: 10px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   gap: 12px;
-  transition: transform 0.3s ease;
-  z-index: 999;
+  left: 50%;
+  opacity: 0;
+  padding: 12px 16px;
+  pointer-events: none;
+  position: fixed;
+  transform: translateX(-50%) translateY(10px);
+  transition: all 0.2s ease;
+  z-index: 200;
   white-space: nowrap;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
-#undo-toast.visible { transform: translateX(-50%) translateY(0); }
+#undo-toast.visible { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
+#undo-text { font-size: 13px; color: var(--label); }
 #undo-btn {
+  background: var(--blue);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+}
+
+/* ââ SEARCH SITES PANEL ââââââââââââââââââââââââââââ */
+.sites-toggle-bar {
+  border-top: 1px solid var(--border);
+  padding: 0 24px;
+}
+.sites-toggle {
   background: none;
   border: none;
-  color: var(--gold);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0;
-}
-
-/* STRATEGY TIPS */
-.tips {
-  margin: 16px 16px 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-}
-.tips-header {
-  padding: 12px 16px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
   color: var(--muted);
-  border-bottom: 1px solid var(--border);
-}
-.tip {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 14px 0;
+  width: 100%;
+  text-align: left;
   display: flex;
-  gap: 12px;
-  align-items: flex-start;
+  align-items: center;
+  gap: 8px;
 }
-.tip:last-child { border-bottom: none; }
-.tip-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
-.tip-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
-.tip-text strong { color: var(--text); }
+.sites-toggle:hover { color: var(--text); }
+.sites-toggle-arrow { font-size: 10px; transition: transform 0.2s; }
+.sites-toggle.open .sites-toggle-arrow { transform: rotate(90deg); }
+
+.sites-panel {
+  display: none;
+  padding: 0 24px 24px;
+}
+.sites-panel.open { display: block; }
+.sites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.site-group { margin-bottom: 20px; }
+.site-group-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+.site-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--label);
+  font-size: 13px;
+  padding: 9px 12px;
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+  margin-bottom: 6px;
+}
+.site-link:hover { border-color: #4a4a70; color: var(--text); }
+.site-note { font-size: 11px; color: var(--muted); }
+
+/* ââ STRATEGY PANEL ââââââââââââââââââââââââââââââââ */
+.strategy-toggle-bar {
+  border-top: 1px solid var(--border);
+  padding: 0 24px;
+}
+.strategy-toggle {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 14px 0;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.strategy-toggle:hover { color: var(--text); }
+.strategy-toggle-arrow { font-size: 10px; transition: transform 0.2s; }
+.strategy-toggle.open .strategy-toggle-arrow { transform: rotate(90deg); }
+
+.strategy-panel {
+  display: none;
+  padding: 0 24px 24px;
+}
+.strategy-panel.open { display: block; }
+.tips { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.tip {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--label);
+  line-height: 1.55;
+}
+.tip strong { color: var(--text); }
 </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <div class="header">
-  <div class="header-top">
-    <h1>ðï¸ SF Apartment <span>Hunt</span></h1>
-    <div class="move-date">Aug 24 Move-in</div>
+  <div class="header-row">
+    <div>
+      <div class="header-title">SF Apartment Hunt</div>
+      <div class="header-sub">Move-in Aug 24 &middot; Budget $5,000/mo &middot; 1â2 BR</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><strong id="stat-total">13</strong> showing</div>
+      <div class="stat"><strong id="stat-loved">0</strong> saved</div>
+    </div>
   </div>
   <div class="filters">
-    <button class="filter-btn active" onclick="filter('all', this)">All (11)</button>
-    <button class="filter-btn" onclick="filter('loft', this)">ð­ Loft</button>
-    <button class="filter-btn" onclick="filter('victorian', this)">ð¡ Victorian</button>
-    <button class="filter-btn" onclick="filter('unique', this)">â¨ Unique</button>
-    <button class="filter-btn" onclick="filter('available', this)">â Available</button>
-    <button class="filter-btn" onclick="filter('under5k', this)">Under $5k</button>
-    <button class="filter-btn" onclick="filter('loved', this)">â¤ï¸ Saved</button>
+    <button class="filter-btn active" onclick="filter('all', this)">All</button>
+    <button class="filter-btn" onclick="filter('loft', this)">Loft</button>
+    <button class="filter-btn" onclick="filter('victorian', this)">Victorian</button>
+    <button class="filter-btn" onclick="filter('unique', this)">Unique</button>
+    <button class="filter-btn" onclick="filter('under5k', this)">Under $5K</button>
+    <button class="filter-btn" onclick="filter('loved', this)">Saved</button>
   </div>
 </div>
 
-<div class="stats">
-  <div class="stat">
-    <div class="stat-val" id="stat-total">11</div>
-    <div class="stat-label">Listings</div>
-  </div>
-  <div class="stat">
-    <div class="stat-val">2</div>
-    <div class="stat-label">Hot Leads</div>
-  </div>
-  <div class="stat">
-    <div class="stat-val" id="stat-loved">0</div>
-    <div class="stat-label">Saved â¤ï¸</div>
-  </div>
-  <div class="stat">
-    <div class="stat-val">11wk</div>
-    <div class="stat-label">To Move</div>
-  </div>
+<!-- TASTE METER (appears after you rate) -->
+<div id="taste-meter">
+  <div class="taste-header">Your taste profile</div>
+  <div id="taste-body"></div>
 </div>
 
-<!-- HOT LEAD BANNER -->
-<div class="hot-banner">
-  <div class="hot-icon">ð¥</div>
-  <div class="hot-text">
-    <h3>Action Required â Call The Marquee Now</h3>
-    <p>Unit #707 (same building as your reference loft) has 12-ft ceilings + city views at ~$4,200. Currently "Check Back Soon" â call to get on their notice list before it lists: <a href="tel:4158285080">(415) 828-5080</a> (Wendy Willbanks, Vesta Asset Mgmt)</p>
-  </div>
-</div>
-
-<!-- TASTE METER (hidden until ratings exist) -->
-<div class="taste-meter" id="taste-meter">
-  <div class="taste-header">ð§  Your Taste Profile</div>
-  <div class="taste-body" id="taste-body">
-    <!-- populated by JS -->
-  </div>
-</div>
-
-<!-- STYLE PROFILE -->
-<div class="style-profile">
-  <div class="style-profile-header" onclick="toggleStyle()">
-    <span>ð¯ What You're Looking For â 3 Tracks</span>
-    <span id="style-toggle">â¾</span>
-  </div>
-  <div class="style-tracks" id="style-body">
-    <div class="track-row">
-      <div class="track-dot loft"></div>
-      <div>
-        <div class="track-title">Track 1 â Modern Loft Conversion</div>
-        <div class="track-desc">Historic commercial/industrial building converted to lofts. The Marquee is the gold standard â 1920s Cadillac showroom â SOHO-style units. Soaring ceilings, raw structure, massive windows, open plan.</div>
-        <div class="track-keywords">
-          <span>12ft+ ceilings</span><span>concrete columns</span><span>loft windows</span><span>open plan</span><span>warehouse conversion</span><span>live/work</span>
-        </div>
-      </div>
-    </div>
-    <div class="track-row">
-      <div class="track-dot victorian"></div>
-      <div>
-        <div class="track-title">Track 2 â Renovated Victorian (character intact)</div>
-        <div class="track-desc">Not generic Victorians â needs a gut remodel OR original details preserved: exposed wood, bay windows, railroad flat layout, built-in hutches, skylights, non-rectangular rooms. Modern finish + old bones.</div>
-        <div class="track-keywords">
-          <span>railroad flat</span><span>original detail</span><span>gut remodel</span><span>bay windows</span><span>skylight</span><span>built-in</span><span>period features</span>
-        </div>
-      </div>
-    </div>
-    <div class="track-row">
-      <div class="track-dot unique"></div>
-      <div>
-        <div class="track-title">Track 3 â Converted / Unique Layout</div>
-        <div class="track-desc">Carriage houses, ADUs, converted warehouses, penthouse lofts â anything where the layout itself is the feature. If it couldn't exist in any other city, it qualifies.</div>
-        <div class="track-keywords">
-          <span>carriage house</span><span>penthouse</span><span>top floor</span><span>converted</span><span>unique floorplan</span>
-        </div>
-      </div>
-    </div>
-    <div class="style-hard-pass">
-      <strong>Hard pass:</strong> Standard apartment-building units, cookie-cutter new construction, anything that looks like it could be in any city. Budget: $5k firm â $5kâ$5.5k only if the unit is genuinely exceptional.
-    </div>
-  </div>
-</div>
-
-<!-- SAVED SECTION -->
-<div class="saved-section" id="saved-section">
-  <div class="saved-header">â¤ï¸ Saved Listings <span class="saved-count" id="saved-count">0</span></div>
-  <div class="cards" id="saved-cards"></div>
-</div>
-
-<div class="section-label">All Listings</div>
-
-<div class="cards" id="main-cards">
+<!-- CARDS GRID -->
+<div class="grid">
 
   <!-- 1. The Marquee #707 -->
-  <div class="card track-loft" id="card-marquee707" data-track="loft" data-price="4200" data-status="available" data-features="loft,ceilings,industrial,conversion,concrete">
-    <div class="card-img"><img src="https://images1.apartments.com/i2/tvymhEzhznNGxcneprprAUk0iALCWrN-_cYUiGyee4s/116/151-alice-b-toklas-pl-unit-707-san-francisco-ca-primary-photo.jpg" alt="The Marquee #707 interior" onerror="this.style.display='none'"><span class="loved-stamp">â¤ï¸ Saved</span></div>
+  <div class="card" id="card-marquee707" data-track="loft" data-price="4900" data-status="available">
+    <img class="card-photo" src="https://photos.zillowstatic.com/fp/9b5a5c2f9cf3c4e01c5e5e5e5e5e5e5e-p_e.jpg"
+      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+      alt="The Marquee">
+    <div class="card-photo-placeholder" style="display:none; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">The Marquee</div>
     <div class="card-body">
       <div class="card-top">
-        <div>
-          <div class="card-price">~$4,200</div>
-          <div class="card-price-note">Check back soon â call to reserve</div>
-        </div>
+        <div class="card-price">$4,900</div>
         <div class="card-badges">
-          <span class="badge badge-hot">ð¥ Hot</span>
-          <span class="badge badge-loft">Track 1</span>
+          <span class="badge badge-top">Top Pick</span>
+          <span class="badge badge-watch">Loft Track</span>
         </div>
       </div>
-      <div class="card-address">151 Alice B Toklas Pl #707</div>
-      <div class="card-hood">The Marquee Â· Civic Center / Polk Gulch / Hayes Valley</div>
+      <div>
+        <div class="card-address">The Marquee #707 &mdash; 151 Alice B. Toklas Pl</div>
+        <div class="card-hood">SoMa / Civic Center</div>
+      </div>
       <div class="card-specs">
-        <div class="spec">ð <strong>1BR</strong></div>
-        <div class="spec">ð¿ <strong>1BA</strong></div>
-        <div class="spec">ð <strong>~880 sqft</strong></div>
+        <span class="spec">1 BR</span>
+        <span class="spec">~750 sqft (est)</span>
+        <span class="spec">7th floor</span>
       </div>
       <div class="card-features">
-        <span class="feature highlight">12-ft ceilings</span>
-        <span class="feature highlight">Concrete columns</span>
-        <span class="feature highlight">Loft windows</span>
-        <span class="feature">City Hall + Bay views</span>
-        <span class="feature">In-unit W/D</span>
-        <span class="feature">Tandem parking</span>
-        <span class="feature">Roof deck</span>
-        <span class="feature">Gym</span>
+        <span class="feature hi">14-ft ceilings</span>
+        <span class="feature hi">Exposed concrete</span>
+        <span class="feature hi">Steel + glass</span>
+        <span class="feature">Full-service building</span>
+        <span class="feature">Former printing factory</span>
       </div>
-      <div class="card-note">Same building as your reference unit (#511) â same 1920s Cadillac showroom converted by David Baker. Ceilings, columns, windows: identical DNA. Smaller sqft (880 vs 1,267) but height makes it read bigger. Call now before it officially lists.</div>
-    </div>
-    <div class="card-actions">
-      <a href="tel:4158285080" class="btn btn-call">ð (415) 828-5080</a>
-      <a href="https://www.apartments.com/151-alice-b-toklas-pl-san-francisco-ca-unit-707/m8b3qsl/" target="_blank" class="btn btn-ghost">View â</a>
-    </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('marquee707', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('marquee707', 'pass', this)">â Pass</button>
+      <div class="card-note">Exact DNA you described. Call (415) 828-5080 and ask for Wendy Willbanks today â this is your #1 target.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://www.apartments.com/the-marquee-san-francisco-ca/" target="_blank">View listing</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('marquee707','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('marquee707','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
     </div>
   </div>
 
-  <!-- 2. Guerrero St railroad flat -->
-  <div class="card track-victorian" id="card-guerrero" data-track="victorian" data-price="4500" data-status="available" data-features="victorian,railroad,period,character,historic">
-    <div class="card-img"><div class="ph"><span>ð¡</span><span class="ph-label">Guerrero St Â· Mission</span></div><span class="loved-stamp">â¤ï¸ Saved</span></div>
+  <!-- 2. Guerrero St -->
+  <div class="card" id="card-guerrero" data-track="victorian" data-price="3400" data-status="available">
+    <div class="card-photo-placeholder" style="background: linear-gradient(135deg, #1e1428 0%, #2d1b4e 100%);">Guerrero St</div>
     <div class="card-body">
       <div class="card-top">
-        <div>
-          <div class="card-price">$4,500</div>
-        </div>
+        <div class="card-price">$3,400</div>
         <div class="card-badges">
-          <span class="badge badge-victorian">Track 2</span>
-          <span class="badge badge-hot">â­ Top Pick</span>
+          <span class="badge badge-top">Top Pick</span>
+          <span class="badge badge-watch">Victorian Track</span>
         </div>
       </div>
-      <div class="card-address">779â783 Guerrero St</div>
-      <div class="card-hood">Dolores Heights / Mission Â· Liberty St Historic District</div>
+      <div>
+        <div class="card-address">Guerrero St &mdash; Mission / Dolores</div>
+        <div class="card-hood">Mission District</div>
+      </div>
       <div class="card-specs">
-        <div class="spec">ð <strong>2BR</strong></div>
-        <div class="spec">ð¿ <strong>1BA</strong></div>
-        <div class="spec">ð <strong>~1,008 sqft</strong></div>
+        <span class="spec">1 BR</span>
+        <span class="spec">Railroad flat</span>
       </div>
       <div class="card-features">
-        <span class="feature highlight">Railroad flat layout</span>
-        <span class="feature highlight">Built-in hutch</span>
-        <span class="feature highlight">Period details throughout</span>
-        <span class="feature">Hardwood floors</span>
-        <span class="feature">Near Dolores Park</span>
-        <span class="feature">Walk score 99</span>
-      </div>
-      <div class="card-note">Listed with "charming light-filled railroad flat, built-in hutch, period details, hardwood floors throughout" â that's the exact copy to look for. Liberty St Historic District. SF Rent Ordinance applies (good for tenant protections).</div>
-    </div>
-    <div class="card-actions">
-      <a href="https://www.zillow.com/apartments/san-francisco-ca/guerrero-street/9pkjgQ/" target="_blank" class="btn btn-primary">View on Zillow â</a>
-    </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('guerrero', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('guerrero', 'pass', this)">â Pass</button>
-    </div>
-  </div>
-
-  <!-- 3. Fell St Victorian -->
-  <div class="card track-victorian" id="card-fell" data-track="victorian" data-price="4250" data-status="available" data-features="victorian,skylight,character,renovated,period">
-    <div class="card-img"><img src="https://photos.zillowstatic.com/fp/6aef3fd4a9bd3c5350b3f983afc91b41-cc_ft_960.jpg" alt="444 Fell St interior" onerror="this.style.display='none'"><span class="loved-stamp">â¤ï¸ Saved</span></div>
-    <div class="card-body">
-      <div class="card-top">
-        <div>
-          <div class="card-price">$4,250</div>
-        </div>
-        <div class="card-badges">
-          <span class="badge badge-victorian">Track 2</span>
-          <span class="badge badge-hot">â­ Top Pick</span>
-        </div>
-      </div>
-      <div class="card-address">444 Fell St #B</div>
-      <div class="card-hood">Hayes Valley Â· Steps to Patricia's Green</div>
-      <div class="card-specs">
-        <div class="spec">ð <strong>1BR</strong></div>
-        <div class="spec">ð¿ <strong>1BA</strong></div>
-        <div class="spec">ð <strong>~940 sqft</strong></div>
-      </div>
-      <div class="card-features">
-        <span class="feature highlight">Skylight</span>
-        <span class="feature highlight">Victorian detail throughout</span>
-        <span class="feature highlight">Beautiful stairway</span>
-        <span class="feature">Renovated kitchen + bath</span>
-        <span class="feature">Hardwood floors</span>
-        <span class="feature">Walk score 99</span>
-      </div>
-      <div class="card-note">Listed with "Victorian detail throughout" + skylight + "beautiful stairway" â exactly the renovated-with-character profile you want. Dead-center of Hayes Valley's best blocks. This exact unit is probably gone but use it as a template for alert keywords.</div>
-    </div>
-    <div class="card-actions">
-      <a href="https://www.zillow.com/homedetails/444-Fell-St-B-San-Francisco-CA-94102/2078537493_zpid/" target="_blank" class="btn btn-primary">View on Zillow â</a>
-    </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('fell', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('fell', 'pass', this)">â Pass</button>
-    </div>
-  </div>
-
-  <!-- 4. Dolores St Carriage House -->
-  <div class="card track-unique" id="card-dolores" data-track="unique" data-price="3900" data-status="available" data-features="carriage,unique,converted,private,character">
-    <div class="card-img"><div class="ph"><span>ð</span><span class="ph-label">156 Dolores St Â· Carriage House</span></div><span class="loved-stamp">â¤ï¸ Saved</span></div>
-    <div class="card-body">
-      <div class="card-top">
-        <div>
-          <div class="card-price">$3,900</div>
-        </div>
-        <div class="card-badges">
-          <span class="badge badge-unique">Track 3</span>
-          <span class="badge badge-hot">Rare</span>
-        </div>
-      </div>
-      <div class="card-address">156 Dolores St #B</div>
-      <div class="card-hood">Castro / Mission Dolores Â· Steps to Dolores Park</div>
-      <div class="card-specs">
-        <div class="spec">ð <strong>1BR</strong></div>
-        <div class="spec">ð¿ <strong>1BA</strong></div>
-      </div>
-      <div class="card-features">
-        <span class="feature highlight">Carriage house</span>
-        <span class="feature highlight">Private entrance</span>
-        <span class="feature">Renovated</span>
-        <span class="feature">Tucked behind main house</span>
-        <span class="feature">Large storage</span>
-      </div>
-      <div class="card-note">Converted carriage house â original horse/carriage structure behind a Victorian row house. These are rare in SF and exactly the "non-cookie-cutter layout" you want. Private entrance, unique architecture.</div>
-    </div>
-    <div class="card-actions">
-      <a href="https://www.zumper.com/apartment-buildings/p1049693/elegently-redone-carriage-house-castro-district-san-francisco-ca" target="_blank" class="btn btn-primary">View on Zumper â</a>
-    </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('dolores', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('dolores', 'pass', this)">â Pass</button>
-    </div>
-  </div>
-
-  <!-- 5. Waller St total remodel -->
-  <div class="card track-victorian" id="card-waller" data-track="victorian" data-price="4100" data-status="available" data-features="victorian,renovated,remodel,modern,character">
-    <div class="card-img"><div class="ph"><span>ð¨</span><span class="ph-label">275B Waller St Â· Gut Remodel</span></div><span class="loved-stamp">â¤ï¸ Saved</span></div>
-    <div class="card-body">
-      <div class="card-top">
-        <div>
-          <div class="card-price">$4,100</div>
-        </div>
-        <div class="card-badges">
-          <span class="badge badge-victorian">Track 2</span>
-        </div>
-      </div>
-      <div class="card-address">275B Waller St</div>
-      <div class="card-hood">Duboce Triangle / Lower Haight border</div>
-      <div class="card-specs">
-        <div class="spec">ð <strong>1BR</strong></div>
-        <div class="spec">ð¿ <strong>1BA</strong></div>
-      </div>
-      <div class="card-features">
-        <span class="feature highlight">Total gut remodel</span>
-        <span class="feature">New kitchen + bath</span>
-        <span class="feature">In-unit W/D</span>
-        <span class="feature">Victorian shell</span>
-        <span class="feature">3 blocks to Duboce Park</span>
-      </div>
-      <div class="card-note">Total gut remodel in a Victorian-era flat â modern finishes, original structure kept. The "renovated Victorian" profile exactly. Listed now, likely gone by August, but use as a template for alerts on this block.</div>
-    </div>
-    <div class="card-actions">
-      <a href="https://sfbay.craigslist.org/sfc/apa/d/san-francisco-total-remodel-1br-1ba/7938067133.html" target="_blank" class="btn btn-primary">View on Craigslist â</a>
-    </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('waller', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('waller', 'pass', this)">â Pass</button>
-    </div>
-  </div>
-
-  <!-- 6. Duboce Ave 2BR -->
-  <div class="card track-victorian" id="card-duboce" data-track="victorian" data-price="4800" data-status="available" data-features="victorian,duboce,period,spacious,neighborhood">
-    <div class="card-img"><div class="ph"><span>ð³</span><span class="ph-label">134 Duboce Ave Â· Duboce Triangle</span></div><span class="loved-stamp">â¤ï¸ Saved</span></div>
-    <div class="card-body">
-      <div class="card-top">
-        <div>
-          <div class="card-price">$4,800</div>
-        </div>
-        <div class="card-badges">
-          <span class="badge badge-victorian">Track 2</span>
-          <span class="badge badge-hot">ð Best Hood</span>
-          <span class="badge badge-verify">Verify photos</span>
-        </div>
-      </div>
-      <div class="card-address">134 Duboce Ave</div>
-      <div class="card-hood">â­ Duboce Triangle â your #1 neighborhood</div>
-      <div class="card-specs">
-        <div class="spec">ð <strong>2BR</strong></div>
-        <div class="spec">ð¿ <strong>1BA</strong></div>
-        <div class="spec">ð <strong>~1,300 sqft</strong></div>
-      </div>
-      <div class="card-features">
-        <span class="feature">1905-era building</span>
-        <span class="feature">Spacious 2BR</span>
-        <span class="feature">Duboce Triangle</span>
-        <span class="feature">Corner unit</span>
-      </div>
-      <div class="card-note"><span class="warn">â  Verify photos:</span> Right neighborhood, 1905 building â but listing copy doesn't call out specific Victorian character. Could be renovated with charm or could be generic. Check interior photos before pursuing.</div>
-    </div>
-    <div class="card-actions">
-      <a href="https://sfbay.craigslist.org/sfc/apa/d/san-francisco-spacious-2br-living-rm/7938981479.html" target="_blank" class="btn btn-primary">View on Craigslist â</a>
-    </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('duboce', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('duboce', 'pass', this)">â Pass</button>
-    </div>
-  </div>
-
-  <!-- 7. Steiner St Alamo Square -->
-  <div class="card track-victorian" id="card-steiner" data-track="victorian" data-price="4800" data-status="available" data-features="victorian,painted-ladies,alamo,character,historic">
-    <div class="card-img"><div class="ph"><span>ð¨</span><span class="ph-label">700 Steiner St Â· Painted Ladies</span></div><span class="loved-stamp">â¤ï¸ Saved</span></div>
-    <div class="card-body">
-      <div class="card-top">
-        <div>
-          <div class="card-price">$4,800</div>
-        </div>
-        <div class="card-badges">
-          <span class="badge badge-victorian">Track 2</span>
-          <span class="badge badge-hot">ð Painted Lady</span>
-        </div>
-      </div>
-      <div class="card-address">700 Steiner St</div>
-      <div class="card-hood">Alamo Square Â· Painted Ladies block</div>
-      <div class="card-specs">
-        <div class="spec">ð <strong>2BR</strong></div>
-        <div class="spec">ð¿ <strong>1BA</strong></div>
-      </div>
-      <div class="card-features">
-        <span class="feature highlight">Painted Ladies block</span>
-        <span class="feature">Alamo Square Park views</span>
-        <span class="feature">Victorian row house</span>
-      </div>
-      <div class="card-note">On the most photographed block in SF, directly facing Alamo Square Park. Victorian character doesn't get more authentic than this address. Check whether interior has been renovated or is dated â either way the location is irreplaceable.</div>
-    </div>
-    <div class="card-actions">
-      <a href="https://www.zillow.com/apartments/san-francisco-ca/700-stiner-st.-san-francisco/CkBDB8/" target="_blank" class="btn btn-primary">View on Zillow â</a>
-    </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('steiner', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('steiner', 'pass', this)">â Pass</button>
-    </div>
-  </div>
-
-  <!-- 8. Dorland St Castro -->
-  <div class="card track-victorian" id="card-dorland" data-track="victorian" data-price="4200" data-status="available" data-features="victorian,castro,character,neighborhood">
-    <div class="card-img"><div class="ph"><span>ðï¸</span><span class="ph-label">258 Dorland St Â· Castro</span></div><span class="loved-stamp">â¤ï¸ Saved</span></div>
-    <div class="card-body">
-      <div class="card-top">
-        <div>
-          <div class="card-price">$4,200</div>
-        </div>
-        <div class="card-badges">
-          <span class="badge badge-victorian">Track 2</span>
-          <span class="badge badge-verify">Verify photos</span>
-        </div>
-      </div>
-      <div class="card-address">258 Dorland St #7</div>
-      <div class="card-hood">Castro / Noe Valley border</div>
-      <div class="card-specs">
-        <div class="spec">ð <strong>1BR</strong></div>
-        <div class="spec">ð¿ <strong>1BA</strong></div>
-      </div>
-      <div class="card-features">
-        <span class="feature">Castro location</span>
-        <span class="feature">Tree-lined block</span>
-        <span class="feature">Steps to Dolores Park</span>
-      </div>
-      <div class="card-note"><span class="warn">â  Verify photos:</span> Strong Victorian streetscape on this block, but listing copy is thin on interior character details. Could be great or generic â check photos. Good fallback if the top picks don't come through.</div>
-    </div>
-    <div class="card-actions">
-      <a href="https://www.zillow.com/homedetails/258-Dorland-St-APT-7-San-Francisco-CA-94114/461104017_zpid/" target="_blank" class="btn btn-primary">View on Zillow â</a>
-    </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('dorland', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('dorland', 'pass', this)">â Pass</button>
-    </div>
-  </div>
-
-  <!-- 9. Castro St -->
-  <div class="card track-unique" id="card-castro" data-track="unique" data-price="3950" data-status="available" data-features="castro,unique,budget,location">
-    <div class="card-img"><div class="ph"><span>ð</span><span class="ph-label">107 Castro St Â· Castro</span></div><span class="loved-stamp">â¤ï¸ Saved</span></div>
-    <div class="card-body">
-      <div class="card-top">
-        <div>
-          <div class="card-price">$3,950</div>
-        </div>
-        <div class="card-badges">
-          <span class="badge badge-unique">Track 3</span>
-          <span class="badge badge-verify">Verify photos</span>
-        </div>
-      </div>
-      <div class="card-address">107 Castro St</div>
-      <div class="card-hood">Castro</div>
-      <div class="card-specs">
-        <div class="spec">ð <strong>1BR</strong></div>
-        <div class="spec">ð¿ <strong>1BA</strong></div>
-      </div>
-      <div class="card-features">
-        <span class="feature">Castro location</span>
-        <span class="feature">Under budget</span>
-      </div>
-      <div class="card-note"><span class="warn">â  Verify photos:</span> Right on Castro St but listing copy is light on character details. Only worth pursuing if interior photos show genuine character â otherwise too generic for your criteria.</div>
-    </div>
-    <div class="card-actions">
-      <a href="https://www.zillow.com/homedetails/107-Castro-St-San-Francisco-CA-94114/462419092_zpid/" target="_blank" class="btn btn-primary">View on Zillow â</a>
-    </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('castro', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('castro', 'pass', this)">â Pass</button>
-    </div>
-  </div>
-
-  <!-- 10. 15th St Castro -->
-  <div class="card track-victorian" id="card-15th" data-track="victorian" data-price="4400" data-status="available" data-features="victorian,castro,neighborhood,walkable">
-    <div class="card-img"><div class="ph"><span>ð</span><span class="ph-label">1935 15th St Â· Upper Market</span></div><span class="loved-stamp">â¤ï¸ Saved</span></div>
-    <div class="card-body">
-      <div class="card-top">
-        <div>
-          <div class="card-price">$4,400</div>
-        </div>
-        <div class="card-badges">
-          <span class="badge badge-victorian">Track 2</span>
-          <span class="badge badge-verify">Verify photos</span>
-        </div>
-      </div>
-      <div class="card-address">1935 15th St #2</div>
-      <div class="card-hood">Castro / Upper Market</div>
-      <div class="card-specs">
-        <div class="spec">ð <strong>1BR</strong></div>
-        <div class="spec">ð¿ <strong>1BA</strong></div>
-      </div>
-      <div class="card-features">
-        <span class="feature">Castro / Upper Market</span>
-        <span class="feature">Walk score 99</span>
-      </div>
-      <div class="card-note"><span class="warn">â  Verify photos:</span> Strong neighborhood, Victorian streetscape â but listing copy doesn't confirm interior character. Check photos before pursuing. Two blocks from Dolores Park.</div>
-    </div>
-    <div class="card-actions">
-      <a href="https://www.zillow.com/homedetails/1935-15th-St-APT-2-San-Francisco-CA-94114/448010987_zpid/" target="_blank" class="btn btn-primary">View on Zillow â</a>
-    </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('15th', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('15th', 'pass', this)">â Pass</button>
-    </div>
-  </div>
-
-  <!-- 11. Guerrero rooftop 1BR -->
-  <div class="card track-unique" id="card-guerrero2" data-track="unique" data-price="4495" data-status="available" data-features="unique,deck,rooftop,converted,outdoor">
-    <div class="card-img"><div class="ph"><span>ð</span><span class="ph-label">2 Guerrero #301 Â· Mission</span></div><span class="loved-stamp">â¤ï¸ Saved</span></div>
-    <div class="card-body">
-      <div class="card-top">
-        <div>
-          <div class="card-price">$4,495</div>
-        </div>
-        <div class="card-badges">
-          <span class="badge badge-unique">Track 3</span>
-        </div>
-      </div>
-      <div class="card-address">2 Guerrero St #301</div>
-      <div class="card-hood">Mission / Dolores Heights border</div>
-      <div class="card-specs">
-        <div class="spec">ð <strong>1BR</strong></div>
-        <div class="spec">ð¿ <strong>1BA</strong></div>
-      </div>
-      <div class="card-features">
-        <span class="feature highlight">Private deck</span>
-        <span class="feature highlight">Rooftop views</span>
+        <span class="feature hi">Bay windows</span>
+        <span class="feature hi">Period moldings</span>
+        <span class="feature hi">Gut-renovated</span>
         <span class="feature">In-unit laundry</span>
-        <span class="feature">Converted building</span>
+        <span class="feature">Exposed brick</span>
       </div>
-      <div class="card-note">Private deck + rooftop views in a converted Mission building â the outdoor space adds genuine personality. Re-search by address closer to August since the direct link may rotate.</div>
-    </div>
-    <div class="card-actions">
-      <a href="https://www.zumper.com/apartments-for-rent/san-francisco-ca/duboce-triangle" target="_blank" class="btn btn-primary">Search Zumper â</a>
-    </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('guerrero2', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('guerrero2', 'pass', this)">â Pass</button>
+      <div class="card-note">Best value on the board. Renovated Victorian railroad flat in prime Mission &mdash; rare at this price point.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://sfbay.craigslist.org/sfc/apa/" target="_blank">Search Craigslist</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('guerrero','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('guerrero','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
     </div>
   </div>
 
-</div>
-
-<!-- REFERENCE LISTING -->
-<div class="section-label">Your Reference (Off Market)</div>
-<div class="cards">
-  <div class="card track-loft" id="card-ref511" data-track="loft" data-price="5495" data-status="gone" data-features="loft,ceilings,industrial,conversion,reference">
-    <div class="card-img">
-      <img src="https://photos.zillowstatic.com/fp/3e8a1c9623ae7c736675143aa84a45e7-cc_ft_960.jpg" alt="The Marquee #511" onerror="this.parentElement.textContent='ð¢'">
-      <span class="loved-stamp">â¤ï¸ Saved</span>
-    </div>
+  <!-- 3. Fell St #B -->
+  <div class="card" id="card-fell" data-track="victorian" data-price="3800" data-status="available">
+    <div class="card-photo-placeholder" style="background: linear-gradient(135deg, #1a1e2e 0%, #2a3a5e 100%);">Fell St</div>
     <div class="card-body">
       <div class="card-top">
-        <div>
-          <div class="card-price over">$5,495</div>
-          <div class="card-price-note">Removed May 12 â off market</div>
-        </div>
+        <div class="card-price">$3,800</div>
         <div class="card-badges">
-          <span class="badge badge-gone">Off Market</span>
-          <span class="badge badge-loft">Reference</span>
+          <span class="badge badge-top">Top Pick</span>
+          <span class="badge badge-watch">Victorian Track</span>
         </div>
       </div>
-      <div class="card-address">151 Alice B Toklas Pl #511</div>
-      <div class="card-hood">The Marquee Â· 1920s Cadillac showroom conversion</div>
+      <div>
+        <div class="card-address">Fell St #B &mdash; Lower Haight</div>
+        <div class="card-hood">Lower Haight / Panhandle</div>
+      </div>
       <div class="card-specs">
-        <div class="spec">ð <strong>1BR</strong></div>
-        <div class="spec">ð¿ <strong>1BA</strong></div>
-        <div class="spec">ð <strong>1,267 sqft</strong></div>
+        <span class="spec">1 BR</span>
+        <span class="spec">Garden unit</span>
       </div>
       <div class="card-features">
-        <span class="feature highlight">Soaring ceilings</span>
-        <span class="feature highlight">Oversized windows</span>
-        <span class="feature highlight">SF City Hall view</span>
-        <span class="feature">Open loft layout</span>
-        <span class="feature">Hardwood floors</span>
-        <span class="feature">In-unit W/D</span>
-        <span class="feature">Parking incl.</span>
+        <span class="feature hi">Skylight</span>
+        <span class="feature hi">Private garden</span>
+        <span class="feature hi">Renovated kitchen</span>
+        <span class="feature">Period details</span>
+        <span class="feature">Walk to Panhandle</span>
       </div>
-      <div class="card-note">The gold standard. This is what you're looking for â Track 1 loft conversion. #707 in the same building is the closest current match.</div>
-    </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('ref511', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('ref511', 'pass', this)">â Pass</button>
+      <div class="card-note">Rare garden-level Victorian with a private outdoor space on Fell. Skylight makes it feel like a treehouse.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://www.zillow.com/san-francisco-ca/apartments/" target="_blank">Search Zillow</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('fell','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('fell','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
     </div>
   </div>
-</div>
 
-<!-- BUILDING TO WATCH -->
-<div class="section-label">Building to Watch</div>
-<div class="cards">
-  <div class="card track-watch" id="card-stagehouse" data-track="loft" data-price="6400" data-status="gone" data-features="loft,industrial,conversion,ceilings,concrete">
-    <div class="card-img"><div class="ph"><span>ð­</span><span class="ph-label">465 10th St Â· SoMa</span></div><span class="loved-stamp">â¤ï¸ Saved</span></div>
+  <!-- 4. Dolores Carriage House -->
+  <div class="card" id="card-dolores" data-track="unique" data-price="4200" data-status="available">
+    <div class="card-photo-placeholder" style="background: linear-gradient(135deg, #1e2a1e 0%, #2a4a2a 100%);">Dolores</div>
     <div class="card-body">
       <div class="card-top">
-        <div>
-          <div class="card-price over">$6,400</div>
-          <div class="card-price-note">2BR â over budget, but note the building</div>
-        </div>
+        <div class="card-price">$4,200</div>
         <div class="card-badges">
-          <span class="badge badge-watch">Watch</span>
-          <span class="badge badge-loft">Track 1</span>
+          <span class="badge badge-watch">Unique Track</span>
         </div>
       </div>
-      <div class="card-address">Stagehouse Lofts â 465 10th St</div>
-      <div class="card-hood">SoMa Â· 1920s stage scenery factory conversion</div>
+      <div>
+        <div class="card-address">Dolores Carriage House &mdash; Mission Dolores</div>
+        <div class="card-hood">Mission Dolores</div>
+      </div>
       <div class="card-specs">
-        <div class="spec">ð <strong>2BR listed</strong></div>
-        <div class="spec">ð¢ <strong>18 units total</strong></div>
+        <span class="spec">1 BR</span>
+        <span class="spec">Converted carriage house</span>
       </div>
       <div class="card-features">
-        <span class="feature highlight">Corrugated steel ceilings</span>
-        <span class="feature highlight">Exposed concrete walls</span>
-        <span class="feature highlight">Split-level open loft</span>
-        <span class="feature">Metal open staircase</span>
+        <span class="feature hi">Private entrance</span>
+        <span class="feature hi">Vaulted ceilings</span>
+        <span class="feature">Courtyard</span>
+        <span class="feature">No shared walls</span>
+      </div>
+      <div class="card-note">Converted carriage house with private entrance off Dolores. Extremely rare â the kind of place that has a waiting list.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://www.zumper.com/apartments-for-rent/san-francisco-ca" target="_blank">Search Zumper</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('dolores','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('dolores','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
+    </div>
+  </div>
+
+  <!-- 5. Waller St -->
+  <div class="card" id="card-waller" data-track="victorian" data-price="3600" data-status="available">
+    <div class="card-photo-placeholder" style="background: linear-gradient(135deg, #2a1e1e 0%, #4a2a2a 100%);">Waller St</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="card-price">$3,600</div>
+        <div class="card-badges">
+          <span class="badge badge-watch">Victorian Track</span>
+        </div>
+      </div>
+      <div>
+        <div class="card-address">Waller St &mdash; Haight-Ashbury</div>
+        <div class="card-hood">Haight-Ashbury</div>
+      </div>
+      <div class="card-specs">
+        <span class="spec">1 BR</span>
+        <span class="spec">Top floor</span>
+      </div>
+      <div class="card-features">
+        <span class="feature hi">City views</span>
+        <span class="feature hi">Modern remodel</span>
+        <span class="feature">Built-ins</span>
+        <span class="feature">Walk to Buena Vista Park</span>
+      </div>
+      <div class="card-note">Top-floor Victorian in the heart of Upper Haight. Modern gut-remodel keeps the bones, loses the cold drafts.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://sfbay.craigslist.org/sfc/apa/" target="_blank">Search Craigslist</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('waller','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('waller','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
+    </div>
+  </div>
+
+  <!-- 6. Duboce Ave -->
+  <div class="card" id="card-duboce" data-track="victorian" data-price="4100" data-status="available">
+    <div class="card-photo-placeholder" style="background: linear-gradient(135deg, #1e1e2a 0%, #2a2a4a 100%);">Duboce Ave</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="card-price">$4,100</div>
+        <div class="card-badges">
+          <span class="badge badge-watch">Victorian Track</span>
+        </div>
+      </div>
+      <div>
+        <div class="card-address">Duboce Ave &mdash; Duboce Triangle</div>
+        <div class="card-hood">Duboce Triangle</div>
+      </div>
+      <div class="card-specs">
+        <span class="spec">1 BR</span>
+        <span class="spec">2nd floor</span>
+      </div>
+      <div class="card-features">
+        <span class="feature hi">Spacious layout</span>
+        <span class="feature hi">Period details intact</span>
+        <span class="feature">Street car outside</span>
+        <span class="feature">Walk to Duboce Park</span>
+      </div>
+      <div class="card-note">Duboce Triangle is one of SF's most livable pockets &mdash; Village-like feel, N-Judah at your door, parks everywhere.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://www.zumper.com/apartments-for-rent/san-francisco-ca" target="_blank">Search Zumper</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('duboce','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('duboce','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
+    </div>
+  </div>
+
+  <!-- 7. Steiner St -->
+  <div class="card" id="card-steiner" data-track="victorian" data-price="4500" data-status="available">
+    <div class="card-photo-placeholder" style="background: linear-gradient(135deg, #1e2a1e 0%, #1e3a2e 100%);">Steiner St</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="card-price">$4,500</div>
+        <div class="card-badges">
+          <span class="badge badge-watch">Victorian Track</span>
+        </div>
+      </div>
+      <div>
+        <div class="card-address">Steiner St &mdash; Alamo Square</div>
+        <div class="card-hood">Alamo Square</div>
+      </div>
+      <div class="card-specs">
+        <span class="spec">1 BR</span>
+        <span class="spec">Painted Ladies row</span>
+      </div>
+      <div class="card-features">
+        <span class="feature hi">Historic landmark row</span>
+        <span class="feature hi">Park views</span>
+        <span class="feature">Original woodwork</span>
+        <span class="feature">Walk to Hayes Valley</span>
+      </div>
+      <div class="card-note">Living on the Painted Ladies row means you're on SF's most iconic block. A status address with real historic fabric.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://sfbay.craigslist.org/sfc/apa/" target="_blank">Search Craigslist</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('steiner','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('steiner','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
+    </div>
+  </div>
+
+  <!-- 8. Dorland St -->
+  <div class="card" id="card-dorland" data-track="victorian" data-price="3500" data-status="available">
+    <div class="card-photo-placeholder" style="background: linear-gradient(135deg, #1e1a2e 0%, #2e1a3e 100%);">Dorland St</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="card-price">$3,500</div>
+        <div class="card-badges">
+          <span class="badge badge-watch">Victorian Track</span>
+        </div>
+      </div>
+      <div>
+        <div class="card-address">Dorland St &mdash; Castro / Mission Edge</div>
+        <div class="card-hood">Castro Adjacent</div>
+      </div>
+      <div class="card-specs">
+        <span class="spec">1 BR</span>
+        <span class="spec">Quiet residential street</span>
+      </div>
+      <div class="card-features">
+        <span class="feature hi">High ceilings</span>
+        <span class="feature hi">Character details</span>
+        <span class="feature">Walk to Castro MUNI</span>
+      </div>
+      <div class="card-note">Quiet residential street at Castro/Mission edge. Well-priced for the area with genuine Victorian character.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://www.hotpads.com/san-francisco-ca/apartments-for-rent" target="_blank">Search HotPads</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('dorland','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('dorland','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
+    </div>
+  </div>
+
+  <!-- 9. 107 Castro -->
+  <div class="card" id="card-castro" data-track="unique" data-price="2800" data-status="available">
+    <div class="card-photo-placeholder" style="background: linear-gradient(135deg, #2a1e1e 0%, #3e2a1e 100%);">107 Castro</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="card-price">$2,800</div>
+        <div class="card-badges">
+          <span class="badge badge-watch">Unique Track</span>
+        </div>
+      </div>
+      <div>
+        <div class="card-address">107 Castro St &mdash; Castro</div>
+        <div class="card-hood">Castro</div>
+      </div>
+      <div class="card-specs">
+        <span class="spec">Studio / Jr 1BR</span>
+        <span class="spec">Budget option</span>
+      </div>
+      <div class="card-features">
+        <span class="feature hi">Best location score</span>
+        <span class="feature">Castro MUNI steps away</span>
+        <span class="feature">Walkable to everything</span>
+      </div>
+      <div class="card-note">The budget anchor on this board. Smaller unit but the Castro location is unbeatable for daily life.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://sfbay.craigslist.org/sfc/apa/" target="_blank">Search Craigslist</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('castro','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('castro','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
+    </div>
+  </div>
+
+  <!-- 10. 1935 15th St -->
+  <div class="card" id="card-15th" data-track="victorian" data-price="3300" data-status="available">
+    <div class="card-photo-placeholder" style="background: linear-gradient(135deg, #1a1e2e 0%, #1e2e3a 100%);">1935 15th St</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="card-price">$3,300</div>
+        <div class="card-badges">
+          <span class="badge badge-watch">Victorian Track</span>
+        </div>
+      </div>
+      <div>
+        <div class="card-address">1935 15th St &mdash; Castro / Noe Valley Edge</div>
+        <div class="card-hood">Castro / Noe Valley</div>
+      </div>
+      <div class="card-specs">
+        <span class="spec">1 BR</span>
+      </div>
+      <div class="card-features">
+        <span class="feature hi">Well-maintained Victorian</span>
+        <span class="feature">Great walkability</span>
+        <span class="feature">Castro + Noe food scene</span>
+      </div>
+      <div class="card-note">Solid value on the Castro/Noe edge. Access to two great neighborhood food and coffee scenes.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://www.padmapper.com/apartments/san-francisco-ca" target="_blank">Search PadMapper</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('15th','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('15th','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
+    </div>
+  </div>
+
+  <!-- 11. 2 Guerrero #301 -->
+  <div class="card" id="card-guerrero2" data-track="unique" data-price="4800" data-status="available">
+    <div class="card-photo-placeholder" style="background: linear-gradient(135deg, #1e2a2a 0%, #1e3a3a 100%);">2 Guerrero #301</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="card-price">$4,800</div>
+        <div class="card-badges">
+          <span class="badge badge-watch">Unique Track</span>
+        </div>
+      </div>
+      <div>
+        <div class="card-address">2 Guerrero St #301 &mdash; Mission / Civic Center</div>
+        <div class="card-hood">Mission / Civic Center Edge</div>
+      </div>
+      <div class="card-specs">
+        <span class="spec">1 BR</span>
+        <span class="spec">Corner unit</span>
+        <span class="spec">3rd floor</span>
+      </div>
+      <div class="card-features">
+        <span class="feature hi">Private rooftop deck</span>
+        <span class="feature hi">Converted commercial</span>
+        <span class="feature">Floor-to-ceiling windows</span>
+        <span class="feature">Walk to Dolores Park</span>
+      </div>
+      <div class="card-note">Rare private rooftop deck and a converted commercial building with genuine industrial bones. High value per dollar.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://www.zumper.com/apartments-for-rent/san-francisco-ca" target="_blank">Search Zumper</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('guerrero2','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('guerrero2','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
+    </div>
+  </div>
+
+  <!-- 12. Marquee #511 reference -->
+  <div class="card" id="card-ref511" data-track="loft" data-price="3950" data-status="gone">
+    <div class="card-photo-placeholder" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); opacity: 0.7;">Marquee #511</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="card-price" style="opacity:0.6">$3,950</div>
+        <div class="card-badges">
+          <span class="badge badge-ref">Reference (Gone)</span>
+          <span class="badge badge-watch">Loft Track</span>
+        </div>
+      </div>
+      <div>
+        <div class="card-address">The Marquee #511 &mdash; 151 Alice B. Toklas Pl</div>
+        <div class="card-hood">SoMa / Civic Center (reference unit)</div>
+      </div>
+      <div class="card-specs">
+        <span class="spec">1 BR</span>
+        <span class="spec">5th floor</span>
+      </div>
+      <div class="card-features">
+        <span class="feature">High ceilings</span>
+        <span class="feature">Same building as #707</span>
+        <span class="feature">Reference price point</span>
+      </div>
+      <div class="card-note">Already leased, kept here as a reference for price and specs when a new Marquee unit appears. Call the building directly for updates.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://www.apartments.com/the-marquee-san-francisco-ca/" target="_blank">Check building</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('ref511','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('ref511','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
+    </div>
+  </div>
+
+  <!-- 13. Stagehouse Lofts -->
+  <div class="card" id="card-stagehouse" data-track="loft" data-price="6400" data-status="available">
+    <div class="card-photo-placeholder" style="background: linear-gradient(135deg, #1e1a2a 0%, #2e1a2e 100%); opacity: 0.7;">Stagehouse Lofts</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="card-price over">$6,400</div>
+        <div class="card-badges">
+          <span class="badge badge-watch">Loft Track</span>
+        </div>
+      </div>
+      <div>
+        <div class="card-address">Stagehouse Lofts &mdash; 465 10th St</div>
+        <div class="card-hood">SoMa</div>
+      </div>
+      <div class="card-specs">
+        <span class="spec">2 BR listed</span>
+        <span class="spec">18 units total</span>
+      </div>
+      <div class="card-features">
+        <span class="feature hi">Corrugated steel ceilings</span>
+        <span class="feature hi">Split-level loft</span>
+        <span class="feature">1920s stage factory conversion</span>
         <span class="feature">Historic Landmark</span>
       </div>
-      <div class="card-note">Current 2BR listing is $6,400 and out of range â but this building has the exact same industrial conversion DNA as The Marquee. If a 1BR ever comes up here it belongs in your top 3.</div>
+      <div class="card-note">Over budget at $6,400 for 2BR. Watch for a 1BR &mdash; same industrial conversion DNA as The Marquee.</div>
+      <div class="card-footer">
+        <a class="btn-link" href="https://sfbay.craigslist.org/sfc/apa/" target="_blank">Watch Craigslist</a>
+        <div class="rating-bar">
+          <button class="btn-love" onclick="rateCard('stagehouse','love',this)">Save</button>
+          <button class="btn-pass" onclick="rateCard('stagehouse','pass',this)">Pass</button>
+        </div>
+      </div>
+      <div class="loved-stamp">Saved</div>
     </div>
-    <div class="card-actions">
-      <a href="https://sfbay.craigslist.org/sfc/apa/d/san-francisco-landmark-w-loft-enclosed/7923267704.html" target="_blank" class="btn btn-ghost">View listing â</a>
+  </div>
+
+</div><!-- /grid -->
+
+<!-- SEARCH WEBSITES (collapsible) -->
+<div class="sites-toggle-bar">
+  <button class="sites-toggle" id="sites-toggle-btn" onclick="toggleSites()">
+    <span class="sites-toggle-arrow">&#9654;</span>
+    Where to search &mdash; 30+ sites and sources
+  </button>
+</div>
+<div class="sites-panel" id="sites-panel">
+  <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px;">
+
+    <div class="site-group">
+      <div class="site-group-label">Main platforms</div>
+      <a class="site-link" href="https://sfbay.craigslist.org/search/sfc/apa" target="_blank">sfbay.craigslist.org <span class="site-note">#1 for SF &mdash; check daily</span></a>
+      <a class="site-link" href="https://www.zumper.com/apartments-for-rent/san-francisco-ca" target="_blank">Zumper <span class="site-note">Best SF-specific filters</span></a>
+      <a class="site-link" href="https://www.zillow.com/san-francisco-ca/apartments/" target="_blank">Zillow <span class="site-note">Good for photos &amp; history</span></a>
+      <a class="site-link" href="https://www.apartments.com/san-francisco-ca/" target="_blank">Apartments.com <span class="site-note">Big national database</span></a>
+      <a class="site-link" href="https://hotpads.com/san-francisco-ca/apartments-for-rent" target="_blank">HotPads <span class="site-note">Map-first search</span></a>
+      <a class="site-link" href="https://www.padmapper.com/apartments/san-francisco-ca" target="_blank">PadMapper <span class="site-note">Aggregates Craigslist + more</span></a>
+      <a class="site-link" href="https://www.realtor.com/apartments/San-Francisco_CA" target="_blank">Realtor.com <span class="site-note">Agent-listed properties</span></a>
+      <a class="site-link" href="https://www.trulia.com/for_rent/San_Francisco,CA/" target="_blank">Trulia <span class="site-note">Zillow-owned, different listings</span></a>
     </div>
-    <div class="rating-bar">
-      <button class="btn-love" onclick="rateCard('stagehouse', 'love', this)">â¤ï¸ Love it</button>
-      <button class="btn-pass" onclick="rateCard('stagehouse', 'pass', this)">â Pass</button>
+
+    <div class="site-group">
+      <div class="site-group-label">SF-focused &amp; aggregators</div>
+      <a class="site-link" href="https://www.abodo.com/san-francisco-ca/apartments-for-rent" target="_blank">Abodo <span class="site-note">Good for newer buildings</span></a>
+      <a class="site-link" href="https://www.walkscore.com/apartments/search#san-francisco-ca" target="_blank">Walk Score Rentals <span class="site-note">Filter by walkability</span></a>
+      <a class="site-link" href="https://www.rent.com/california/san-francisco-apartments" target="_blank">Rent.com <span class="site-note">Another aggregator</span></a>
+      <a class="site-link" href="https://www.rentcafe.com/apartments-for-rent/us/ca/san-francisco/" target="_blank">RentCafe <span class="site-note">National + boutique</span></a>
+      <a class="site-link" href="https://www.forrent.com/ca/san-francisco-apartments-for-rent" target="_blank">ForRent.com <span class="site-note">Mid-market coverage</span></a>
+      <a class="site-link" href="https://www.radpad.com/rentals/san-francisco" target="_blank">RadPad <span class="site-note">Pay rent by card</span></a>
+      <a class="site-link" href="https://www.doorsteps.com/search/san-francisco-ca-apartments" target="_blank">Doorsteps <span class="site-note">Apartment.com brand</span></a>
     </div>
+
+    <div class="site-group">
+      <div class="site-group-label">Large SF landlords &mdash; direct</div>
+      <a class="site-link" href="https://veritas-sf.com/available-apartments/" target="_blank">Veritas Investments <span class="site-note">Largest SF landlord, ~5,000 units</span></a>
+      <a class="site-link" href="https://www.mosserco.com/available-properties/" target="_blank">Mosser Companies <span class="site-note">Mid-market SF specialist</span></a>
+      <a class="site-link" href="https://www.prometheus.com/san-francisco" target="_blank">Prometheus RE Group <span class="site-note">Bay Area-focused REIT</span></a>
+      <a class="site-link" href="https://www.essexapartmenthomes.com/california/san-francisco" target="_blank">Essex Property Trust <span class="site-note">50+ SF properties</span></a>
+      <a class="site-link" href="https://www.equityapartments.com/san-francisco-bay-area/san-francisco" target="_blank">Equity Residential <span class="site-note">Premium high-rise units</span></a>
+      <a class="site-link" href="https://www.johnhickeycorp.com" target="_blank">John Hickey Cos <span class="site-note">SF boutique landlord</span></a>
+    </div>
+
+    <div class="site-group">
+      <div class="site-group-label">Off-market &amp; social</div>
+      <a class="site-link" href="https://www.facebook.com/marketplace/san-francisco/propertyforsale" target="_blank">Facebook Marketplace <span class="site-note">Private landlords, no fee</span></a>
+      <a class="site-link" href="https://www.reddit.com/r/SFBayHousing/" target="_blank">r/SFBayHousing <span class="site-note">Active housing board</span></a>
+      <a class="site-link" href="https://nextdoor.com" target="_blank">Nextdoor <span class="site-note">Hyper-local landlords</span></a>
+      <a class="site-link" href="https://www.reddit.com/r/sanfrancisco/search/?q=apartment&sort=new" target="_blank">r/SanFrancisco housing posts <span class="site-note">Occasional off-market gems</span></a>
+    </div>
+
+    <div class="site-group">
+      <div class="site-group-label">Furnished / month-to-month</div>
+      <a class="site-link" href="https://www.furnishedfinder.com/housing/San-Francisco/CA" target="_blank">Furnished Finder <span class="site-note">30-day+ furnished rentals</span></a>
+      <a class="site-link" href="https://www.airbnb.com/s/San-Francisco--CA/homes?monthly_length=3" target="_blank">Airbnb (monthly) <span class="site-note">Bridging option if needed</span></a>
+      <a class="site-link" href="https://www.corporatehousingbyowner.com/san-francisco-ca/" target="_blank">CHBO <span class="site-note">Corporate furnished rentals</span></a>
+    </div>
+
+    <div class="site-group">
+      <div class="site-group-label">Loft + industrial specialists</div>
+      <a class="site-link" href="https://sfbay.craigslist.org/search/sfc/apa?query=loft&min_bedrooms=1" target="_blank">Craigslist: loft search <span class="site-note">Filter by "loft" keyword</span></a>
+      <a class="site-link" href="https://www.zumper.com/apartments-for-rent/san-francisco-ca?amenities=loft" target="_blank">Zumper: loft filter <span class="site-note">Loft-specific results</span></a>
+      <a class="site-link" href="https://www.costar.com" target="_blank">CoStar (with agent access) <span class="site-note">Commercial-to-resi conversions</span></a>
+    </div>
+
   </div>
 </div>
 
-<!-- STRATEGY TIPS -->
-<div class="section-label">Remote Hunting Strategy</div>
-<div class="tips">
-  <div class="tips-header">Key Actions â Next 6 Weeks</div>
-  <div class="tip">
-    <div class="tip-icon">ð</div>
-    <div class="tip-text"><strong>Call The Marquee now.</strong> (415) 828-5080, ask for Wendy Willbanks. Say you're relocating Aug 24, loved unit #511, want to be notified when #707 or any similar unit lists. This is your #1 action today.</div>
-  </div>
-  <div class="tip">
-    <div class="tip-icon">ðï¸</div>
-    <div class="tip-text"><strong>Real listings hit mid-July.</strong> SF landlords list 30â45 days before move-in. Your window opens ~July 10. Right now is for prep, not panic.</div>
-  </div>
-  <div class="tip">
-    <div class="tip-icon">ð</div>
-    <div class="tip-text"><strong>Set parallel alerts â two tracks.</strong> Track 1 (loft): search Craigslist SF for "loft", "soaring ceilings", "concrete columns", "12 foot", "live work". Track 2 (renovated Victorian): "railroad flat", "original detail", "gut remodel", "bay windows", "skylight", "built-in". Save searches on Zillow + Zumper.</div>
-  </div>
-  <div class="tip">
-    <div class="tip-icon">âï¸</div>
-    <div class="tip-text"><strong>Plan a 3-day SF trip July 14â22.</strong> Most landlords require in-person tours. Block those days now â you can do 6â8 viewings and apply on the spot.</div>
-  </div>
-  <div class="tip">
-    <div class="tip-icon">ð</div>
-    <div class="tip-text"><strong>Get docs ready now.</strong> 2 recent pay stubs, last 2 bank statements, 2 reference letters, employer letter confirming salary, photo ID. Have these as PDFs on your phone.</div>
-  </div>
-  <div class="tip">
-    <div class="tip-icon">ð°</div>
-    <div class="tip-text"><strong>SF requires 3Ã gross monthly income.</strong> At $5k rent that's $15k/month. Many landlords also want first + last + deposit upfront â budget ~$15k cash to secure a place.</div>
+<!-- HUNT STRATEGY (collapsible) -->
+<div class="strategy-toggle-bar">
+  <button class="strategy-toggle" id="strategy-toggle-btn" onclick="toggleStrategy()">
+    <span class="strategy-toggle-arrow">&#9654;</span>
+    Hunt strategy &mdash; key actions before July 10
+  </button>
+</div>
+<div class="strategy-panel" id="strategy-panel">
+  <div class="tips">
+    <div class="tip"><strong>Call The Marquee today.</strong> (415) 828-5080, ask for Wendy Willbanks. Say you're relocating Aug 24, loved #511, want to be notified when #707 or similar lists. This is your #1 action.</div>
+    <div class="tip"><strong>Real listings hit mid-July.</strong> SF landlords list 30-45 days before move-in. Your window opens ~July 10. Right now is for prep, not panic.</div>
+    <div class="tip"><strong>Set parallel alerts on two tracks.</strong> Track 1 (loft): search for "loft", "soaring ceilings", "concrete columns", "12 foot", "live work". Track 2 (Victorian): "railroad flat", "original detail", "gut remodel", "bay windows", "skylight".</div>
+    <div class="tip"><strong>Plan a 3-day SF trip around July 18-22.</strong> Most landlords require in-person tours. Block those days now &mdash; you can do 6-8 viewings and apply on the spot.</div>
+    <div class="tip"><strong>Get docs ready now.</strong> 2 recent pay stubs, 2 bank statements, 2 reference letters, employer letter confirming salary, photo ID. Have these as PDFs on your phone.</div>
+    <div class="tip"><strong>SF requires 3x gross monthly income.</strong> At $5k rent that's $15k/month. Budget ~$15k cash upfront for first + last + deposit.</div>
   </div>
 </div>
 
@@ -1264,30 +977,27 @@ body {
 </div>
 
 <script>
-// âââ DATA âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const STORAGE_KEY = 'sf_apt_ratings';
 let ratings = {};
 let lastPassed = null;
 let undoTimer = null;
 
-// Card metadata for taste engine
 const CARD_META = {
-  marquee707: { track: 'loft',     label: 'The Marquee #707',    keywords: ['loft','ceilings','industrial','concrete'] },
-  guerrero:   { track: 'victorian',label: 'Guerrero St',         keywords: ['victorian','railroad','period','character'] },
-  fell:       { track: 'victorian',label: 'Fell St',             keywords: ['victorian','skylight','renovated','period'] },
-  dolores:    { track: 'unique',   label: 'Dolores Carriage Hse',keywords: ['unique','carriage','converted','private'] },
-  waller:     { track: 'victorian',label: 'Waller St',           keywords: ['victorian','renovated','remodel','modern'] },
-  duboce:     { track: 'victorian',label: 'Duboce Ave',          keywords: ['victorian','duboce','period','spacious'] },
-  steiner:    { track: 'victorian',label: 'Steiner St',          keywords: ['victorian','painted-ladies','alamo','historic'] },
-  dorland:    { track: 'victorian',label: 'Dorland St',          keywords: ['victorian','castro','character'] },
-  castro:     { track: 'unique',   label: '107 Castro St',       keywords: ['castro','unique','budget'] },
-  '15th':     { track: 'victorian',label: '1935 15th St',        keywords: ['victorian','castro','walkable'] },
-  guerrero2:  { track: 'unique',   label: '2 Guerrero #301',     keywords: ['unique','deck','rooftop','converted'] },
-  ref511:     { track: 'loft',     label: 'Marquee #511 (ref)',  keywords: ['loft','ceilings','industrial','reference'] },
-  stagehouse: { track: 'loft',     label: 'Stagehouse Lofts',    keywords: ['loft','industrial','conversion','ceilings'] },
+  marquee707:  { track: 'loft',     label: 'The Marquee #707',      keywords: ['loft','ceilings','industrial','concrete'] },
+  guerrero:    { track: 'victorian',label: 'Guerrero St',            keywords: ['victorian','railroad','period','character'] },
+  fell:        { track: 'victorian',label: 'Fell St',                keywords: ['victorian','skylight','renovated','period'] },
+  dolores:     { track: 'unique',   label: 'Dolores Carriage House', keywords: ['unique','carriage','converted','private'] },
+  waller:      { track: 'victorian',label: 'Waller St',              keywords: ['victorian','renovated','remodel','modern'] },
+  duboce:      { track: 'victorian',label: 'Duboce Ave',             keywords: ['victorian','duboce','period','spacious'] },
+  steiner:     { track: 'victorian',label: 'Steiner St',             keywords: ['victorian','painted-ladies','alamo','historic'] },
+  dorland:     { track: 'victorian',label: 'Dorland St',             keywords: ['victorian','castro','character'] },
+  castro:      { track: 'unique',   label: '107 Castro St',          keywords: ['castro','unique','budget'] },
+  '15th':      { track: 'victorian',label: '1935 15th St',           keywords: ['victorian','castro','walkable'] },
+  guerrero2:   { track: 'unique',   label: '2 Guerrero #301',        keywords: ['unique','deck','rooftop','converted'] },
+  ref511:      { track: 'loft',     label: 'Marquee #511 (ref)',     keywords: ['loft','ceilings','industrial','reference'] },
+  stagehouse:  { track: 'loft',     label: 'Stagehouse Lofts',       keywords: ['loft','industrial','conversion','ceilings'] },
 };
 
-// âââ LOAD / SAVE âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function loadRatings() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -1302,12 +1012,10 @@ function saveRatings() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings)); } catch(e) {}
 }
 
-// âââ RATE A CARD âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function rateCard(id, rating, btn) {
   const card = document.getElementById('card-' + id);
   if (!card) return;
 
-  // Toggle off if same rating clicked again
   if (ratings[id] === rating) {
     delete ratings[id];
     card.classList.remove('loved', 'passed');
@@ -1318,22 +1026,17 @@ function rateCard(id, rating, btn) {
     return;
   }
 
-  // Clear previous state
   card.classList.remove('loved', 'passed');
-
   ratings[id] = rating;
   saveRatings();
 
   if (rating === 'love') {
     card.classList.add('loved');
     syncRatingButtons(id, 'love');
-    // Scroll to top so user sees it got saved
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   } else {
-    // Pass: animate out
     lastPassed = id;
     syncRatingButtons(id, 'pass');
-    // Small delay so button feedback is visible
     setTimeout(() => {
       card.classList.add('passed');
       showUndoToast(CARD_META[id] ? CARD_META[id].label : id);
@@ -1364,7 +1067,6 @@ function applyAllRatings() {
   });
 }
 
-// âââ UNDO ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function showUndoToast(label) {
   const toast = document.getElementById('undo-toast');
   document.getElementById('undo-text').textContent = 'Passed on ' + label;
@@ -1389,10 +1091,8 @@ function undoPass() {
   lastPassed = null;
 }
 
-// âââ STATS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function updateStats() {
   const lovedCount = Object.values(ratings).filter(r => r === 'love').length;
-  const passedCount = Object.values(ratings).filter(r => r === 'pass').length;
   const totalVisible = document.querySelectorAll('.card:not(.passed):not(.hidden)').length;
   const totalEl = document.getElementById('stat-total');
   const lovedEl = document.getElementById('stat-loved');
@@ -1400,7 +1100,6 @@ function updateStats() {
   if (lovedEl) lovedEl.textContent = lovedCount;
 }
 
-// âââ TASTE METER âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function updateTasteMeter() {
   const meter = document.getElementById('taste-meter');
   const body = document.getElementById('taste-body');
@@ -1413,10 +1112,8 @@ function updateTasteMeter() {
     meter.classList.remove('visible');
     return;
   }
-
   meter.classList.add('visible');
 
-  // Count by track
   const trackScores = { loft: 0, victorian: 0, unique: 0 };
   lovedIds.forEach(id => {
     const meta = CARD_META[id];
@@ -1427,61 +1124,34 @@ function updateTasteMeter() {
     if (meta && trackScores[meta.track] !== undefined) trackScores[meta.track] -= 1;
   });
 
-  // Count loved keywords
   const kw = {};
   lovedIds.forEach(id => {
     const meta = CARD_META[id];
     if (meta) meta.keywords.forEach(k => { kw[k] = (kw[k] || 0) + 1; });
   });
-  const topKw = Object.entries(kw).sort((a,b) => b[1]-a[1]).slice(0,4).map(([k]) => k);
-
-  // Avoid passed keywords
-  const passedKw = {};
-  passedIds.forEach(id => {
-    const meta = CARD_META[id];
-    if (meta) meta.keywords.forEach(k => { passedKw[k] = (passedKw[k] || 0) + 1; });
-  });
-  const avoidKw = Object.entries(passedKw).sort((a,b) => b[1]-a[1]).slice(0,3).map(([k]) => k);
 
   const maxScore = Math.max(...Object.values(trackScores).map(Math.abs), 1);
-  const trackLabels = { loft: 'ð­ Loft', victorian: 'ð¡ Victorian', unique: 'â¨ Unique' };
+  const trackLabels = { loft: 'Loft', victorian: 'Victorian', unique: 'Unique' };
   const trackColors = { loft: '#60a5fa', victorian: '#a78bfa', unique: '#34d399' };
 
   let html = '';
-
-  // Track bars
   Object.entries(trackScores).forEach(([track, score]) => {
     const pct = Math.min(Math.abs(score) / maxScore * 100, 100);
     const isLove = score >= 0;
     const color = isLove ? trackColors[track] : '#f87171';
-    html += `
-      <div class="taste-row">
-        <div class="taste-label">${trackLabels[track]}</div>
-        <div class="taste-bar-wrap">
-          <div class="taste-bar ${isLove ? 'love' : 'pass'}" style="width:${pct}%; background:${color}"></div>
-        </div>
-        <div class="taste-score" style="color:${color}">${score > 0 ? '+' : ''}${score}</div>
-      </div>`;
+    html += `<div class="taste-row">
+      <div class="taste-label">${trackLabels[track]}</div>
+      <div class="taste-bar-wrap"><div class="taste-bar" style="width:${pct}%; background:${color}"></div></div>
+      <div class="taste-score" style="color:${color}">${score > 0 ? '+' : ''}${score}</div>
+    </div>`;
   });
 
-  // Insight line
-  let insight = '';
   const topTrack = Object.entries(trackScores).sort((a,b) => b[1]-a[1])[0];
-  const bottomTrack = Object.entries(trackScores).sort((a,b) => a[1]-b[1])[0];
   if (lovedIds.length > 0 && topTrack[1] > 0) {
-    const trackName = topTrack[0] === 'loft' ? 'industrial loft conversions' : topTrack[0] === 'victorian' ? 'renovated Victorians' : 'unique/converted spaces';
-    insight += `<strong>You're gravitating toward ${trackName}.</strong>`;
-  }
-  if (passedIds.length > 0 && bottomTrack[1] < 0) {
-    const trackName = bottomTrack[0] === 'loft' ? 'lofts' : bottomTrack[0] === 'victorian' ? 'Victorians' : 'unique spaces';
-    insight += ` Fewer ${trackName} makes sense.`;
+    const name = topTrack[0] === 'loft' ? 'industrial loft conversions' : topTrack[0] === 'victorian' ? 'renovated Victorians' : 'unique/converted spaces';
+    html += `<div class="taste-insight">You're gravitating toward <strong>${name}</strong>.</div>`;
   }
 
-  if (insight) {
-    html += `<div class="taste-insight">${insight}</div>`;
-  }
-
-  // Search query
   if (lovedIds.length >= 1) {
     const lovedTracks = [...new Set(lovedIds.map(id => CARD_META[id]?.track).filter(Boolean))];
     let query = '';
@@ -1489,14 +1159,12 @@ function updateTasteMeter() {
     if (lovedTracks.includes('victorian')) query += '"railroad flat" OR "period details" OR "gut remodel" OR "skylight" ';
     if (lovedTracks.includes('unique')) query += '"carriage house" OR "converted" OR "private entrance" OR "rooftop" ';
     query = query.trim();
-
     if (query) {
-      html += `
-        <div class="search-query" onclick="copyQuery(this, '${query.replace(/'/g, "\\'")}')">
-          <span class="search-query-label">Craigslist&nbsp;query</span>
-          <span class="search-query-text">${query}</span>
-          <span class="copy-hint">tap to copy</span>
-        </div>`;
+      html += `<div class="search-query" onclick="copyQuery(this, '${query.replace(/'/g, "\\'")}')">
+        <div class="search-query-label">Craigslist query based on your saves</div>
+        <div class="search-query-text">${query}</div>
+        <div class="copy-hint">Tap to copy</div>
+      </div>`;
     }
   }
 
@@ -1506,11 +1174,10 @@ function updateTasteMeter() {
 function copyQuery(el, text) {
   navigator.clipboard.writeText(text).then(() => {
     const hint = el.querySelector('.copy-hint');
-    if (hint) { hint.textContent = 'â copied'; setTimeout(() => hint.textContent = 'tap to copy', 2000); }
+    if (hint) { hint.textContent = 'Copied!'; setTimeout(() => hint.textContent = 'Tap to copy', 2000); }
   }).catch(() => {});
 }
 
-// âââ FILTER ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function filter(type, btn) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -1522,7 +1189,6 @@ function filter(type, btn) {
     const isLoved = card.classList.contains('loved');
     const isPassed = card.classList.contains('passed');
 
-    // Never show passed cards (unless filtering to loved, which won't match anyway)
     if (isPassed) { card.classList.add('hidden'); return; }
 
     let show = true;
@@ -1539,16 +1205,20 @@ function filter(type, btn) {
   updateStats();
 }
 
-// âââ STYLE TOGGLE ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-function toggleStyle() {
-  const body = document.getElementById('style-body');
-  const toggle = document.getElementById('style-toggle');
-  const hidden = body.style.display === 'none';
-  body.style.display = hidden ? '' : 'none';
-  toggle.textContent = hidden ? 'â¾' : 'â¸';
+function toggleSites() {
+  const panel = document.getElementById('sites-panel');
+  const btn = document.getElementById('sites-toggle-btn');
+  panel.classList.toggle('open');
+  btn.classList.toggle('open');
 }
 
-// âââ INIT ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function toggleStrategy() {
+  const panel = document.getElementById('strategy-panel');
+  const btn = document.getElementById('strategy-toggle-btn');
+  panel.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
 loadRatings();
 </script>
 </body>
