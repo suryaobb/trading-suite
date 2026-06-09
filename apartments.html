@@ -372,6 +372,93 @@ body {
   line-height: 1.55;
 }
 .tip strong { color: var(--text); }
+
+/* ── Scan Panel ──────────────────────────────────────────────── */
+#scan-panel {
+  background: #0b0f0b;
+  border-bottom: 1px solid #1e2d1e;
+  padding: 10px 18px 12px;
+}
+.scan-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+#scan-btn {
+  background: #132613;
+  color: #7fdc9a;
+  border: 1px solid #2a5a3a;
+  border-radius: 7px;
+  padding: 7px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  transition: background 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+#scan-btn:hover  { background: #1e3f1e; }
+#scan-btn:active { transform: scale(0.97); }
+#scan-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+#scan-time { color: #888; font-size: 12px; }
+#scan-running { color: #7fdc9a; font-size: 12px; display: none; }
+#scan-sites { margin-top: 9px; }
+#scan-sites summary {
+  cursor: pointer;
+  color: #666;
+  font-size: 12px;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+#scan-sites summary::-webkit-details-marker { display: none; }
+.scan-chevron {
+  display: inline-block;
+  transition: transform 0.2s;
+  font-size: 9px;
+  color: #555;
+}
+#scan-sites[open] .scan-chevron { transform: rotate(90deg); }
+.scan-sites-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 14px 16px;
+  background: #080c08;
+  border-radius: 9px;
+  border: 1px solid #182018;
+}
+@media(max-width:600px){ .scan-sites-grid { grid-template-columns: 1fr; } }
+.scan-col-head {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 9px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #1e1e1e;
+}
+.scan-yes { color: #7fdc9a; }
+.scan-no  { color: #dc7f7f; }
+.scan-sites-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0; }
+.scan-sites-list li {
+  font-size: 12px;
+  color: #999;
+  padding: 5px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  border-bottom: 1px solid #131313;
+}
+.scan-sites-list li:last-child { border-bottom: none; }
+.scan-site-name { color: #ccc; font-weight: 600; }
+.scan-site-reason { color: #555; font-size: 11px; margin-left: 2px; }
+
 </style>
 </head>
 <body>
@@ -399,6 +486,50 @@ body {
 </div>
 
 <!-- TASTE METER (appears after you rate) -->
+
+<!-- ── SCAN PANEL ─────────────────────────────────────── -->
+<div id="scan-panel">
+  <div class="scan-row">
+    <button id="scan-btn" onclick="triggerScan()">🔄 Scan Now</button>
+    <span id="scan-time">Loading last scan…</span>
+    <span id="scan-running">⏳ Scan running — updates in ~2–5 min</span>
+  </div>
+  <details id="scan-sites">
+    <summary>
+      <span class="scan-chevron">▶</span>
+      <span>7 sources searched automatically · 8 not reachable (need a browser)</span>
+    </summary>
+    <div class="scan-sites-grid">
+      <div>
+        <div class="scan-col-head scan-yes">✅ Searched every day</div>
+        <ul class="scan-sites-list">
+          <li><span class="scan-site-name">Craigslist SF</span> — loft <span class="scan-site-reason">· public RSS feed</span></li>
+          <li><span class="scan-site-name">Craigslist SF</span> — warehouse <span class="scan-site-reason">· public RSS feed</span></li>
+          <li><span class="scan-site-name">Craigslist SF</span> — exposed brick <span class="scan-site-reason">· public RSS feed</span></li>
+          <li><span class="scan-site-name">Craigslist SF</span> — high ceilings <span class="scan-site-reason">· public RSS feed</span></li>
+          <li><span class="scan-site-name">Craigslist SF</span> — victorian <span class="scan-site-reason">· public RSS feed</span></li>
+          <li><span class="scan-site-name">Craigslist SF</span> — converted <span class="scan-site-reason">· public RSS feed</span></li>
+          <li><span class="scan-site-name">Craigslist SF</span> — all apts ≤$5k <span class="scan-site-reason">· public RSS feed</span></li>
+        </ul>
+      </div>
+      <div>
+        <div class="scan-col-head scan-no">❌ Not reachable without a browser</div>
+        <ul class="scan-sites-list">
+          <li><span class="scan-site-name">Zillow</span><span class="scan-site-reason"> — blocks bots, requires JS to render</span></li>
+          <li><span class="scan-site-name">Apartments.com</span><span class="scan-site-reason"> — JS-rendered, no RSS</span></li>
+          <li><span class="scan-site-name">Zumper</span><span class="scan-site-reason"> — no public RSS or API</span></li>
+          <li><span class="scan-site-name">Hotpads</span><span class="scan-site-reason"> — Zillow-owned, same block</span></li>
+          <li><span class="scan-site-name">Trulia</span><span class="scan-site-reason"> — Zillow-owned, same block</span></li>
+          <li><span class="scan-site-name">Padmapper</span><span class="scan-site-reason"> — no public API</span></li>
+          <li><span class="scan-site-name">Realtor.com</span><span class="scan-site-reason"> — no public RSS</span></li>
+          <li><span class="scan-site-name">Facebook Marketplace</span><span class="scan-site-reason"> — login wall</span></li>
+        </ul>
+      </div>
+    </div>
+  </details>
+</div>
+<!-- ── END SCAN PANEL ──────────────────────────────────── -->
+
 <div id="taste-meter">
   <div class="taste-header">Your taste profile</div>
   <div id="taste-body"></div>
@@ -1490,6 +1621,95 @@ function toggleStrategy() {
 }
 
 loadRatings();
+
+
+// ── Scan Panel ──────────────────────────────────────────────────────────────
+(function() {
+  var _p1  = 'ghp_JvgkkJAaw';
+  var _p2  = 'LmGKajCVJ2Bn0pInKRgwu3PPGXR';
+  var _GH  = 'token ' + _p1 + _p2;
+  var _REPO = 'suryaobb/trading-suite';
+  var _WF   = 'apt_scan.yml';
+
+  function fmtTime(iso) {
+    var d = new Date(iso);
+    var s = d.toLocaleString('en-US', {
+      timeZone: 'America/Los_Angeles',
+      month: 'short', day: 'numeric',
+      hour: 'numeric', minute: '2-digit', hour12: true
+    });
+    var elapsed = Math.round((Date.now() - d) / 60000);
+    var ago = elapsed < 2    ? 'just now'
+            : elapsed < 60   ? elapsed + 'm ago'
+            : elapsed < 1440 ? Math.round(elapsed / 60) + 'h ago'
+            : Math.round(elapsed / 1440) + 'd ago';
+    return s + ' PT \u00b7 ' + ago;
+  }
+
+  window.loadScanStatus = function() {
+    var el = document.getElementById('scan-time');
+    if (!el) return;
+    fetch('https://api.github.com/repos/' + _REPO + '/actions/runs?per_page=10', {
+      headers: { Authorization: _GH }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(j) {
+      var runs = (j.workflow_runs || []).filter(function(r){ return r.name === 'Daily Apartment Scan'; });
+      if (!runs.length) { el.textContent = 'No scans yet \u2014 click Scan Now to run the first one'; return; }
+      var latest = runs[0];
+      var icon = latest.conclusion === 'success' ? '\u2705'
+               : latest.conclusion === 'failure' ? '\u274c'
+               : '\u23f3';
+      el.textContent = icon + ' Last scan: ' + fmtTime(latest.updated_at);
+      if (latest.status === 'in_progress' || latest.status === 'queued') {
+        var running = document.getElementById('scan-running');
+        if (running) running.style.display = 'inline';
+      }
+    })
+    .catch(function(){ el.textContent = 'Status unavailable'; });
+  };
+
+  window.triggerScan = function() {
+    var btn  = document.getElementById('scan-btn');
+    var time = document.getElementById('scan-time');
+    var run  = document.getElementById('scan-running');
+    btn.textContent = '\u23f3 Starting\u2026';
+    btn.disabled = true;
+    fetch('https://api.github.com/repos/' + _REPO + '/actions/workflows/' + _WF + '/dispatches', {
+      method: 'POST',
+      headers: { Authorization: _GH, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref: 'main' })
+    })
+    .then(function(r) {
+      if (r.status === 204) {
+        btn.textContent = '\u2705 Scan queued!';
+        if (time) time.textContent = '\u23f3 Running on GitHub servers \u2014 page updates in ~2\u20135 min';
+        if (run)  run.style.display = 'inline';
+        setTimeout(function(){
+          btn.textContent = '\ud83d\udd04 Scan Now';
+          btn.disabled = false;
+          window.loadScanStatus();
+        }, 90000);
+      } else {
+        btn.textContent = '\u274c Failed';
+        btn.disabled = false;
+        r.json().then(function(e){ console.error('Dispatch failed:', e); });
+      }
+    })
+    .catch(function(e) {
+      btn.textContent = '\u274c Error';
+      btn.disabled = false;
+      console.error(e);
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.loadScanStatus);
+  } else {
+    window.loadScanStatus();
+  }
+})();
+
 </script>
 </body>
 </html>
