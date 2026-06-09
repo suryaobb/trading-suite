@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backtest — Trading Suite</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+body { overflow-x: hidden; }
+
+.topbar {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 48px;
+  z-index: 100;
+}
+
+.api-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.api-row input {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+  outline: none;
+  flex: 1;
+  transition: border-color 0.15s;
+  font-family: monospace;
+}
+.api-row input:focus { border-color: var(--accent); color: var(--text); }
+
+.btn-run {
+  background: var(--grad);
+  border: none;
+  border-radius: 8px;
+  padding: 7px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.btn-run:hover { opacity: 0.85; }
+.btn-run:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-mute);
+}
+
+.content { padding: 20px; max-width: 1100px; margin: 0 auto; }
+
+/* ─── SUMMARY CARDS ─── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.sum-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  text-align: center;
+}
+
+.sum-card .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-mute);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.sum-card .value {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.sum-card .sub {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 3px;
+}
+
+/* ─── RESULTS TABLE ─── */
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.results-table {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.rt-head {
+  display: grid;
+  grid-template-columns: 80px 70px 80px 80px 80px 80px 80px 1fr;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-mute);
+}
+
+.rt-row {
+  display: grid;
+  grid-template-columns: 80px 70px 80px 80px 80px 80px 80px 1fr;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  transition: background 0.1s;
+}
+.rt-row:last-child { border-bottom: none; }
+.rt-row:hover { background: rgba(56,189,248,0.03); }
+
+.rt-sym {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.rt-val { font-size: 13px; font-weight: 600; color: var(--text-dim); }
+.rt-val.green { color: var(--green); }
+.rt-val.red   { color: var(--red); }
+.rt-val.yellow{ color: var(--yellow); }
+.rt-val.mute  { color: var(--text-mute); }
+
+.win-bar-wrap {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 120px;
+}
+.win-bar { height: 6px; border-radius: 3px; }
+
+/* ─── SIGNAL LIST ─── */
+.signal-list {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.sl-head {
+  display: grid;
+  grid-template-columns: 80px 90px 90px 90px 90px 90px 1fr;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-mute);
+}
+
+.sl-row {
+  display: grid;
+  grid-template-columns: 80px 90px 90px 90px 90px 90px 1fr;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  font-size: 12px;
+  transition: background 0.1s;
+}
+.sl-row:last-child { border-bottom: none; }
+.sl-row:hover { background: rgba(56,189,248,0.03); }
+.sl-row.win { border-left: 3px solid var(--green); }
+.sl-row.loss { border-left: 3px solid var(--red); }
+
+.outcome-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+.outcome-badge.win { background: #0d2718; color: var(--green); }
+.outcome-badge.loss { background: #2d0f0f; color: var(--red); }
+
+/* ─── LOADING ─── */
+.loading-overlay {
+  display: none;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-mute);
+}
+.loading-overlay.show { display: block; }
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.progress-text { font-size: 13px; margin-top: 8px; }
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-faint);
+}
+.empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state p { font-size: 13px; line-height: 1.7; color: var(--text-mute); }
+
+/* ─── FILTER ROW ─── */
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.filter-row label { font-size: 12px; color: var(--text-mute); }
+.filter-row select {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+  outline: none;
+}
+
+@media (max-width: 800px) {
+  .rt-head, .rt-row { grid-template-columns: 70px 60px 70px 70px 70px 70px 1fr; }
+  .rt-head span:nth-child(7), .rt-row > *:nth-child(7) { display: none; }
+  .sl-head, .sl-row { grid-template-columns: 70px 80px 80px 80px 80px 1fr; }
+  .sl-head span:nth-child(6), .sl-row > *:nth-child(6) { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- SHARED NAV -->
+<nav class="nav">
+  <div class="nav-logo">⚡ <span>Trading</span> Suite</div>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html">Dashboard</a>
+    <a class="nav-link" href="scanner.html">Scanner</a>
+    <a class="nav-link" href="planner.html">Planner</a>
+    <a class="nav-link" href="journal.html">Journal</a>
+    <a class="nav-link active" href="backtest.html">Backtest</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-clock" id="navClock">–</span>
+  </div>
+</nav>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="api-row">
+    <input type="password" id="apiKey" placeholder="Polygon API key..." value="eaJZCtLOOObYTtDAeHfSqnUDIo2pVx9O">
+  </div>
+  <button class="btn-run" id="runBtn" onclick="runBacktest()">▶ Run 5-Month Backtest</button>
+  <div class="status-pill" id="statusPill">Ready</div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- Loading -->
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <div style="font-size:15px;font-weight:700;color:var(--text-dim)">Running backtest…</div>
+    <div class="progress-text" id="progressText">Fetching daily bars…</div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" id="emptyState">
+    <div class="icon">📈</div>
+    <p>
+      Backtest: <strong>5 EMA × 20 EMA crossover above VWAP</strong><br>
+      5 months of daily bars · 10 symbols<br><br>
+      Hit <strong>Run 5-Month Backtest</strong> to fetch history from Polygon and see<br>
+      how often the signal wins, the average return, and every individual trade.
+    </p>
+  </div>
+
+  <!-- Results (hidden until run) -->
+  <div id="results" style="display:none;">
+
+    <!-- Summary cards -->
+    <div class="summary-grid" id="summaryCards"></div>
+
+    <!-- Per-symbol table -->
+    <div style="margin-bottom:6px;" class="section-title">Per-symbol breakdown</div>
+    <div class="results-table">
+      <div class="rt-head">
+        <span>Symbol</span>
+        <span>Signals</span>
+        <span>Win %</span>
+        <span>Avg Win</span>
+        <span>Avg Loss</span>
+        <span>Expect.</span>
+        <span>Bars</span>
+        <span>Win rate bar</span>
+      </div>
+      <div id="symbolRows"></div>
+    </div>
+
+    <!-- Individual signals -->
+    <div class="filter-row">
+      <div class="section-title" style="margin-bottom:0;">All signals fired</div>
+      <label>Filter:
+        <select id="filterSym" onchange="renderSignalList()">
+          <option value="">All symbols</option>
+        </select>
+      </label>
+      <label>Outcome:
+        <select id="filterOutcome" onchange="renderSignalList()">
+          <option value="">All</option>
+          <option value="win">Wins only</option>
+          <option value="loss">Losses only</option>
+        </select>
+      </label>
+    </div>
+    <div class="signal-list">
+      <div class="sl-head">
+        <span>Symbol</span>
+        <span>Date</span>
+        <span>Entry</span>
+        <span>EMA5</span>
+        <span>EMA20</span>
+        <span>+5d Return</span>
+        <span>Outcome</span>
+      </div>
+      <div id="signalRows"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const TICKERS = ['AAPL','MSFT','GOOGL','AMZN','META','NVDA','TSLA','SPY','QQQ','IWM'];
+const WIN_THRESHOLD = 0.005;  // 0.5% forward move = win
+const FORWARD_DAYS  = 5;      // measure outcome over next 5 trading days
+
+let allSignals = [];   // { ticker, date, entry, ema5, ema20, vwap, returnPct, win }
+let symbolStats = {};  // { ticker: { signals, wins, winRate, avgWin, avgLoss, expectancy, bars } }
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function getDateRange() {
+  const to = new Date();
+  to.setDate(to.getDate() - 1);  // yesterday (last complete day)
+  const from = new Date(to);
+  from.setMonth(from.getMonth() - 5);
+  const fmt = d => d.toISOString().slice(0, 10);
+  return { from: fmt(from), to: fmt(to) };
+}
+
+function calcEMA(bars, period) {
+  // Returns EMA series aligned with bars array (null for first period-1 values)
+  const k = 2 / (period + 1);
+  const result = new Array(bars.length).fill(null);
+  if (bars.length < period) return result;
+  // Seed with SMA
+  let sum = 0;
+  for (let i = 0; i < period; i++) sum += bars[i].c;
+  result[period - 1] = sum / period;
+  for (let i = period; i < bars.length; i++) {
+    result[i] = bars[i].c * k + result[i - 1] * (1 - k);
+  }
+  return result;
+}
+
+function calcVWAPSeries(bars) {
+  // Cumulative VWAP from the start of the window (running average transaction price)
+  let sumTPV = 0, sumV = 0;
+  return bars.map(b => {
+    const tp = (b.h + b.l + b.c) / 3;
+    sumTPV += tp * b.v;
+    sumV   += b.v;
+    return sumV > 0 ? sumTPV / sumV : b.c;
+  });
+}
+
+function fmt2(n) { return n != null ? n.toFixed(2) : '–'; }
+function fmtPct(n) { return n != null ? (n >= 0 ? '+' : '') + (n * 100).toFixed(2) + '%' : '–'; }
+
+// ── Fetch one ticker ──────────────────────────────────────────────────────────
+async function fetchDailyBars(ticker, from, to, apiKey) {
+  const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${apiKey}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (!data.results || !data.results.length) return [];
+  return data.results.map(r => ({ o: r.o, h: r.h, l: r.l, c: r.c, v: r.v, t: r.t }));
+}
+
+// ── Run signal detection over bars ───────────────────────────────────────────
+function detectSignals(ticker, bars) {
+  const ema5  = calcEMA(bars, 5);
+  const ema20 = calcEMA(bars, 20);
+  const vwap  = calcVWAPSeries(bars);
+  const signals = [];
+
+  // Need at least 21 bars of history before first signal, plus FORWARD_DAYS lookahead
+  for (let i = 20; i < bars.length - FORWARD_DAYS; i++) {
+    if (ema5[i] == null || ema5[i-1] == null || ema20[i] == null || ema20[i-1] == null) continue;
+
+    // Bull crossover: EMA5 crosses above EMA20
+    const bullCross = ema5[i-1] < ema20[i-1] && ema5[i] > ema20[i];
+    if (!bullCross) continue;
+
+    // Must be above VWAP on crossover day
+    if (bars[i].c <= vwap[i]) continue;
+
+    // Measure outcome: max gain in next FORWARD_DAYS bars
+    const entry = bars[i].c;
+    let bestClose = entry;
+    for (let j = i + 1; j <= i + FORWARD_DAYS; j++) {
+      if (bars[j]) bestClose = Math.max(bestClose, bars[j].c);
+    }
+    const returnPct = (bestClose - entry) / entry;
+    const win = returnPct >= WIN_THRESHOLD;
+
+    const date = new Date(bars[i].t).toISOString().slice(0, 10);
+    signals.push({ ticker, date, entry, ema5: ema5[i], ema20: ema20[i], vwap: vwap[i], returnPct, win });
+  }
+
+  return { signals, bars: bars.length };
+}
+
+// ── Aggregate stats per symbol ────────────────────────────────────────────────
+function calcStats(ticker, signals, bars) {
+  const wins   = signals.filter(s => s.win);
+  const losses = signals.filter(s => !s.win);
+  const winRate  = signals.length > 0 ? wins.length / signals.length : 0;
+  const avgWin   = wins.length   > 0 ? wins.reduce((a, s) => a + s.returnPct, 0) / wins.length   : 0;
+  const avgLoss  = losses.length > 0 ? losses.reduce((a, s) => a + s.returnPct, 0) / losses.length : 0;
+  const expectancy = winRate * avgWin + (1 - winRate) * avgLoss;
+  return { ticker, signals: signals.length, wins: wins.length, losses: losses.length, winRate, avgWin, avgLoss, expectancy, bars };
+}
+
+// ── Main backtest runner ──────────────────────────────────────────────────────
+async function runBacktest() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('Enter your Polygon API key.'); return; }
+
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('statusPill').textContent = 'Fetching…';
+
+  allSignals = [];
+  symbolStats = {};
+
+  const { from, to } = getDateRange();
+  document.getElementById('progressText').textContent = `Fetching daily bars from ${from} to ${to}…`;
+
+  for (let i = 0; i < TICKERS.length; i++) {
+    const ticker = TICKERS[i];
+    document.getElementById('progressText').textContent = `[${i+1}/${TICKERS.length}] ${ticker} — fetching…`;
+    try {
+      const bars = await fetchDailyBars(ticker, from, to, apiKey);
+      if (bars.length < 25) {
+        symbolStats[ticker] = { ticker, signals: 0, wins: 0, losses: 0, winRate: 0, avgWin: 0, avgLoss: 0, expectancy: 0, bars: bars.length };
+        continue;
+      }
+      const { signals, bars: barCount } = detectSignals(ticker, bars);
+      allSignals.push(...signals);
+      symbolStats[ticker] = calcStats(ticker, signals, barCount);
+    } catch(e) {
+      console.error(ticker, e);
+      symbolStats[ticker] = { ticker, signals: 0, wins: 0, losses: 0, winRate: 0, avgWin: 0, avgLoss: 0, expectancy: 0, bars: 0, error: true };
+    }
+  }
+
+  // Sort signals newest first
+  allSignals.sort((a, b) => b.date.localeCompare(a.date));
+
+  document.getElementById('loading').classList.remove('show');
+  renderResults(from, to);
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('statusPill').textContent = `Done — ${allSignals.length} signals`;
+  document.getElementById('runBtn').disabled = false;
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderResults(from, to) {
+  renderSummary(from, to);
+  renderSymbolRows();
+  populateFilter();
+  renderSignalList();
+}
+
+function renderSummary(from, to) {
+  const totalSignals = allSignals.length;
+  const totalWins    = allSignals.filter(s => s.win).length;
+  const overallWR    = totalSignals > 0 ? (totalWins / totalSignals * 100).toFixed(1) : '—';
+  const allWinRets   = allSignals.filter(s => s.win).map(s => s.returnPct * 100);
+  const allLossRets  = allSignals.filter(s => !s.win).map(s => s.returnPct * 100);
+  const avgWin  = allWinRets.length  > 0 ? (allWinRets.reduce((a,b)=>a+b,0)/allWinRets.length).toFixed(2)   : '—';
+  const avgLoss = allLossRets.length > 0 ? (allLossRets.reduce((a,b)=>a+b,0)/allLossRets.length).toFixed(2) : '—';
+  const expAll  = totalSignals > 0
+    ? ((totalWins/totalSignals) * (allWinRets.reduce((a,b)=>a+b,0)/Math.max(1,allWinRets.length))
+       + (1 - totalWins/totalSignals) * (allLossRets.reduce((a,b)=>a+b,0)/Math.max(1,allLossRets.length))).toFixed(2)
+    : '—';
+  const bestSym = Object.values(symbolStats).sort((a,b) => b.winRate - a.winRate)[0];
+
+  document.getElementById('summaryCards').innerHTML = `
+    <div class="sum-card">
+      <div class="label">Period</div>
+      <div class="value" style="font-size:14px;padding-top:4px;">${from}<br>→ ${to}</div>
+    </div>
+    <div class="sum-card">
+      <div class="label">Total Signals</div>
+      <div class="value">${totalSignals}</div>
+      <div class="sub">across all 10 symbols</div>
+    </div>
+    <div class="sum-card">
+      <div class="label">Overall Win %</div>
+      <div class="value" style="color:${parseFloat(overallWR)>=50?'var(--green)':'var(--red)'}">${overallWR}%</div>
+      <div class="sub">${totalWins}W / ${totalSignals-totalWins}L</div>
+    </div>
+    <div class="sum-card">
+      <div class="label">Avg Win</div>
+      <div class="value" style="color:var(--green);font-size:20px">+${avgWin}%</div>
+      <div class="sub">best-close in 5 days</div>
+    </div>
+    <div class="sum-card">
+      <div class="label">Avg Loss</div>
+      <div class="value" style="color:var(--red);font-size:20px">${avgLoss}%</div>
+      <div class="sub">best-close in 5 days</div>
+    </div>
+    <div class="sum-card">
+      <div class="label">Expectancy</div>
+      <div class="value" style="color:${parseFloat(expAll)>=0?'var(--green)':'var(--red)'}; font-size:20px">${expAll}%</div>
+      <div class="sub">per trade avg</div>
+    </div>
+    <div class="sum-card">
+      <div class="label">Best Symbol</div>
+      <div class="value" style="font-size:20px">${bestSym?.ticker||'—'}</div>
+      <div class="sub">${bestSym ? (bestSym.winRate*100).toFixed(0)+'% win rate' : ''}</div>
+    </div>
+    <div class="sum-card">
+      <div class="label">Signal</div>
+      <div class="value" style="font-size:11px;line-height:1.5;padding-top:4px;color:var(--text-dim)">5 EMA × 20 EMA<br>crossover above VWAP<br>daily bars</div>
+    </div>
+  `;
+}
+
+function renderSymbolRows() {
+  const sorted = Object.values(symbolStats).sort((a, b) => b.winRate - a.winRate);
+  document.getElementById('symbolRows').innerHTML = sorted.map(s => {
+    const wrPct = (s.winRate * 100).toFixed(1);
+    const wrCls = s.winRate >= 0.6 ? 'green' : s.winRate >= 0.45 ? 'yellow' : 'red';
+    const expCls = s.expectancy >= 0 ? 'green' : 'red';
+    const barColor = s.winRate >= 0.6 ? 'var(--green)' : s.winRate >= 0.45 ? 'var(--yellow)' : 'var(--red)';
+    const barW = Math.round(s.winRate * 100);
+    return `<div class="rt-row">
+      <span class="rt-sym">${s.ticker}</span>
+      <span class="rt-val">${s.signals}</span>
+      <span class="rt-val ${wrCls}">${s.signals > 0 ? wrPct + '%' : '—'}</span>
+      <span class="rt-val green">${s.wins > 0 ? '+' + (s.avgWin*100).toFixed(2) + '%' : '—'}</span>
+      <span class="rt-val red">${s.losses > 0 ? (s.avgLoss*100).toFixed(2) + '%' : '—'}</span>
+      <span class="rt-val ${expCls}">${s.signals > 0 ? (s.expectancy>=0?'+':'') + (s.expectancy*100).toFixed(2) + '%' : '—'}</span>
+      <span class="rt-val mute">${s.bars}</span>
+      <span>
+        <div class="win-bar-wrap">
+          <div class="win-bar" style="width:${barW}%;background:${barColor}"></div>
+        </div>
+      </span>
+    </div>`;
+  }).join('');
+}
+
+function populateFilter() {
+  const sel = document.getElementById('filterSym');
+  sel.innerHTML = '<option value="">All symbols</option>' +
+    TICKERS.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+function renderSignalList() {
+  const symFilter     = document.getElementById('filterSym').value;
+  const outcomeFilter = document.getElementById('filterOutcome').value;
+  let filtered = allSignals;
+  if (symFilter)     filtered = filtered.filter(s => s.ticker === symFilter);
+  if (outcomeFilter) filtered = filtered.filter(s => outcomeFilter === 'win' ? s.win : !s.win);
+
+  if (!filtered.length) {
+    document.getElementById('signalRows').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-faint);font-size:13px;">No signals match the current filter.</div>';
+    return;
+  }
+
+  document.getElementById('signalRows').innerHTML = filtered.map(s => {
+    const retCls = s.returnPct >= WIN_THRESHOLD ? 'green' : 'red';
+    return `<div class="sl-row ${s.win ? 'win' : 'loss'}">
+      <span style="font-weight:800;color:#fff">${s.ticker}</span>
+      <span style="color:var(--text-dim)">${s.date}</span>
+      <span style="color:var(--text-dim)">$${fmt2(s.entry)}</span>
+      <span style="color:var(--accent)">$${fmt2(s.ema5)}</span>
+      <span style="color:var(--text-mute)">$${fmt2(s.ema20)}</span>
+      <span class="rt-val ${retCls}">${fmtPct(s.returnPct)}</span>
+      <span><span class="outcome-badge ${s.win ? 'win' : 'loss'}">${s.win ? '✓ Win' : '✗ Loss'}</span></span>
+    </div>`;
+  }).join('');
+}
+
+// ── Clock ─────────────────────────────────────────────────────────────────────
+function isDST(d) { const j=new Date(d.getFullYear(),0,1),jul=new Date(d.getFullYear(),6,1);return d.getTimezoneOffset()<Math.max(j.getTimezoneOffset(),jul.getTimezoneOffset()); }
+function updateClock() {
+  const now=new Date(), etOff=-5*60+(isDST(now)?60:0), et=new Date(now.getTime()+(now.getTimezoneOffset()+etOff)*60000);
+  document.getElementById('navClock').textContent=et.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})+' ET';
+}
+updateClock(); setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
