@@ -3,658 +3,651 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Backtest — Trading Suite</title>
+<title>Options Signal Backtest â 1 Year</title>
 <link rel="stylesheet" href="shared.css">
 <style>
-body { overflow-x: hidden; }
+:root { --r-md: 8px; --r-sm: 4px; }
+body { margin: 0; }
+.bt-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+h1 { font-size: 20px; font-weight: 800; color: var(--text); margin: 0 0 4px; }
+.subtitle { font-size: 12px; color: var(--text-dim); margin-bottom: 24px; }
 
-.topbar {
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  position: sticky;
-  top: 48px;
-  z-index: 100;
-}
+/* Config card */
+.cfg-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px; margin-bottom: 16px; display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.cfg-field { display: flex; flex-direction: column; gap: 4px; }
+.cfg-field label { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px; }
+.cfg-field input { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 12px; font-size: 13px; color: var(--text); outline: none; width: 220px; font-family: monospace; }
+.cfg-field input:focus { border-color: var(--accent); }
+.cfg-field.wide input { width: 120px; }
+.run-btn { background: var(--grad); border: none; border-radius: var(--r-sm); padding: 9px 22px; font-size: 13px; font-weight: 800; color: #fff; cursor: pointer; transition: opacity .15s; white-space: nowrap; }
+.run-btn:hover { opacity: .85; }
+.run-btn:disabled { opacity: .4; cursor: not-allowed; }
 
-.api-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 260px;
-}
+/* Progress */
+.prog-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px; margin-bottom: 16px; display: none; }
+.prog-card.visible { display: block; }
+.prog-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.prog-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.prog-pct { font-size: 13px; font-weight: 700; color: var(--accent); }
+.prog-bar-bg { height: 6px; background: var(--bg-input); border-radius: 3px; overflow: hidden; margin-bottom: 10px; }
+.prog-bar-fill { height: 100%; background: var(--grad); border-radius: 3px; transition: width .3s; width: 0%; }
+.prog-log { font-size: 11px; font-family: monospace; color: var(--text-dim); max-height: 120px; overflow-y: auto; line-height: 1.7; }
 
-.api-row input {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 7px 12px;
-  font-size: 13px;
-  color: var(--text-dim);
-  outline: none;
-  flex: 1;
-  transition: border-color 0.15s;
-  font-family: monospace;
-}
-.api-row input:focus { border-color: var(--accent); color: var(--text); }
+/* Summary stats row */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.stat-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px; }
+.stat-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-mute); margin-bottom: 4px; }
+.stat-val { font-size: 22px; font-weight: 900; color: var(--text); }
+.stat-val.green { color: var(--green); }
+.stat-val.red { color: var(--red); }
+.stat-val.yellow { color: var(--yellow); }
+.stat-val.blue { color: var(--accent); }
+.stat-sub { font-size: 10px; color: var(--text-mute); margin-top: 2px; }
 
-.btn-run {
-  background: var(--grad);
-  border: none;
-  border-radius: 8px;
-  padding: 7px 18px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #fff;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.15s;
-}
-.btn-run:hover { opacity: 0.85; }
-.btn-run:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Section headers */
+.section-hdr { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .8px; color: var(--text-dim); margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
 
-.status-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 5px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  color: var(--text-mute);
-}
+/* Tables */
+.bt-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; }
+.bt-table th { background: var(--bg-input); padding: 7px 10px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+.bt-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-dim); }
+.bt-table tr:hover td { background: rgba(255,255,255,.02); }
+.bt-table td.green { color: var(--green); font-weight: 700; }
+.bt-table td.red { color: var(--red); font-weight: 700; }
+.bt-table td.yellow { color: var(--yellow); font-weight: 700; }
+.bt-table td.blue { color: var(--accent); font-weight: 700; }
+.bt-table td.bold { color: var(--text); font-weight: 700; }
 
-.content { padding: 20px; max-width: 1100px; margin: 0 auto; }
+.split-badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+.split-badge.train { background: rgba(56,189,248,.15); color: var(--accent); }
+.split-badge.test  { background: rgba(74,222,128,.15); color: var(--green); }
 
-/* ─── SUMMARY CARDS ─── */
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 10px;
-  margin-bottom: 24px;
-}
+.verdict-bar { padding: 14px 16px; border-radius: var(--r-md); margin-bottom: 20px; font-size: 13px; font-weight: 700; }
+.verdict-bar.pass { background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.3); color: var(--green); }
+.verdict-bar.warn { background: rgba(251,191,36,.1); border: 1px solid rgba(251,191,36,.3); color: var(--yellow); }
+.verdict-bar.fail { background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.3); color: var(--red); }
 
-.sum-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 16px;
-  text-align: center;
-}
+.dl-btn { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 7px 14px; font-size: 11px; font-weight: 700; color: var(--text-dim); cursor: pointer; margin-right: 8px; transition: border-color .15s; }
+.dl-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-.sum-card .label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-mute);
-  margin-bottom: 6px;
-  font-weight: 600;
-}
-
-.sum-card .value {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: -0.5px;
-}
-
-.sum-card .sub {
-  font-size: 11px;
-  color: var(--text-faint);
-  margin-top: 3px;
-}
-
-/* ─── RESULTS TABLE ─── */
-.section-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 10px;
-}
-
-.results-table {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 24px;
-}
-
-.rt-head {
-  display: grid;
-  grid-template-columns: 80px 70px 80px 80px 80px 80px 80px 1fr;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-mute);
-}
-
-.rt-row {
-  display: grid;
-  grid-template-columns: 80px 70px 80px 80px 80px 80px 80px 1fr;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  align-items: center;
-  transition: background 0.1s;
-}
-.rt-row:last-child { border-bottom: none; }
-.rt-row:hover { background: rgba(56,189,248,0.03); }
-
-.rt-sym {
-  font-size: 15px;
-  font-weight: 800;
-  color: #fff;
-}
-
-.rt-val { font-size: 13px; font-weight: 600; color: var(--text-dim); }
-.rt-val.green { color: var(--green); }
-.rt-val.red   { color: var(--red); }
-.rt-val.yellow{ color: var(--yellow); }
-.rt-val.mute  { color: var(--text-mute); }
-
-.win-bar-wrap {
-  height: 6px;
-  background: var(--border);
-  border-radius: 3px;
-  overflow: hidden;
-  width: 100%;
-  max-width: 120px;
-}
-.win-bar { height: 6px; border-radius: 3px; }
-
-/* ─── SIGNAL LIST ─── */
-.signal-list {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.sl-head {
-  display: grid;
-  grid-template-columns: 80px 90px 90px 90px 90px 90px 1fr;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-mute);
-}
-
-.sl-row {
-  display: grid;
-  grid-template-columns: 80px 90px 90px 90px 90px 90px 1fr;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-  align-items: center;
-  font-size: 12px;
-  transition: background 0.1s;
-}
-.sl-row:last-child { border-bottom: none; }
-.sl-row:hover { background: rgba(56,189,248,0.03); }
-.sl-row.win { border-left: 3px solid var(--green); }
-.sl-row.loss { border-left: 3px solid var(--red); }
-
-.outcome-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: 20px;
-}
-.outcome-badge.win { background: #0d2718; color: var(--green); }
-.outcome-badge.loss { background: #2d0f0f; color: var(--red); }
-
-/* ─── LOADING ─── */
-.loading-overlay {
-  display: none;
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text-mute);
-}
-.loading-overlay.show { display: block; }
-
-.spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 16px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.progress-text { font-size: 13px; margin-top: 8px; }
-
-/* ─── EMPTY STATE ─── */
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text-faint);
-}
-.empty-state .icon { font-size: 40px; margin-bottom: 12px; }
-.empty-state p { font-size: 13px; line-height: 1.7; color: var(--text-mute); }
-
-/* ─── FILTER ROW ─── */
-.filter-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-}
-.filter-row label { font-size: 12px; color: var(--text-mute); }
-.filter-row select {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 5px 10px;
-  font-size: 12px;
-  color: var(--text-dim);
-  cursor: pointer;
-  outline: none;
-}
-
-@media (max-width: 800px) {
-  .rt-head, .rt-row { grid-template-columns: 70px 60px 70px 70px 70px 70px 1fr; }
-  .rt-head span:nth-child(7), .rt-row > *:nth-child(7) { display: none; }
-  .sl-head, .sl-row { grid-template-columns: 70px 80px 80px 80px 80px 1fr; }
-  .sl-head span:nth-child(6), .sl-row > *:nth-child(6) { display: none; }
-}
+#results { display: none; }
+#results.visible { display: block; }
 </style>
 </head>
 <body>
-
-<!-- SHARED NAV -->
 <nav class="nav">
-  <div class="nav-logo">⚡ <span>Trading</span> Suite</div>
+  <a class="nav-logo" href="index.html">â¡ <span>Trading Suite</span></a>
   <div class="nav-links">
-    <a class="nav-link" href="index.html">Dashboard</a>
-    <a class="nav-link" href="scanner.html">Scanner</a>
-    <a class="nav-link" href="planner.html">Planner</a>
-    <a class="nav-link" href="journal.html">Journal</a>
-    <a class="nav-link active" href="backtest.html">Backtest</a>
-  </div>
-  <div class="nav-right">
-    <span class="nav-clock" id="navClock">–</span>
+    <a class="nav-link" href="scanner.html">ð¡ Scanner</a>
+    <a class="nav-link" href="journal.html">ð Journal</a>
+    <a class="nav-link" href="planner.html">ð Planner</a>
+    <a class="nav-link active" href="backtest.html">ð Backtest</a>
   </div>
 </nav>
 
-<!-- TOP BAR -->
-<div class="topbar">
-  <div class="api-row">
-    <input type="password" id="apiKey" placeholder="Polygon API key..." value="eaJZCtLOOObYTtDAeHfSqnUDIo2pVx9O">
-  </div>
-  <button class="btn-run" id="runBtn" onclick="runBacktest()">▶ Run 5-Month Backtest</button>
-  <div class="status-pill" id="statusPill">Ready</div>
-</div>
+<div class="bt-wrap">
+  <h1>Options Signal Backtest</h1>
+  <p class="subtitle">1 year Â· 1-minute bars Â· proper walk-forward validation Â· intraday indicators</p>
 
-<!-- CONTENT -->
-<div class="content">
-
-  <!-- Loading -->
-  <div class="loading-overlay" id="loading">
-    <div class="spinner"></div>
-    <div style="font-size:15px;font-weight:700;color:var(--text-dim)">Running backtest…</div>
-    <div class="progress-text" id="progressText">Fetching daily bars…</div>
-  </div>
-
-  <!-- Empty state -->
-  <div class="empty-state" id="emptyState">
-    <div class="icon">📈</div>
-    <p>
-      Backtest: <strong>5 EMA × 20 EMA crossover above VWAP</strong><br>
-      5 months of daily bars · 10 symbols<br><br>
-      Hit <strong>Run 5-Month Backtest</strong> to fetch history from Polygon and see<br>
-      how often the signal wins, the average return, and every individual trade.
-    </p>
+  <div class="cfg-card">
+    <div class="cfg-field">
+      <label>Polygon API Key</label>
+      <input type="password" id="apiKeyIn" placeholder="Paste keyâ¦" autocomplete="off">
+    </div>
+    <div class="cfg-field wide">
+      <label>From Date</label>
+      <input type="date" id="fromDate" value="2025-06-09">
+    </div>
+    <div class="cfg-field wide">
+      <label>To Date</label>
+      <input type="date" id="toDate" value="2026-06-06">
+    </div>
+    <div class="cfg-field wide">
+      <label>Score Threshold</label>
+      <input type="number" id="scoreThresh" value="70" min="50" max="130">
+    </div>
+    <div class="cfg-field wide">
+      <label>Win Target %</label>
+      <input type="number" id="winTarget" value="0.5" step="0.1" min="0.1">
+    </div>
+    <button class="run-btn" id="runBtn" onclick="startBacktest()">â¶ Run Backtest</button>
   </div>
 
-  <!-- Results (hidden until run) -->
-  <div id="results" style="display:none;">
-
-    <!-- Summary cards -->
-    <div class="summary-grid" id="summaryCards"></div>
-
-    <!-- Per-symbol table -->
-    <div style="margin-bottom:6px;" class="section-title">Per-symbol breakdown</div>
-    <div class="results-table">
-      <div class="rt-head">
-        <span>Symbol</span>
-        <span>Signals</span>
-        <span>Win %</span>
-        <span>Avg Win</span>
-        <span>Avg Loss</span>
-        <span>Expect.</span>
-        <span>Bars</span>
-        <span>Win rate bar</span>
-      </div>
-      <div id="symbolRows"></div>
+  <div class="prog-card" id="progCard">
+    <div class="prog-header">
+      <span class="prog-title" id="progTitle">Fetching dataâ¦</span>
+      <span class="prog-pct" id="progPct">0%</span>
     </div>
+    <div class="prog-bar-bg"><div class="prog-bar-fill" id="progFill"></div></div>
+    <div class="prog-log" id="progLog"></div>
+  </div>
 
-    <!-- Individual signals -->
-    <div class="filter-row">
-      <div class="section-title" style="margin-bottom:0;">All signals fired</div>
-      <label>Filter:
-        <select id="filterSym" onchange="renderSignalList()">
-          <option value="">All symbols</option>
-        </select>
-      </label>
-      <label>Outcome:
-        <select id="filterOutcome" onchange="renderSignalList()">
-          <option value="">All</option>
-          <option value="win">Wins only</option>
-          <option value="loss">Losses only</option>
-        </select>
-      </label>
+  <div id="results">
+    <div class="verdict-bar" id="verdictBar"></div>
+    <div class="section-hdr">Overall Performance</div>
+    <div class="stats-row" id="overallStats"></div>
+    <div class="section-hdr">Walk-Forward Validation â Train vs Out-of-Sample Test</div>
+    <table class="bt-table" id="splitTable">
+      <thead><tr>
+        <th>Set</th><th>Signals</th><th>Win Rate (30m)</th><th>Win Rate (60m)</th>
+        <th>Avg Ret 30m</th><th>Profit Factor</th><th>Sharpe</th><th>Max DD</th>
+      </tr></thead>
+      <tbody id="splitBody"></tbody>
+    </table>
+    <div class="section-hdr">Per-Ticker Breakdown</div>
+    <table class="bt-table" id="tickerTable">
+      <thead><tr>
+        <th>Ticker</th><th>Dir</th><th>Signals</th>
+        <th>WR 15m</th><th>WR 30m</th><th>WR 60m</th><th>WR 120m</th>
+        <th>Avg Ret 60m</th><th>Profit Factor</th><th>Sharpe</th><th>Verdict</th>
+      </tr></thead>
+      <tbody id="tickerBody"></tbody>
+    </table>
+    <div class="section-hdr">Signal Log â Out-of-Sample Only (last 30%)</div>
+    <table class="bt-table" id="signalTable">
+      <thead><tr>
+        <th>Date/Time</th><th>Ticker</th><th>Dir</th><th>Score</th>
+        <th>Signals</th><th>Entry</th><th>Ret 30m</th><th>Ret 60m</th><th>Win 60m</th>
+      </tr></thead>
+      <tbody id="signalBody"></tbody>
+    </table>
+    <div style="margin-top:16px;">
+      <button class="dl-btn" onclick="downloadJSON()">â¬ Download JSON</button>
+      <button class="dl-btn" onclick="downloadCSV()">â¬ Download CSV</button>
     </div>
-    <div class="signal-list">
-      <div class="sl-head">
-        <span>Symbol</span>
-        <span>Date</span>
-        <span>Entry</span>
-        <span>EMA5</span>
-        <span>EMA20</span>
-        <span>+5d Return</span>
-        <span>Outcome</span>
-      </div>
-      <div id="signalRows"></div>
-    </div>
-
   </div>
 </div>
 
 <script>
-const TICKERS = ['AAPL','MSFT','GOOGL','AMZN','META','NVDA','TSLA','SPY','QQQ','IWM'];
-const WIN_THRESHOLD = 0.005;  // 0.5% forward move = win
-const FORWARD_DAYS  = 5;      // measure outcome over next 5 trading days
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// CONFIG
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+const TICKERS = ['AAPL','MSFT','GOOGL','AMZN','META','NVDA','TSLA','SPY','QQQ','IWM','AMD'];
+const ORB_BARS = 30;           // first 30 one-minute bars = opening range
+const COOLDOWN_MS = 2*60*1000; // 2-min cooldown per direction
+const FWD_WINDOWS = [15,30,60,120]; // forward return windows in minutes
+const TRAIN_RATIO = 0.70;      // 70% train, 30% out-of-sample
 
-let allSignals = [];   // { ticker, date, entry, ema5, ema20, vwap, returnPct, win }
-let symbolStats = {};  // { ticker: { signals, wins, winRate, avgWin, avgLoss, expectancy, bars } }
+let allSignals = [], rawBarsCache = {};
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-function getDateRange() {
-  const to = new Date();
-  to.setDate(to.getDate() - 1);  // yesterday (last complete day)
-  const from = new Date(to);
-  from.setMonth(from.getMonth() - 5);
-  const fmt = d => d.toISOString().slice(0, 10);
-  return { from: fmt(from), to: fmt(to) };
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// MATH
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function ema(arr, n) {
+  const k = 2/(n+1); let e = arr[0];
+  for (let i=1;i<arr.length;i++) e = arr[i]*k + e*(1-k);
+  return e;
 }
-
-function calcEMA(bars, period) {
-  // Returns EMA series aligned with bars array (null for first period-1 values)
-  const k = 2 / (period + 1);
-  const result = new Array(bars.length).fill(null);
-  if (bars.length < period) return result;
-  // Seed with SMA
-  let sum = 0;
-  for (let i = 0; i < period; i++) sum += bars[i].c;
-  result[period - 1] = sum / period;
-  for (let i = period; i < bars.length; i++) {
-    result[i] = bars[i].c * k + result[i - 1] * (1 - k);
+function emaArr(arr, n) {
+  const k = 2/(n+1); const out = new Array(arr.length);
+  out[0] = arr[0];
+  for (let i=1;i<arr.length;i++) out[i] = arr[i]*k + out[i-1]*(1-k);
+  return out;
+}
+function rsi(closes, period=14) {
+  if (closes.length < period+1) return 50;
+  let gain=0, loss=0;
+  for (let i=1;i<=period;i++) {
+    const d = closes[i]-closes[i-1];
+    if (d>0) gain+=d; else loss-=d;
   }
-  return result;
+  gain/=period; loss/=period;
+  for (let i=period+1;i<closes.length;i++) {
+    const d = closes[i]-closes[i-1];
+    gain = (gain*(period-1)+(d>0?d:0))/period;
+    loss = (loss*(period-1)+(d<0?-d:0))/period;
+  }
+  return loss===0 ? 100 : 100-100/(1+gain/loss);
+}
+function macd(closes) {
+  if (closes.length < 26) return {line:0, sig:0};
+  const fast = emaArr(closes, 12);
+  const slow = emaArr(closes, 26);
+  const line = fast.map((v,i)=>v-slow[i]);
+  const sig  = emaArr(line, 9);
+  return {line: line.at(-1), sig: sig.at(-1)};
+}
+function vwapUpTo(bars, idx) {
+  let sv=0, vol=0;
+  for (let i=0;i<=idx;i++) {
+    const tp = (bars[i].h+bars[i].l+bars[i].c)/3;
+    sv += tp*bars[i].v; vol += bars[i].v;
+  }
+  return vol ? sv/vol : bars[idx].c;
+}
+function stddev(arr) {
+  const m = arr.reduce((a,b)=>a+b,0)/arr.length;
+  return Math.sqrt(arr.reduce((a,b)=>a+(b-m)**2,0)/arr.length);
 }
 
-function calcVWAPSeries(bars) {
-  // Cumulative VWAP from the start of the window (running average transaction price)
-  let sumTPV = 0, sumV = 0;
-  return bars.map(b => {
-    const tp = (b.h + b.l + b.c) / 3;
-    sumTPV += tp * b.v;
-    sumV   += b.v;
-    return sumV > 0 ? sumTPV / sumV : b.c;
-  });
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// SCORING ENGINE â mirrors scanner.html exactly
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function scoreBar(ctx, dir) {
+  // ctx: {e5,e20,e9,e21,vwap,price,orbHigh,orbLow,orbDone,pdh,pdl,rvol,rsiVal,macdLine,macdSig,spyBull}
+  let score=0; const sigs=[];
+  if (!ctx.rvol || ctx.rvol < 1.0) return {score:0, sigs:[]};
+
+  if (dir==='call') {
+    if (ctx.e5 && ctx.e20 && ctx.e5>ctx.e20)               { score+=25; sigs.push('EMA5>20'); }
+    if (ctx.e9 && ctx.e21 && ctx.e9>ctx.e21)               { score+=10; sigs.push('EMA9>21'); }
+    if (ctx.vwap && ctx.price>ctx.vwap)                     { score+=15; sigs.push('Above VWAP'); }
+    if (ctx.orbDone && ctx.orbHigh && ctx.price>ctx.orbHigh){ score+=30; sigs.push('ORB breakout'); }
+    if (ctx.pdh && ctx.price>ctx.pdh)                       { score+=15; sigs.push('Above PDH'); }
+    if (ctx.rsiVal>=35 && ctx.rsiVal<=70)                   { score+=10; sigs.push(`RSI ${ctx.rsiVal.toFixed(0)}`); }
+    if (ctx.macdLine && ctx.macdSig && ctx.macdLine>ctx.macdSig){ score+=10; sigs.push('MACD bull'); }
+    if (ctx.spyBull)                                         { score+=10; sigs.push('Bull regime'); }
+  } else {
+    if (ctx.e5 && ctx.e20 && ctx.e5<ctx.e20)               { score+=25; sigs.push('EMA5<20'); }
+    if (ctx.e9 && ctx.e21 && ctx.e9<ctx.e21)               { score+=10; sigs.push('EMA9<21'); }
+    if (ctx.vwap && ctx.price<ctx.vwap)                     { score+=15; sigs.push('Below VWAP'); }
+    if (ctx.orbDone && ctx.orbLow  && ctx.price<ctx.orbLow) { score+=30; sigs.push('ORB breakdown'); }
+    if (ctx.pdl && ctx.price<ctx.pdl)                       { score+=15; sigs.push('Below PDL'); }
+    if (ctx.rsiVal>=30 && ctx.rsiVal<=65)                   { score+=10; sigs.push(`RSI ${ctx.rsiVal.toFixed(0)}`); }
+    if (ctx.macdLine && ctx.macdSig && ctx.macdLine<ctx.macdSig){ score+=10; sigs.push('MACD bear'); }
+    if (ctx.spyBull===false)                                 { score+=10; sigs.push('Bear regime'); }
+  }
+  return {score, sigs};
 }
 
-function fmt2(n) { return n != null ? n.toFixed(2) : '–'; }
-function fmtPct(n) { return n != null ? (n >= 0 ? '+' : '') + (n * 100).toFixed(2) + '%' : '–'; }
-
-// ── Fetch one ticker ──────────────────────────────────────────────────────────
-async function fetchDailyBars(ticker, from, to, apiKey) {
-  const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${apiKey}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if (!data.results || !data.results.length) return [];
-  return data.results.map(r => ({ o: r.o, h: r.h, l: r.l, c: r.c, v: r.v, t: r.t }));
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// DATA FETCH
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+async function fetchMinuteBars(ticker, from, to, key) {
+  const bars = [];
+  let url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/minute/${from}/${to}?adjusted=true&sort=asc&limit=50000&apiKey=${key}`;
+  while (url) {
+    const r = await fetch(url);
+    const d = await r.json();
+    if (d.status==='ERROR'||d.status==='FORBIDDEN') throw new Error(d.message||'API error');
+    (d.results||[]).forEach(b => bars.push({t:b.t,o:b.o,h:b.h,l:b.l,c:b.c,v:b.v}));
+    url = d.next_url ? d.next_url+'&apiKey='+key : null;
+    if (url) await new Promise(r=>setTimeout(r,120));
+  }
+  return bars;
 }
 
-// ── Run signal detection over bars ───────────────────────────────────────────
-function detectSignals(ticker, bars) {
-  const ema5  = calcEMA(bars, 5);
-  const ema20 = calcEMA(bars, 20);
-  const vwap  = calcVWAPSeries(bars);
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// SESSION SPLITTER
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function splitSessions(bars) {
+  // Group 1-min bars into trading days (9:30â16:00 ET)
+  const sessions = {};
+  for (const b of bars) {
+    const dt = new Date(b.t);
+    // ET offset: UTC-4 summer, UTC-5 winter (approximate with offset)
+    const etMs = b.t - 4*3600*1000; // rough ET (close enough for date grouping)
+    const etDt = new Date(etMs);
+    const dateKey = `${etDt.getUTCFullYear()}-${String(etDt.getUTCMonth()+1).padStart(2,'0')}-${String(etDt.getUTCDate()).padStart(2,'0')}`;
+    const h = etDt.getUTCHours(), m = etDt.getUTCMinutes();
+    // Only keep market hours: 9:30â16:00 ET
+    if (h<9||(h===9&&m<30)||h>=16) continue;
+    if (!sessions[dateKey]) sessions[dateKey] = [];
+    sessions[dateKey].push(b);
+  }
+  return sessions;
+}
+
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// BACKTEST ONE TICKER
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function backtestTicker(ticker, bars, spySessions, scoreThresh, winPct) {
+  const sessions = splitSessions(bars);
+  const dates = Object.keys(sessions).sort();
   const signals = [];
 
-  // Need at least 21 bars of history before first signal, plus FORWARD_DAYS lookahead
-  for (let i = 20; i < bars.length - FORWARD_DAYS; i++) {
-    if (ema5[i] == null || ema5[i-1] == null || ema20[i] == null || ema20[i-1] == null) continue;
+  let pdh=null, pdl=null;
 
-    // Bull crossover: EMA5 crosses above EMA20
-    const bullCross = ema5[i-1] < ema20[i-1] && ema5[i] > ema20[i];
-    if (!bullCross) continue;
+  for (let di=0; di<dates.length; di++) {
+    const date = dates[di];
+    const sess = sessions[date];
+    if (sess.length < ORB_BARS+5) { pdh=null; pdl=null; continue; }
 
-    // Must be above VWAP on crossover day
-    if (bars[i].c <= vwap[i]) continue;
+    // ORB
+    const orbBars = sess.slice(0, ORB_BARS);
+    const orbHigh = Math.max(...orbBars.map(b=>b.h));
+    const orbLow  = Math.min(...orbBars.map(b=>b.l));
 
-    // Measure outcome: max gain in next FORWARD_DAYS bars
-    const entry = bars[i].c;
-    let bestClose = entry;
-    for (let j = i + 1; j <= i + FORWARD_DAYS; j++) {
-      if (bars[j]) bestClose = Math.max(bestClose, bars[j].c);
+    // SPY regime for this day
+    const spySess = spySessions[date] || [];
+    let spyBull = null;
+    if (spySess.length >= 20) {
+      const spyCloses = spySess.map(b=>b.c);
+      const spyE5  = ema(spyCloses.slice(-5), 5);
+      const spyE20 = ema(spyCloses.slice(-20), 20);
+      spyBull = spyE5 > spyE20;
     }
-    const returnPct = (bestClose - entry) / entry;
-    const win = returnPct >= WIN_THRESHOLD;
 
-    const date = new Date(bars[i].t).toISOString().slice(0, 10);
-    signals.push({ ticker, date, entry, ema5: ema5[i], ema20: ema20[i], vwap: vwap[i], returnPct, win });
+    // Cooldown per direction
+    let lastCall=0, lastPut=0;
+
+    // Slide through bars in the session
+    for (let i=ORB_BARS; i<sess.length; i++) {
+      const bar = sess[i];
+      const closesUpTo = sess.slice(0,i+1).map(b=>b.c);
+
+      // Indicators
+      const e5  = closesUpTo.length>=5  ? ema(closesUpTo.slice(-5),5)   : null;
+      const e20 = closesUpTo.length>=20 ? ema(closesUpTo.slice(-20),20) : null;
+      const e9  = closesUpTo.length>=9  ? ema(closesUpTo.slice(-9),9)   : null;
+      const e21 = closesUpTo.length>=21 ? ema(closesUpTo.slice(-21),21) : null;
+      const vw  = vwapUpTo(sess, i);
+      const rsiVal = closesUpTo.length>=15 ? rsi(closesUpTo.slice(-30),14) : 50;
+      const macdR = closesUpTo.length>=26 ? macd(closesUpTo.slice(-60)) : {line:0,sig:0};
+
+      // RVOL
+      const volArr = sess.slice(0,i+1).map(b=>b.v);
+      const avgVol = volArr.slice(-21,-1).reduce((a,b)=>a+b,0)/Math.max(volArr.length-1,1);
+      const rvol   = avgVol>0 ? bar.v/avgVol : 0;
+
+      const ctx = {
+        e5,e20,e9,e21,
+        vwap: vw,
+        price: bar.c,
+        orbHigh, orbLow,
+        orbDone: true, // past ORB window
+        pdh, pdl,
+        rvol,
+        rsiVal,
+        macdLine: macdR.line,
+        macdSig:  macdR.sig,
+        spyBull
+      };
+
+      const now = bar.t;
+
+      for (const dir of ['call','put']) {
+        const lastFired = dir==='call' ? lastCall : lastPut;
+        if (now - lastFired < COOLDOWN_MS) continue;
+
+        const {score, sigs} = scoreBar(ctx, dir);
+        if (score < scoreThresh) continue;
+
+        // Signal fired â measure forward returns
+        if (dir==='call') lastCall=now; else lastPut=now;
+
+        const fwdRets = {};
+        for (const w of FWD_WINDOWS) {
+          const targetIdx = i+w;
+          if (targetIdx < sess.length) {
+            const exitPrice = sess[targetIdx].c;
+            const ret = (exitPrice - bar.c) / bar.c * 100;
+            fwdRets[w] = dir==='call' ? ret : -ret; // positive = profitable
+          } else {
+            // Use last available bar in session
+            const exitPrice = sess.at(-1).c;
+            const ret = (exitPrice - bar.c) / bar.c * 100;
+            fwdRets[w] = dir==='call' ? ret : -ret;
+          }
+        }
+
+        signals.push({
+          ticker, date, ts: new Date(bar.t).toISOString(),
+          dir, score, sigs: sigs.join(' Â· '),
+          entry: bar.c, rvol: rvol.toFixed(2),
+          fwdRets,
+          sessionIdx: di,
+          totalSessions: dates.length
+        });
+      }
+    }
+
+    // Update PDH/PDL for next day
+    pdh = Math.max(...sess.map(b=>b.h));
+    pdl = Math.min(...sess.map(b=>b.l));
   }
 
-  return { signals, bars: bars.length };
+  return signals;
 }
 
-// ── Aggregate stats per symbol ────────────────────────────────────────────────
-function calcStats(ticker, signals, bars) {
-  const wins   = signals.filter(s => s.win);
-  const losses = signals.filter(s => !s.win);
-  const winRate  = signals.length > 0 ? wins.length / signals.length : 0;
-  const avgWin   = wins.length   > 0 ? wins.reduce((a, s) => a + s.returnPct, 0) / wins.length   : 0;
-  const avgLoss  = losses.length > 0 ? losses.reduce((a, s) => a + s.returnPct, 0) / losses.length : 0;
-  const expectancy = winRate * avgWin + (1 - winRate) * avgLoss;
-  return { ticker, signals: signals.length, wins: wins.length, losses: losses.length, winRate, avgWin, avgLoss, expectancy, bars };
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// STATS CALCULATOR
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function calcStats(signals, winPct, window=60) {
+  if (!signals.length) return null;
+  const rets = signals.map(s=>s.fwdRets[window]).filter(r=>r!=null);
+  if (!rets.length) return null;
+  const wins = rets.filter(r=>r>winPct);
+  const losses = rets.filter(r=>r<=-winPct);
+  const winRate = wins.length/rets.length;
+  const avgRet = rets.reduce((a,b)=>a+b,0)/rets.length;
+  const grossWin = wins.reduce((a,b)=>a+b,0);
+  const grossLoss = Math.abs(losses.reduce((a,b)=>a+b,0));
+  const pf = grossLoss>0 ? grossWin/grossLoss : (grossWin>0?999:0);
+  const sd = stddev(rets);
+  const sharpe = sd>0 ? (avgRet/sd)*Math.sqrt(252*6.5*60/window) : 0; // annualized
+  // Max drawdown on cumulative ret curve
+  let cum=0, peak=0, maxDD=0;
+  for (const r of rets) {
+    cum+=r; if (cum>peak) peak=cum;
+    const dd=peak-cum; if (dd>maxDD) maxDD=dd;
+  }
+  // Win rates by window
+  const wrByWindow = {};
+  for (const w of FWD_WINDOWS) {
+    const wRets = signals.map(s=>s.fwdRets[w]).filter(r=>r!=null);
+    wrByWindow[w] = wRets.length ? wRets.filter(r=>r>winPct).length/wRets.length : null;
+  }
+  return {count:signals.length, winRate, avgRet, pf, sharpe, maxDD, wrByWindow,
+          tstat: sd>0 ? avgRet/(sd/Math.sqrt(rets.length)) : 0};
 }
 
-// ── Main backtest runner ──────────────────────────────────────────────────────
-async function runBacktest() {
-  const apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey) { alert('Enter your Polygon API key.'); return; }
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// PROGRESS HELPERS
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function log(msg) {
+  const el = document.getElementById('progLog');
+  el.innerHTML += `${new Date().toLocaleTimeString()} â ${msg}<br>`;
+  el.scrollTop = el.scrollHeight;
+}
+function setProgress(pct, title='') {
+  document.getElementById('progFill').style.width = pct+'%';
+  document.getElementById('progPct').textContent = pct.toFixed(0)+'%';
+  if (title) document.getElementById('progTitle').textContent = title;
+}
+function fmt(n, d=2) { return n==null?'â':(n>=0?'+':'')+n.toFixed(d); }
+function fmtPct(n)   { return n==null?'â':(n*100).toFixed(1)+'%'; }
+function colorClass(n, pos=true) { return n>0?(pos?'green':'red'):(n<0?(pos?'red':'green'):''); }
+
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// MAIN
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+async function startBacktest() {
+  const key   = document.getElementById('apiKeyIn').value.trim();
+  const from  = document.getElementById('fromDate').value;
+  const to    = document.getElementById('toDate').value;
+  const thresh= parseInt(document.getElementById('scoreThresh').value)||70;
+  const winPct= parseFloat(document.getElementById('winTarget').value)||0.5;
+
+  if (!key) { alert('Enter API key'); return; }
 
   document.getElementById('runBtn').disabled = true;
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('results').style.display = 'none';
-  document.getElementById('loading').classList.add('show');
-  document.getElementById('statusPill').textContent = 'Fetching…';
-
+  document.getElementById('progCard').classList.add('visible');
+  document.getElementById('results').classList.remove('visible');
   allSignals = [];
-  symbolStats = {};
 
-  const { from, to } = getDateRange();
-  document.getElementById('progressText').textContent = `Fetching daily bars from ${from} to ${to}…`;
+  try {
+    // ââ PHASE 1: Fetch all bars ââââââââââââââââââââââââââ
+    const totalFetch = TICKERS.length;
+    const barsMap = {};
 
-  for (let i = 0; i < TICKERS.length; i++) {
-    const ticker = TICKERS[i];
-    document.getElementById('progressText').textContent = `[${i+1}/${TICKERS.length}] ${ticker} — fetching…`;
-    try {
-      const bars = await fetchDailyBars(ticker, from, to, apiKey);
-      if (bars.length < 25) {
-        symbolStats[ticker] = { ticker, signals: 0, wins: 0, losses: 0, winRate: 0, avgWin: 0, avgLoss: 0, expectancy: 0, bars: bars.length };
-        continue;
-      }
-      const { signals, bars: barCount } = detectSignals(ticker, bars);
-      allSignals.push(...signals);
-      symbolStats[ticker] = calcStats(ticker, signals, barCount);
-    } catch(e) {
-      console.error(ticker, e);
-      symbolStats[ticker] = { ticker, signals: 0, wins: 0, losses: 0, winRate: 0, avgWin: 0, avgLoss: 0, expectancy: 0, bars: 0, error: true };
+    for (let ti=0; ti<TICKERS.length; ti++) {
+      const t = TICKERS[ti];
+      setProgress((ti/totalFetch)*50, `Fetching ${t} (${ti+1}/${TICKERS.length})â¦`);
+      log(`â ${t}: fetching 1-min bars ${from} â ${to}`);
+      const bars = await fetchMinuteBars(t, from, to, key);
+      barsMap[t] = bars;
+      log(`  â ${t}: ${bars.length.toLocaleString()} bars`);
     }
+
+    // ââ PHASE 2: Run backtests âââââââââââââââââââââââââââ
+    const spySessions = splitSessions(barsMap['SPY']||[]);
+
+    for (let ti=0; ti<TICKERS.length; ti++) {
+      const t = TICKERS[ti];
+      setProgress(50+(ti/TICKERS.length)*45, `Backtesting ${t}â¦`);
+      log(`â ${t}: running signal detectionâ¦`);
+      const sigs = backtestTicker(t, barsMap[t]||[], spySessions, thresh, winPct);
+      allSignals.push(...sigs);
+      log(`  â ${t}: ${sigs.length} signals (${sigs.filter(s=>s.dir==='call').length} calls, ${sigs.filter(s=>s.dir==='put').length} puts)`);
+    }
+
+    setProgress(100, 'Complete â building reportâ¦');
+    log(`\nâââ TOTAL: ${allSignals.length} signals across all tickers âââ`);
+
+    // ââ PHASE 3: Build report ââââââââââââââââââââââââââââ
+    buildReport(allSignals, winPct);
+    document.getElementById('results').classList.add('visible');
+
+  } catch(e) {
+    log(`â Error: ${e.message}`);
   }
 
-  // Sort signals newest first
-  allSignals.sort((a, b) => b.date.localeCompare(a.date));
-
-  document.getElementById('loading').classList.remove('show');
-  renderResults(from, to);
-  document.getElementById('results').style.display = 'block';
-  document.getElementById('statusPill').textContent = `Done — ${allSignals.length} signals`;
   document.getElementById('runBtn').disabled = false;
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
-function renderResults(from, to) {
-  renderSummary(from, to);
-  renderSymbolRows();
-  populateFilter();
-  renderSignalList();
-}
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// REPORT BUILDER
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function buildReport(signals, winPct) {
+  // Walk-forward split based on sessionIdx / totalSessions
+  const splitPoint = TRAIN_RATIO;
+  const trainSigs = signals.filter(s => s.sessionIdx / s.totalSessions < splitPoint);
+  const testSigs  = signals.filter(s => s.sessionIdx / s.totalSessions >= splitPoint);
 
-function renderSummary(from, to) {
-  const totalSignals = allSignals.length;
-  const totalWins    = allSignals.filter(s => s.win).length;
-  const overallWR    = totalSignals > 0 ? (totalWins / totalSignals * 100).toFixed(1) : '—';
-  const allWinRets   = allSignals.filter(s => s.win).map(s => s.returnPct * 100);
-  const allLossRets  = allSignals.filter(s => !s.win).map(s => s.returnPct * 100);
-  const avgWin  = allWinRets.length  > 0 ? (allWinRets.reduce((a,b)=>a+b,0)/allWinRets.length).toFixed(2)   : '—';
-  const avgLoss = allLossRets.length > 0 ? (allLossRets.reduce((a,b)=>a+b,0)/allLossRets.length).toFixed(2) : '—';
-  const expAll  = totalSignals > 0
-    ? ((totalWins/totalSignals) * (allWinRets.reduce((a,b)=>a+b,0)/Math.max(1,allWinRets.length))
-       + (1 - totalWins/totalSignals) * (allLossRets.reduce((a,b)=>a+b,0)/Math.max(1,allLossRets.length))).toFixed(2)
-    : '—';
-  const bestSym = Object.values(symbolStats).sort((a,b) => b.winRate - a.winRate)[0];
+  const trainStats = calcStats(trainSigs, winPct, 60);
+  const testStats  = calcStats(testSigs,  winPct, 60);
+  const allStats   = calcStats(signals,   winPct, 60);
 
-  document.getElementById('summaryCards').innerHTML = `
-    <div class="sum-card">
-      <div class="label">Period</div>
-      <div class="value" style="font-size:14px;padding-top:4px;">${from}<br>→ ${to}</div>
-    </div>
-    <div class="sum-card">
-      <div class="label">Total Signals</div>
-      <div class="value">${totalSignals}</div>
-      <div class="sub">across all 10 symbols</div>
-    </div>
-    <div class="sum-card">
-      <div class="label">Overall Win %</div>
-      <div class="value" style="color:${parseFloat(overallWR)>=50?'var(--green)':'var(--red)'}">${overallWR}%</div>
-      <div class="sub">${totalWins}W / ${totalSignals-totalWins}L</div>
-    </div>
-    <div class="sum-card">
-      <div class="label">Avg Win</div>
-      <div class="value" style="color:var(--green);font-size:20px">+${avgWin}%</div>
-      <div class="sub">best-close in 5 days</div>
-    </div>
-    <div class="sum-card">
-      <div class="label">Avg Loss</div>
-      <div class="value" style="color:var(--red);font-size:20px">${avgLoss}%</div>
-      <div class="sub">best-close in 5 days</div>
-    </div>
-    <div class="sum-card">
-      <div class="label">Expectancy</div>
-      <div class="value" style="color:${parseFloat(expAll)>=0?'var(--green)':'var(--red)'}; font-size:20px">${expAll}%</div>
-      <div class="sub">per trade avg</div>
-    </div>
-    <div class="sum-card">
-      <div class="label">Best Symbol</div>
-      <div class="value" style="font-size:20px">${bestSym?.ticker||'—'}</div>
-      <div class="sub">${bestSym ? (bestSym.winRate*100).toFixed(0)+'% win rate' : ''}</div>
-    </div>
-    <div class="sum-card">
-      <div class="label">Signal</div>
-      <div class="value" style="font-size:11px;line-height:1.5;padding-top:4px;color:var(--text-dim)">5 EMA × 20 EMA<br>crossover above VWAP<br>daily bars</div>
-    </div>
-  `;
-}
+  // Overall stat boxes
+  const ovEl = document.getElementById('overallStats');
+  const wr60all = allStats?.wrByWindow[60];
+  const wr60test = testStats?.wrByWindow[60];
+  ovEl.innerHTML = [
+    {lbl:'Total Signals', val: signals.length, cls:'blue', sub:'across all tickers'},
+    {lbl:'OOS Win Rate (60m)', val: fmtPct(wr60test), cls: wr60test>=.55?'green':wr60test>=.45?'yellow':'red', sub:'out-of-sample'},
+    {lbl:'Profit Factor (OOS)', val: testStats?.pf?.toFixed(2)||'â', cls: (testStats?.pf||0)>=1.3?'green':(testStats?.pf||0)>=1.0?'yellow':'red', sub:'gross win / gross loss'},
+    {lbl:'Sharpe Ratio (OOS)', val: testStats?.sharpe?.toFixed(2)||'â', cls: (testStats?.sharpe||0)>=1.0?'green':(testStats?.sharpe||0)>=0.5?'yellow':'red', sub:'annualized'},
+    {lbl:'Max Drawdown (OOS)', val: testStats?.maxDD?.toFixed(1)+'%'||'â', cls:'yellow', sub:'on cum return curve'},
+    {lbl:'T-Stat (OOS)', val: testStats?.tstat?.toFixed(2)||'â', cls: Math.abs(testStats?.tstat||0)>=1.96?'green':'yellow', sub:'>1.96 = significant'},
+    {lbl:'Train Win Rate (60m)', val: fmtPct(trainStats?.wrByWindow[60]), cls: (trainStats?.wrByWindow[60]||0)>=.55?'green':'yellow', sub:'in-sample'},
+    {lbl:'Signal Frequency', val: signals.length>0?(signals.length/52).toFixed(1)+'/wk':'â', cls:'blue', sub:'avg per week'}
+  ].map(s=>`<div class="stat-box"><div class="stat-lbl">${s.lbl}</div><div class="stat-val ${s.cls}">${s.val}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
 
-function renderSymbolRows() {
-  const sorted = Object.values(symbolStats).sort((a, b) => b.winRate - a.winRate);
-  document.getElementById('symbolRows').innerHTML = sorted.map(s => {
-    const wrPct = (s.winRate * 100).toFixed(1);
-    const wrCls = s.winRate >= 0.6 ? 'green' : s.winRate >= 0.45 ? 'yellow' : 'red';
-    const expCls = s.expectancy >= 0 ? 'green' : 'red';
-    const barColor = s.winRate >= 0.6 ? 'var(--green)' : s.winRate >= 0.45 ? 'var(--yellow)' : 'var(--red)';
-    const barW = Math.round(s.winRate * 100);
-    return `<div class="rt-row">
-      <span class="rt-sym">${s.ticker}</span>
-      <span class="rt-val">${s.signals}</span>
-      <span class="rt-val ${wrCls}">${s.signals > 0 ? wrPct + '%' : '—'}</span>
-      <span class="rt-val green">${s.wins > 0 ? '+' + (s.avgWin*100).toFixed(2) + '%' : '—'}</span>
-      <span class="rt-val red">${s.losses > 0 ? (s.avgLoss*100).toFixed(2) + '%' : '—'}</span>
-      <span class="rt-val ${expCls}">${s.signals > 0 ? (s.expectancy>=0?'+':'') + (s.expectancy*100).toFixed(2) + '%' : '—'}</span>
-      <span class="rt-val mute">${s.bars}</span>
-      <span>
-        <div class="win-bar-wrap">
-          <div class="win-bar" style="width:${barW}%;background:${barColor}"></div>
-        </div>
-      </span>
-    </div>`;
-  }).join('');
-}
-
-function populateFilter() {
-  const sel = document.getElementById('filterSym');
-  sel.innerHTML = '<option value="">All symbols</option>' +
-    TICKERS.map(t => `<option value="${t}">${t}</option>`).join('');
-}
-
-function renderSignalList() {
-  const symFilter     = document.getElementById('filterSym').value;
-  const outcomeFilter = document.getElementById('filterOutcome').value;
-  let filtered = allSignals;
-  if (symFilter)     filtered = filtered.filter(s => s.ticker === symFilter);
-  if (outcomeFilter) filtered = filtered.filter(s => outcomeFilter === 'win' ? s.win : !s.win);
-
-  if (!filtered.length) {
-    document.getElementById('signalRows').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-faint);font-size:13px;">No signals match the current filter.</div>';
-    return;
+  // Verdict
+  const vEl = document.getElementById('verdictBar');
+  const oos = wr60test||0;
+  if (oos >= 0.58) {
+    vEl.className='verdict-bar pass';
+    vEl.textContent=`â TRADEABLE EDGE â Out-of-sample win rate ${fmtPct(oos)} at 60m hold. Profit factor ${testStats?.pf?.toFixed(2)||'â'}. This strategy has statistically meaningful edge on unseen data.`;
+  } else if (oos >= 0.50) {
+    vEl.className='verdict-bar warn';
+    vEl.textContent=`â ï¸ MARGINAL EDGE â Out-of-sample win rate ${fmtPct(oos)} at 60m. Marginally above coin flip. Reduce position size and monitor live for 30+ signals before scaling.`;
+  } else {
+    vEl.className='verdict-bar fail';
+    vEl.textContent=`â NO EDGE â Out-of-sample win rate ${fmtPct(oos)} at 60m. Strategy underperforms random on unseen data. Do NOT trade this configuration.`;
   }
 
-  document.getElementById('signalRows').innerHTML = filtered.map(s => {
-    const retCls = s.returnPct >= WIN_THRESHOLD ? 'green' : 'red';
-    return `<div class="sl-row ${s.win ? 'win' : 'loss'}">
-      <span style="font-weight:800;color:#fff">${s.ticker}</span>
-      <span style="color:var(--text-dim)">${s.date}</span>
-      <span style="color:var(--text-dim)">$${fmt2(s.entry)}</span>
-      <span style="color:var(--accent)">$${fmt2(s.ema5)}</span>
-      <span style="color:var(--text-mute)">$${fmt2(s.ema20)}</span>
-      <span class="rt-val ${retCls}">${fmtPct(s.returnPct)}</span>
-      <span><span class="outcome-badge ${s.win ? 'win' : 'loss'}">${s.win ? '✓ Win' : '✗ Loss'}</span></span>
-    </div>`;
-  }).join('');
+  // Walk-forward split table
+  const sb = document.getElementById('splitBody');
+  for (const [label, stats, badge] of [
+    ['In-Sample (Train 70%)', trainStats, 'train'],
+    ['Out-of-Sample (Test 30%)', testStats, 'test']
+  ]) {
+    if (!stats) continue;
+    const wr30 = stats.wrByWindow[30];
+    const wr60 = stats.wrByWindow[60];
+    sb.innerHTML += `<tr>
+      <td class="bold"><span class="split-badge ${badge}">${label}</span></td>
+      <td class="bold">${stats.count}</td>
+      <td class="${wr30>=.55?'green':wr30>=.45?'yellow':'red'}">${fmtPct(wr30)}</td>
+      <td class="${wr60>=.55?'green':wr60>=.45?'yellow':'red'}">${fmtPct(wr60)}</td>
+      <td class="${colorClass(stats.avgRet)}">${fmt(stats.avgRet)}%</td>
+      <td class="${stats.pf>=1.3?'green':stats.pf>=1.0?'yellow':'red'}">${stats.pf.toFixed(2)}</td>
+      <td class="${stats.sharpe>=1?'green':stats.sharpe>=0.5?'yellow':'red'}">${stats.sharpe.toFixed(2)}</td>
+      <td class="red">${stats.maxDD.toFixed(1)}%</td>
+    </tr>`;
+  }
+
+  // Per-ticker table
+  const tb = document.getElementById('tickerBody');
+  const tickerDirGroups = {};
+  for (const s of signals) {
+    const k = s.ticker+'|'+s.dir;
+    if (!tickerDirGroups[k]) tickerDirGroups[k]=[];
+    tickerDirGroups[k].push(s);
+  }
+  const rows = Object.entries(tickerDirGroups).sort(([a],[b])=>a.localeCompare(b));
+  for (const [key, sigs] of rows) {
+    const [tick, dir] = key.split('|');
+    const st = calcStats(sigs, winPct, 60);
+    if (!st) continue;
+    const wr15=st.wrByWindow[15], wr30=st.wrByWindow[30], wr60=st.wrByWindow[60], wr120=st.wrByWindow[120];
+    const oos = sigs.filter(s=>s.sessionIdx/s.totalSessions>=TRAIN_RATIO);
+    const oosSt = calcStats(oos, winPct, 60);
+    const verdict = (oosSt?.winRate||0)>=0.58 ? 'â' : (oosSt?.winRate||0)>=0.50 ? 'â ï¸' : 'â';
+    tb.innerHTML += `<tr>
+      <td class="bold">${tick}</td>
+      <td class="${dir==='call'?'green':'red'}">${dir.toUpperCase()}</td>
+      <td>${st.count}</td>
+      <td class="${wr15>=.55?'green':wr15>=.45?'yellow':'red'}">${fmtPct(wr15)}</td>
+      <td class="${wr30>=.55?'green':wr30>=.45?'yellow':'red'}">${fmtPct(wr30)}</td>
+      <td class="${wr60>=.55?'green':wr60>=.45?'yellow':'red'}">${fmtPct(wr60)}</td>
+      <td class="${wr120>=.55?'green':wr120>=.45?'yellow':'red'}">${fmtPct(wr120)}</td>
+      <td class="${colorClass(st.avgRet)}">${fmt(st.avgRet)}%</td>
+      <td class="${st.pf>=1.3?'green':st.pf>=1.0?'yellow':'red'}">${st.pf.toFixed(2)}</td>
+      <td class="${st.sharpe>=1?'green':st.sharpe>=.5?'yellow':'red'}">${st.sharpe.toFixed(2)}</td>
+      <td>${verdict}</td>
+    </tr>`;
+  }
+
+  // Signal log â out-of-sample only (last 50 to avoid DOM overload)
+  const sigEl = document.getElementById('signalBody');
+  const oosSigs = testSigs.slice(-100);
+  for (const s of oosSigs) {
+    const r30 = s.fwdRets[30], r60 = s.fwdRets[60];
+    const w60 = r60!=null && r60 > winPct;
+    sigEl.innerHTML += `<tr>
+      <td>${s.ts.replace('T',' ').slice(0,16)}</td>
+      <td class="bold">${s.ticker}</td>
+      <td class="${s.dir==='call'?'green':'red'}">${s.dir.toUpperCase()}</td>
+      <td class="blue">${s.score}</td>
+      <td style="font-size:10px;max-width:200px;white-space:normal">${s.sigs}</td>
+      <td>$${s.entry.toFixed(2)}</td>
+      <td class="${colorClass(r30)}">${r30!=null?fmt(r30)+'%':'â'}</td>
+      <td class="${colorClass(r60)}">${r60!=null?fmt(r60)+'%':'â'}</td>
+      <td>${w60?'â':'â'}</td>
+    </tr>`;
+  }
 }
 
-// ── Clock ─────────────────────────────────────────────────────────────────────
-function isDST(d) { const j=new Date(d.getFullYear(),0,1),jul=new Date(d.getFullYear(),6,1);return d.getTimezoneOffset()<Math.max(j.getTimezoneOffset(),jul.getTimezoneOffset()); }
-function updateClock() {
-  const now=new Date(), etOff=-5*60+(isDST(now)?60:0), et=new Date(now.getTime()+(now.getTimezoneOffset()+etOff)*60000);
-  document.getElementById('navClock').textContent=et.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})+' ET';
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// DOWNLOADS
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function downloadJSON() {
+  const blob = new Blob([JSON.stringify(allSignals,null,2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'backtest_signals.json'; a.click();
 }
-updateClock(); setInterval(updateClock, 1000);
+function downloadCSV() {
+  const cols = ['ticker','date','ts','dir','score','sigs','entry','rvol','ret15','ret30','ret60','ret120'];
+  const rows = allSignals.map(s=>[
+    s.ticker,s.date,s.ts,s.dir,s.score,`"${s.sigs}"`,s.entry,s.rvol,
+    s.fwdRets[15]?.toFixed(3)||'',s.fwdRets[30]?.toFixed(3)||'',
+    s.fwdRets[60]?.toFixed(3)||'',s.fwdRets[120]?.toFixed(3)||''
+  ].join(','));
+  const blob = new Blob([[cols.join(','),...rows].join('\n')], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'backtest_signals.csv'; a.click();
+}
+
+// Pre-fill key if stored locally
+window.addEventListener('DOMContentLoaded', () => {
+  const stored = localStorage.getItem('polygonKey');
+  if (stored && stored.charCodeAt(0) !== 8226) {
+    document.getElementById('apiKeyIn').value = stored;
+  }
+});
 </script>
 </body>
 </html>
