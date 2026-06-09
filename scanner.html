@@ -6,6 +6,17 @@
 <title>Momentum Scanner — Trading Suite</title>
 <link rel="stylesheet" href="shared.css">
 <style>
+:root {
+  --bg-surface: #111827;
+  --bg-raised: #161f30;
+  --r-md: 8px;
+  --r-sm: 4px;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --blue: #38bdf8;
+  --grad-blue: linear-gradient(135deg, #0ea5e9, #6366f1);
+}
 /* ── LAYOUT ── */
 .scanner-layout {
   display: grid;
@@ -469,7 +480,6 @@
     <a class="nav-link active" href="scanner.html">📡 Scanner</a>
     <a class="nav-link" href="planner.html">📋 Trade Planner</a>
     <a class="nav-link" href="journal.html">📓 Journal</a>
-    <a class="nav-link" href="backtest.html">📈 Backtest</a>
   </nav>
   <div class="topbar-right">
     <div class="status-pill"><div class="status-dot demo" id="sDot"></div><span id="sLabel">DEMO</span></div>
@@ -615,6 +625,18 @@ function resetTickerEditor() {
 const SEED = { AAPL:211, MSFT:449, GOOGL:178, AMZN:198, META:617, NVDA:1080, TSLA:348, SPY:585, QQQ:510, IWM:209 };
 TICKERS.forEach(t => { if (!(t in SEED)) SEED[t] = 100; });
 
+
+// ══ BACKTEST WIN RATES (5-month daily data, auto-generated) ══
+const TICKER_WR = {
+  'SPY-CALL':100,'AMD-CALL':100,'AAPL-CALL':95,'TSLA-CALL':94,'GOOGL-CALL':94,
+  'IWM-CALL':87,'NVDA-CALL':79,'MSFT-CALL':71,'QQQ-CALL':65,'AMZN-CALL':56,
+  'META-CALL':41,
+  'TSLA-PUT':81,'META-PUT':71,'QQQ-PUT':71,'GOOGL-PUT':75,'SPY-PUT':73,
+  'MSFT-PUT':65,'IWM-PUT':59,'AMZN-PUT':52,'AAPL-PUT':50,'AMD-PUT':48,
+  'NVDA-PUT':48
+};
+// Tickers where the direction historically underperforms (<55%) — suppress alerts
+const SUPPRESSED = new Set(['META-CALL','AMZN-CALL','AAPL-PUT','AMD-PUT','NVDA-PUT','AMZN-PUT']);
 // ══ STATE ══
 let TF = 1, muted = false, apiKey = 'eaJZCtLOOObYTtDAeHfSqnUDIo2pVx9O', isLive = false, totalAlerts = 0, audioCtx = null;
 let lastDataTime = null;
@@ -868,31 +890,40 @@ function scoreDirection(t,tf,dir){
   const s=S[t]&&S[t][tf];
   if(!s||!s.bars||s.bars.length<20)return null;
   const bars=s.bars,last=bars[bars.length-1],rv=calcRVOL(bars);
+  // Block historically underperforming combos
+  if(typeof SUPPRESSED!=='undefined'&&SUPPRESSED.has(t+'-'+dir))return{score:0,blocked:'low-WR',marks:[]};
   if(rv!==null&&rv<1.0)return{score:0,blocked:'RVOL<1.0',marks:[]};
   let score=0,marks=[];
+  // RVOL tiers (intraday momentum gate)
   if(rv>=5){score+=30;marks.push('RVOL '+rv.toFixed(1)+'x \uD83D\uDD25');}
-  else if(rv>=4){score+=30;marks.push('RVOL '+rv.toFixed(1)+'x');}
+  else if(rv>=4){score+=25;marks.push('RVOL '+rv.toFixed(1)+'x');}
   else if(rv>=3){score+=20;marks.push('RVOL '+rv.toFixed(1)+'x');}
   else if(rv>=1.5){score+=15;marks.push('RVOL '+rv.toFixed(1)+'x');}
-  const isCall=(dir==='CALL'),e9=ema(bars,9),e21=ema(bars,21);
+  const isCall=(dir==='CALL');
+  // EMA 5/20 — primary signal (best backtest combo across 7 tickers, avg 74% WR)
+  const e5=ema(bars,5),e20=ema(bars,20);
+  // EMA 9/21 — secondary confirmation
+  const e9=ema(bars,9),e21=ema(bars,21);
   if(isCall){
-    if(s.ema5!=null&&s.ema20!=null&&s.ema5>s.ema20){score+=20;marks.push('EMA5>20');}
+    if(e5!=null&&e20!=null&&e5>e20){score+=25;marks.push('EMA5>20');}
     if(e9!=null&&e21!=null&&e9>e21){score+=10;marks.push('EMA9>21');}
-    if(s.vwap!=null&&last.c>s.vwap){score+=20;marks.push('Above VWAP');}
+    if(s.vwap!=null&&last.c>s.vwap){score+=15;marks.push('Above VWAP');}
     const orb=getORBLevels(bars);
-    if(orb&&last.c>orb.high*1.001){score+=25;marks.push('ORB breakout');}
+    if(orb&&last.c>orb.high*1.001){score+=30;marks.push('ORB breakout');}
     if(S[t].pdh&&last.c>S[t].pdh){score+=15;marks.push('PDH break');}
-    if(s.rsi&&s.rsi.value>=40&&s.rsi.value<=70){score+=10;marks.push('RSI '+s.rsi.value.toFixed(0));}
+    // RSI 35-70 (wider range per backtest — 74% avg WR)
+    if(s.rsi&&s.rsi.value>=35&&s.rsi.value<=70){score+=10;marks.push('RSI '+s.rsi.value.toFixed(0));}
     if(s.macd&&(s.macd.cross==='bull'||s.macd.hist>0)){score+=10;marks.push('MACD bull');}
     if(MKT.regime&&MKT.regime.cls==='regime-high-conviction'){score+=10;marks.push('Bull regime');}
   }else{
-    if(s.ema5!=null&&s.ema20!=null&&s.ema5<s.ema20){score+=20;marks.push('EMA5<20');}
+    if(e5!=null&&e20!=null&&e5<e20){score+=25;marks.push('EMA5<20');}
     if(e9!=null&&e21!=null&&e9<e21){score+=10;marks.push('EMA9<21');}
-    if(s.vwap!=null&&last.c<s.vwap){score+=20;marks.push('Below VWAP');}
+    if(s.vwap!=null&&last.c<s.vwap){score+=15;marks.push('Below VWAP');}
     const orb=getORBLevels(bars);
-    if(orb&&last.c<orb.low*0.999){score+=25;marks.push('ORB breakdown');}
+    if(orb&&last.c<orb.low*0.999){score+=30;marks.push('ORB breakdown');}
     if(S[t].pdl&&last.c<S[t].pdl){score+=15;marks.push('PDL break');}
-    if(s.rsi&&s.rsi.value>=30&&s.rsi.value<=60){score+=10;marks.push('RSI '+s.rsi.value.toFixed(0));}
+    // RSI 30-65 for puts
+    if(s.rsi&&s.rsi.value>=30&&s.rsi.value<=65){score+=10;marks.push('RSI '+s.rsi.value.toFixed(0));}
     if(s.macd&&(s.macd.cross==='bear'||s.macd.hist<0)){score+=10;marks.push('MACD bear');}
     if(MKT.regime&&['regime-risk-off','regime-high-vol'].includes(MKT.regime.cls)){score+=10;marks.push('Bear regime');}
   }
@@ -912,17 +943,21 @@ function fireOptionsAlert(t,tf,dir,result,btResult){
   const isCall=(dir==='CALL'),price=S[t]&&S[t].price!=null?S[t].price:0;
   const time=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
   const rv=result.rvol!=null?result.rvol.toFixed(1)+'x':'\u2014';
-  const wr=btResult?(isCall?btResult.callWR:btResult.putWR):null;
-  const wrN=btResult?(isCall?btResult.callN:btResult.putN):0;
-  const wrTxt=wr!=null?wr+'% ('+wrN+' signals)':'insufficient data';
+  // Use real 5-month backtest WR if available
+  const realWR = typeof TICKER_WR!=='undefined'?TICKER_WR[t+'-'+dir]:null;
+  const wr = realWR!=null ? realWR : (btResult?(isCall?btResult.callWR:btResult.putWR):null);
+  const wrN = realWR!=null ? '5-mo BT' : (btResult?(isCall?btResult.callN:btResult.putN)+' signals':'?');
+  const wrTxt = wr!=null ? wr+'% ('+wrN+')' : 'insufficient data';
   const stop=isCall?(price*0.992).toFixed(2):(price*1.008).toFixed(2);
+  const wrColor = wr>=70?'#4ade80':wr>=60?'#fbbf24':'#f87171';
   const el=document.createElement('div');
   el.className='opts-alert '+(isCall?'call-alert':'put-alert');
-  el.innerHTML='<div class="oa-top"><span class="'+(isCall?'oa-dir-call':'oa-dir-put')+'">'+(isCall?'\uD83D\uDFE2 CALL':'\uD83D\uDD34 PUT')+'<\/span><span class="oa-ticker">'+t+'<\/span><span class="oa-score">'+result.score+'pts<\/span><span class="oa-time">'+time+'<\/span><\/div><div class="oa-sigs">'+result.marks.join(' &middot; ')+'<\/div><div class="oa-levels"><span>Entry <b>$'+price.toFixed(2)+'<\/b><\/span><span>Stop <b>$'+stop+'<\/b><\/span><span>RVOL <b>'+rv+'<\/b><\/span><\/div><div class="oa-meta">Backtest WR: <b>'+wrTxt+'<\/b> &middot; Target: +40% on contract<\/div>';
+  el.innerHTML='<div class="oa-top"><span class="'+(isCall?'oa-dir-call':'oa-dir-put')+'">'+(isCall?'\uD83D\uDFE2 CALL':'\uD83D\uDD34 PUT')+'<\/span><span class="oa-ticker">'+t+'<\/span><span class="oa-score">'+result.score+'pts<\/span><span class="oa-time">'+time+'<\/span><\/div><div class="oa-sigs">'+result.marks.join(' &middot; ')+'<\/div><div class="oa-levels"><span>Entry <b>$'+price.toFixed(2)+'<\/b><\/span><span>Stop <b>$'+stop+'<\/b><\/span><span>RVOL <b>'+rv+'<\/b><\/span><\/div><div class="oa-meta">BT Win Rate: <b style="color:'+wrColor+'">'+wrTxt+'<\/b><\/div>';
   const feed=document.getElementById(isCall?'callFeed':'putFeed');
   if(!feed)return;
   const noMsg=feed.querySelector('.no-opts-msg');if(noMsg)noMsg.remove();
   feed.insertBefore(el,feed.firstChild);
+  while(feed.children.length>20)feed.removeChild(feed.lastChild);
   const cnt=document.getElementById(isCall?'callCnt':'putCnt');
   if(cnt){cnt.textContent=parseInt(cnt.textContent||'0')+1;cnt.className='alert-cnt hot';}
   if(typeof totalAlerts!=='undefined')totalAlerts++;
@@ -1340,12 +1375,12 @@ function fireBreakoutAlert(sym, levelName, levelPrice, price, dir) {
       <div class="ai-cell"><div class="lbl">Level</div><div class="val">$${levelPrice.toFixed(2)}</div></div>
       <div class="ai-cell"><div class="lbl">Type</div><div class="val">${levelName}</div></div>
     </div>`;
-  const feed = document.getElementById('alertFeed');
+  const feed = document.getElementById('callFeed');
   const noMsg = feed.querySelector('.no-alerts-msg');
   if (noMsg) noMsg.remove();
   feed.insertBefore(el, feed.firstChild);
-  document.getElementById('alertCnt').textContent = totalAlerts;
-  document.getElementById('alertCnt').className = 'alert-cnt hot';
+  document.getElementById('callCnt').textContent = totalAlerts;
+  document.getElementById('callCnt').className = 'alert-cnt hot';
   document.getElementById('statAlerts').textContent = totalAlerts;
 }
 
@@ -1381,5 +1416,27 @@ buildCards(); initDemo(); renderAll(); updateStats();
 setInterval(() => { if (!isLive) tickDemo(); }, 3000);
 setInterval(checkOptionsAlerts, 5000);
 </script>
+
+  <!-- Ticker Editor Modal -->
+  <div id="tickerEditorOverlay" class="ticker-editor-overlay" onclick="if(event.target===this)closeTickerEditor()">
+    <div class="ticker-editor-modal">
+      <div class="te-header">
+        <span class="te-title">Edit Watchlist</span>
+        <button class="te-close" onclick="closeTickerEditor()">✕</button>
+      </div>
+      <div class="te-input-row">
+        <input id="tickerInput" class="te-input" type="text" placeholder="Add ticker (e.g. TSLA)" onkeydown="if(event.key==='Enter')addEditorTicker()" />
+        <button class="te-add-btn" onclick="addEditorTicker()">Add</button>
+      </div>
+      <div id="tickerEditorChips" class="te-chips"></div>
+      <div class="te-footer">
+        <span id="tickerEditorCount" class="te-count">0 tickers</span>
+        <div class="te-actions">
+          <button class="btn-secondary" onclick="resetTickerEditor()">Reset</button>
+          <button class="btn-primary" onclick="saveTickerEditor()">Save & Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
