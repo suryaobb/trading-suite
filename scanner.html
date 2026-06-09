@@ -932,6 +932,16 @@ function fireOptionsAlert(t,tf,dir,result,btResult){
 
 function checkOptionsAlerts(){
   if(typeof S==='undefined'||typeof TICKERS==='undefined'||typeof TF==='undefined')return;
+  // Market hours gate: 9:30–16:00 ET, Mon–Fri only
+  function isMarketHours(){
+    const now=new Date();
+    const et=new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+    const day=et.getDay(); // 0=Sun,6=Sat
+    if(day===0||day===6)return false;
+    const h=et.getHours(),m=et.getMinutes(),mins=h*60+m;
+    return mins>=570&&mins<960; // 9:30=570, 16:00=960
+  }
+  if(!isMarketHours())return;
   const now=Date.now();
   TICKERS.forEach(function(t){
     if(!S[t])return;
