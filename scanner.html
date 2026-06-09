@@ -1375,12 +1375,12 @@ function fireBreakoutAlert(sym, levelName, levelPrice, price, dir) {
       <div class="ai-cell"><div class="lbl">Level</div><div class="val">$${levelPrice.toFixed(2)}</div></div>
       <div class="ai-cell"><div class="lbl">Type</div><div class="val">${levelName}</div></div>
     </div>`;
-  const feed = document.getElementById('callFeed');
+  const feed = document.getElementById(dir === 'up' ? 'callFeed' : 'putFeed');
   const noMsg = feed.querySelector('.no-alerts-msg');
   if (noMsg) noMsg.remove();
   feed.insertBefore(el, feed.firstChild);
-  document.getElementById('callCnt').textContent = totalAlerts;
-  document.getElementById('callCnt').className = 'alert-cnt hot';
+  document.getElementById(dir === 'up' ? 'callCnt' : 'putCnt').textContent = totalAlerts;
+  document.getElementById(dir === 'up' ? 'callCnt' : 'putCnt').className = 'alert-cnt hot';
   document.getElementById('statAlerts').textContent = totalAlerts;
 }
 
