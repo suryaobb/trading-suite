@@ -465,7 +465,7 @@ function submitTrade() {
     direction: document.getElementById('f-dir').value,
     entry: parseFloat(document.getElementById('f-entry').value)||0,
     exit:  parseFloat(document.getElementById('f-exit').value)||0,
-    contracts: parseInt(document.getElementById('f-contracts').value)||1,
+    contracts: parseInt(document.getElementById('f-contracts ').value)||1,
     pnl: parseFloat(document.getElementById('f-pnl').value)||0,
     result: document.getElementById('f-result').value,
     tags: getSelectedTags(),
@@ -598,13 +598,13 @@ function renderList() {
 }
 
 function openPlanner(ticker, price) {
-  window.open('planner.html?ticker='+ticker+'&price='+price, '_blank');
+  window.open('planner.html?ticker='+ticker+&price='+price, '_blank');
 }
 
 function exportCSV() {
   if (!trades.length) { alert('No trades to export.'); return; }
   const headers=['Date','Ticker','Direction','Entry','Exit','Contracts','PnL','Result','Tags','Notes'];
-  const rows=trades.map(t=>[t.date,t.ticker,t.direction,t.entry,t.exit,t.contracts,t.pnl,t.result,(t.tags||[]).join('|'),`"${(t.notes||'').replace(/"/g,"'")}`]);
+  const rows=trades.map(t=>[t.date,t.ticker,t.direction,t.entry,t.exit,t.contracts,t.pnl,t.result,(t.tags||[]).join('|'),`"${(t.notes||'').replace(/"/g,"'")}"`]);
   const csv=[headers.join(','),...rows.map(r=>r.join(','))].join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const a=document.createElement('a');
