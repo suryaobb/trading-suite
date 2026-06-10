@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Momentum Scanner â Trading Suite</title>
+<title>Momentum Scanner — Trading Suite</title>
 <link rel="stylesheet" href="shared.css">
 <style>
-/* ââ LAYOUT ââ */
+/* ── LAYOUT ── */
 .scanner-layout {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -18,7 +18,7 @@
   .alert-col { border-left: none; border-top: 1px solid var(--border); height: 360px; }
 }
 
-/* ââ LEFT PANEL ââ */
+/* ── LEFT PANEL ── */
 .left-panel { display: flex; flex-direction: column; overflow: hidden; }
 
 .scanner-toolbar {
@@ -194,7 +194,7 @@
 .stats-bar .green { color: var(--green); }
 .stats-bar .yellow { color: var(--yellow); }
 
-/* ââ RIGHT PANEL (Alerts) ââ */
+/* ── RIGHT PANEL (Alerts) ── */
 .alert-col {
   border-left: 1px solid var(--border);
   display: flex;
@@ -271,7 +271,7 @@
 <body>
 
 <nav class="nav">
-  <a class="nav-logo" href="index.html">â¡ <span class="accent">Trading</span> Suite</a>
+  <a class="nav-logo" href="index.html">⚡ <span class="accent">Trading</span> Suite</a>
   <div class="nav-links">
     <a class="nav-link" href="index.html">Dashboard</a>
     <a class="nav-link active" href="scanner.html">Scanner</a>
@@ -284,7 +284,7 @@
       <div id="sDot" style="width:7px;height:7px;border-radius:50%;background:#92400e;"></div>
       <span id="sLabel">DEMO</span>
     </div>
-    <div id="mktBadge" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-muted);">â</div>
+    <div id="mktBadge" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-muted);">–</div>
   </div>
 </nav>
 
@@ -301,11 +301,11 @@
         <button class="tf-tab active" id="tab1" onclick="switchTF(1)">1 Min</button>
         <button class="tf-tab" id="tab5" onclick="switchTF(5)">5 Min</button>
       </div>
-      <button class="mute-toggle" id="muteBtn" onclick="toggleMute()" title="Toggle alerts">ð</button>
+      <button class="mute-toggle" id="muteBtn" onclick="toggleMute()" title="Toggle alerts">🔔</button>
     </div>
 
     <div class="demo-strip" id="demoStrip">
-      ð¡ <b>DEMO MODE</b> â Simulated data. Paste your Polygon key above to go live.
+      🟡 <b>DEMO MODE</b> — Simulated data. Paste your Polygon key above to go live.
     </div>
 
     <div class="ticker-grid" id="tickerGrid"></div>
@@ -314,14 +314,14 @@
       <span>Bulls: <b class="green" id="statBull">0</b></span>
       <span>Near Cross: <b class="yellow" id="statNear">0</b></span>
       <span>Alerts: <b class="yellow" id="statAlerts">0</b></span>
-      <span>Updated: <b id="statTime">â</b></span>
+      <span>Updated: <b id="statTime">–</b></span>
     </div>
   </div>
 
   <!-- RIGHT: Alerts -->
   <div class="alert-col">
     <div class="alert-header">
-      <h3>ð¨ Crossover Alerts</h3>
+      <h3>🧠 Brain Alerts</h3>
       <div style="display:flex;align-items:center;gap:7px;">
         <span class="alert-cnt" id="alertCnt">0</span>
         <button class="clear-btn" onclick="clearAlerts()">Clear</button>
@@ -329,7 +329,7 @@
     </div>
     <div class="alerts-feed" id="alertFeed">
       <div class="no-alerts-msg">
-        Watching 11 tickers for<br>5 EMA Ã 20 EMA crossovers<br>above VWAPâ¦<br><br>
+        Watching 11 tickers for<br>5 EMA × 20 EMA crossovers<br>above VWAP…<br><br>
         Alerts show real 1-yr win rates<br>from backtest (AMD: 21.4% call).
       </div>
     </div>
@@ -338,11 +338,12 @@
 </div>
 
 <script>
-// ââ CONFIG ââ
+// ══ CONFIG ══
 const TICKERS = ['AAPL','MSFT','GOOGL','AMZN','META','NVDA','TSLA','AMD','SPY','QQQ','IWM'];
 const SEED = { AAPL:211, MSFT:449, GOOGL:178, AMZN:198, META:617, NVDA:1080, TSLA:348, AMD:138, SPY:585, QQQ:510, IWM:209 };
+const DEMO_SESSION_BARS = 78; // 78 1-min bars per simulated trading session
 
-// ââ HISTORICAL WIN RATES (1-yr OOS backtest Â· scoreâ¥70 Â· 60-min forward window) ââ
+// ── WIN RATE FALLBACK (used until brain_state.json loads) ──
 const HIST_WR = {
   AAPL:  { call: 7.9,  put: 7.5  },
   MSFT:  { call: 6.8,  put: 8.3  },
@@ -357,24 +358,125 @@ const HIST_WR = {
   IWM:   { call: 5.4,  put: 7.5  },
 };
 
-// ââ STATE ââ
-let TF = 1, muted = false, apiKey = '', isLive = false, totalAlerts = 0, audioCtx = null;
+// ── BRAIN STATE (loaded from brain_state.json) ──
+let brainState = null;
 
-const S = {}; // per-ticker state
+async function loadBrainState() {
+  try {
+    const r = await fetch('brain_state.json?_=' + Date.now());
+    if (!r.ok) return;
+    brainState = await r.json();
+    console.log('[Brain] Loaded:', brainState.generated_at);
+    updateBrainBadges();
+    const msg = document.getElementById('alertFeed').querySelector('.no-alerts-msg');
+    if (msg) renderNoAlertsMsg(msg);
+  } catch(e) { console.log('[Brain] brain_state.json not found — using defaults'); }
+}
+
+function renderNoAlertsMsg(el) {
+  const top = brainState?.strategy_leaderboard?.[0];
+  if (!top) return;
+  el.innerHTML = `Watching 11 tickers · 7 strategies<br>
+    <b style="color:#38bdf8">Top strategy: ${top.strategy}</b><br>
+    Avg WR: ${(top.avg_win_rate*100).toFixed(1)}%&nbsp;&nbsp;PF: ${top.avg_profit_factor.toFixed(2)}<br><br>
+    <span style="color:#4b5563;font-size:10px">Brain updated ${new Date(brainState.generated_at).toLocaleDateString()}</span>`;
+}
+
+function getBrainWR(ticker, strategy) {
+  if (brainState?.tickers?.[ticker]?.all_strategies?.[strategy]?.oos_win_rate != null) {
+    return (brainState.tickers[ticker].all_strategies[strategy].oos_win_rate * 100).toFixed(1) + '%';
+  }
+  if (brainState?.tickers?.[ticker]?.oos_win_rate != null) {
+    return (brainState.tickers[ticker].oos_win_rate * 100).toFixed(1) + '%';
+  }
+  const wr = HIST_WR[ticker];
+  return wr ? wr.call + '%' : null;
+}
+
+function getBrainBest(ticker) {
+  return brainState?.tickers?.[ticker]?.best_strategy || 'EMA_CROSS';
+}
+
+function updateBrainBadges() {
+  if (!brainState) return;
+  TICKERS.forEach(t => {
+    const tdata = brainState.tickers[t];
+    if (!tdata) return;
+    const wr = (tdata.oos_win_rate * 100).toFixed(1);
+    const strat = (tdata.best_strategy || 'EMA_CROSS').replace('_', ' ');
+    const b1 = document.getElementById('wr-call-' + t);
+    const b2 = document.getElementById('wr-put-' + t);
+    if (b1) { b1.textContent = `🧠 ${strat}`; b1.title = 'Brain-selected strategy'; }
+    if (b2) { b2.textContent = `WR ${wr}%`; b2.title = `OOS win rate: ${wr}%  PF: ${tdata.oos_profit_factor?.toFixed(2)}`; }
+  });
+}
+
+// ── SESSION STATE (tracks OR, HOD/LOD per ticker) ──
+const SS = {};
 TICKERS.forEach(t => {
-  S[t] = {
-    price: SEED[t], open: SEED[t], change: 0, changePct: 0, lastAlert: 0,
-    1: { bars:[], ema5:null, ema20:null, vwap:null },
-    5: { bars:[], ema5:null, ema20:null, vwap:null }
+  SS[t] = {
+    prevClose: SEED[t], prevVwap: null,
+    or5H: null, or5L: null, or5Ready: false,
+    or15H: null, or15L: null, or15Ready: false,
+    hod: null, lod: null, sessionBars: 0,
   };
 });
 
-const DS = {}; // demo state
+function resetSession(t, lastClose) {
+  SS[t].prevClose = lastClose || SS[t].prevClose;
+  SS[t].or5H = null; SS[t].or5L = null; SS[t].or5Ready = false;
+  SS[t].or15H = null; SS[t].or15L = null; SS[t].or15Ready = false;
+  SS[t].hod = null; SS[t].lod = null; SS[t].sessionBars = 0;
+}
+
+function updateSessionState(t, bar) {
+  const ss = SS[t];
+  ss.sessionBars++;
+  if (!isLive && ss.sessionBars >= DEMO_SESSION_BARS) resetSession(t, bar.c);
+  // OR tracking
+  if (!ss.or5Ready) {
+    ss.or5H = ss.or5H === null ? bar.h : Math.max(ss.or5H, bar.h);
+    ss.or5L = ss.or5L === null ? bar.l : Math.min(ss.or5L, bar.l);
+    if (ss.sessionBars >= 5) ss.or5Ready = true;
+  }
+  if (!ss.or15Ready) {
+    ss.or15H = ss.or15H === null ? bar.h : Math.max(ss.or15H, bar.h);
+    ss.or15L = ss.or15L === null ? bar.l : Math.min(ss.or15L, bar.l);
+    if (ss.sessionBars >= 15) ss.or15Ready = true;
+  }
+  // HOD / LOD
+  ss.hod = ss.hod === null ? bar.h : Math.max(ss.hod, bar.h);
+  ss.lod = ss.lod === null ? bar.l : Math.min(ss.lod, bar.l);
+}
+
+// ── STRATEGY METADATA ──
+const STRAT_META = {
+  EMA_CROSS:    { label:'5×20 EMA Cross',  emoji:'📈', color:'#38bdf8' },
+  VWAP_RECLAIM: { label:'VWAP Reclaim',    emoji:'🔄', color:'#4ade80' },
+  ORB_5:        { label:'5-Min ORB',       emoji:'🚀', color:'#fb923c' },
+  ORB_15:       { label:'15-Min ORB',      emoji:'📊', color:'#f97316' },
+  GAP_GO:       { label:'Gap & Go',        emoji:'⚡', color:'#fbbf24' },
+  EMA_PULLBACK: { label:'EMA Pullback',    emoji:'🎯', color:'#34d399' },
+  HOD_BREAK:    { label:'HOD Break',       emoji:'💥', color:'#a78bfa' },
+};
+
+// ══ STATE ══
+let TF = 1, muted = false, apiKey = '', isLive = false, totalAlerts = 0, audioCtx = null;
+
+const S = {};
+TICKERS.forEach(t => {
+  S[t] = {
+    price: SEED[t], open: SEED[t], change: 0, changePct: 0, lastAlert: 0,
+    1: { bars:[], ema5:null, ema9:null, ema20:null, vwap:null },
+    5: { bars:[], ema5:null, ema9:null, ema20:null, vwap:null }
+  };
+});
+const DS = {};
 TICKERS.forEach(t => {
   DS[t] = { price: SEED[t], trend: (Math.random()-0.48), vol: SEED[t]*0.009 };
 });
 
-// ââ MATH ââ
+// ══ MATH ══
 function ema(bars, n) {
   if (bars.length < 2) return null;
   const k = 2/(n+1); let e = bars[0].c;
@@ -387,14 +489,113 @@ function vwap(bars) {
   bars.forEach(b => { sv += ((b.h+b.l+b.c)/3)*b.v; vol += b.v; });
   return vol ? sv/vol : null;
 }
+function calcRVOL(t, tf) {
+  const bars = S[t][tf].bars;
+  if (bars.length < 5) return 1.0;
+  const last = bars[bars.length-1].v;
+  const avg  = bars.slice(-21,-1).reduce((s,b)=>s+b.v,0) / Math.min(20, bars.length-1);
+  return avg > 0 ? last/avg : 1.0;
+}
 function recalc(t, tf) {
   const s = S[t][tf]; const bs = s.bars;
   if (bs.length < 20) return;
-  s.ema5 = ema(bs, 5); s.ema20 = ema(bs, 20); s.vwap = vwap(bs);
+  s.ema5 = ema(bs,5); s.ema9 = ema(bs,9); s.ema20 = ema(bs,20); s.vwap = vwap(bs);
 }
-function fmt(n) { return n != null ? '$'+n.toFixed(2) : 'â'; }
+function fmt(n) { return n != null ? '$'+n.toFixed(2) : '–'; }
 
-// ââ DEMO ââ
+// ══ SIGNAL CHECKS ══
+function chkEmaCross(t, tf, p5, p20) {
+  const s = S[t][tf];
+  if (!s.ema5||!s.ema20||!s.vwap) return null;
+  if (p5 < p20 && s.ema5 > s.ema20 && S[t].price > s.vwap)
+    return { strategy:'EMA_CROSS', direction:'LONG', e5:s.ema5, e20:s.ema20, vw:s.vwap };
+  return null;
+}
+
+function chkVwapReclaim(t, tf, bar) {
+  const s = S[t][tf]; const ss = SS[t];
+  if (!s.vwap||!ss.prevVwap||ss.sessionBars < 3) return null;
+  const bars = s.bars; if (bars.length < 2) return null;
+  const prevP = bars[bars.length-2].c, price = bar.c;
+  const rvol = calcRVOL(t,tf);
+  const slopeUp = s.vwap > ss.prevVwap;
+  if (prevP <= ss.prevVwap && price > s.vwap && rvol >= 2.0 && slopeUp)
+    return { strategy:'VWAP_RECLAIM', direction:'LONG', rvol:rvol.toFixed(1), vw:s.vwap };
+  return null;
+}
+
+function chkORB(t, tf, bar, type) {
+  const s = S[t][tf]; const ss = SS[t];
+  if (!s.vwap) return null;
+  const bars = s.bars; if (bars.length < 2) return null;
+  const prevP = bars[bars.length-2].c, price = bar.c;
+  const rvol = calcRVOL(t,tf);
+  if (type==='ORB_5' && ss.or5Ready && ss.or5H) {
+    if (prevP <= ss.or5H && price > ss.or5H && price > s.vwap && rvol >= 1.5)
+      return { strategy:'ORB_5', direction:'LONG', orHigh:ss.or5H, rvol:rvol.toFixed(1), vw:s.vwap };
+  }
+  if (type==='ORB_15' && ss.or15Ready && ss.or15H) {
+    if (prevP <= ss.or15H && price > ss.or15H && price > s.vwap && rvol >= 1.5)
+      return { strategy:'ORB_15', direction:'LONG', orHigh:ss.or15H, rvol:rvol.toFixed(1), vw:s.vwap };
+  }
+  return null;
+}
+
+function chkGapGo(t, tf, bar) {
+  const s = S[t][tf]; const ss = SS[t];
+  if (!s.vwap||!ss.or15Ready||!ss.or15H) return null;
+  const bars = s.bars; if (bars.length < 2) return null;
+  const prevP = bars[bars.length-2].c, price = bar.c;
+  const rvol = calcRVOL(t,tf);
+  const gapPct = ss.prevClose > 0 ? (S[t].open - ss.prevClose) / ss.prevClose : 0;
+  if (gapPct >= 0.02 && prevP <= ss.or15H && price > ss.or15H && price > s.vwap && rvol >= 2.0)
+    return { strategy:'GAP_GO', direction:'LONG', gap:(gapPct*100).toFixed(1), rvol:rvol.toFixed(1), vw:s.vwap };
+  return null;
+}
+
+function chkEmaPullback(t, tf, bar) {
+  const s = S[t][tf]; const ss = SS[t];
+  if (!s.ema9||!s.ema20||!s.vwap||ss.sessionBars < 6) return null;
+  const price = bar.c;
+  const bullTrend = s.ema9 > s.ema20;
+  const inZone = price >= s.ema20*0.997 && price <= s.ema9*1.003;
+  const bars = s.bars; if (bars.length < 8) return null;
+  const recentMax = Math.max(...bars.slice(-7,-1).map(b=>b.c));
+  const hadMomentum = recentMax > s.ema9 * 1.012;
+  if (bullTrend && inZone && price > s.vwap && hadMomentum && calcRVOL(t,tf) >= 1.2)
+    return { strategy:'EMA_PULLBACK', direction:'LONG', e9:s.ema9, e20:s.ema20, vw:s.vwap };
+  return null;
+}
+
+function chkHodBreak(t, tf, bar) {
+  const s = S[t][tf]; const ss = SS[t];
+  if (!s.vwap||!ss.hod||ss.sessionBars < 6) return null;
+  const bars = s.bars; if (bars.length < 2) return null;
+  const prevP = bars[bars.length-2].c, price = bar.c;
+  const rvol = calcRVOL(t,tf);
+  const prevHod = ss.hod;
+  if (prevP < prevHod*0.9997 && price > prevHod && price > s.vwap && rvol >= 1.5)
+    return { strategy:'HOD_BREAK', direction:'LONG', hod:prevHod, rvol:rvol.toFixed(1), vw:s.vwap };
+  return null;
+}
+
+function checkAllStrategies(t, tf, p5, p20, bar) {
+  const hits = [
+    chkEmaCross(t,tf,p5,p20),
+    chkVwapReclaim(t,tf,bar),
+    chkORB(t,tf,bar,'ORB_5'),
+    chkORB(t,tf,bar,'ORB_15'),
+    chkGapGo(t,tf,bar),
+    chkEmaPullback(t,tf,bar),
+    chkHodBreak(t,tf,bar),
+  ].filter(Boolean);
+  if (!hits.length) return null;
+  // Prefer brain's recommended strategy; otherwise first hit
+  const best = getBrainBest(t);
+  return hits.find(h=>h.strategy===best) || hits[0];
+}
+
+// ══ DEMO ══
 function demoBar(t) {
   const d = DS[t];
   d.trend = d.trend*0.97 + (Math.random()-0.5)*0.05;
@@ -403,15 +604,23 @@ function demoBar(t) {
   const h = Math.max(o,c)+Math.random()*d.vol*0.4;
   const l = Math.min(o,c)-Math.random()*d.vol*0.4;
   d.price = c;
-  return { o, h, l, c, v: Math.floor(40000+Math.random()*180000), t: Date.now() };
+  // Randomly spike volume ~8% of bars to simulate RVOL surges
+  const base = Math.floor(40000+Math.random()*180000);
+  const v = Math.random() < 0.08 ? Math.floor(base*(2.5+Math.random()*2)) : base;
+  return { o, h, l, c, v, t: Date.now() };
 }
 
 function initDemo() {
   TICKERS.forEach(t => {
     DS[t].price = SEED[t];
+    resetSession(t, SEED[t]);
     [1,5].forEach(tf => {
       S[t][tf].bars = [];
-      for (let i=0; i<35; i++) S[t][tf].bars.push(demoBar(t));
+      for (let i=0; i<35; i++) {
+        const bar = demoBar(t);
+        S[t][tf].bars.push(bar);
+        if (tf===1) updateSessionState(t, bar);
+      }
       recalc(t, tf);
     });
     S[t].price = DS[t].price; S[t].open = SEED[t];
@@ -424,11 +633,15 @@ function tickDemo() {
   TICKERS.forEach(t => {
     [1,5].forEach(tf => {
       const s = S[t][tf];
-      const prev5 = s.ema5, prev20 = s.ema20;
+      const p5 = s.ema5, p20 = s.ema20, prevVwap = s.vwap;
       const bar = demoBar(t);
       s.bars.push(bar); if (s.bars.length > 80) s.bars.shift();
       recalc(t, tf);
-      if (prev5 && prev20) checkCross(t, tf, prev5, prev20, bar.c);
+      if (tf===1) { SS[t].prevVwap = prevVwap; updateSessionState(t, bar); }
+      if (p5 && p20) {
+        const sig = checkAllStrategies(t, tf, p5, p20, bar);
+        if (sig) dispatchAlert(t, tf, S[t].price, sig);
+      }
     });
     const last = S[t][1].bars.at(-1);
     if (last) { S[t].price=last.c; S[t].change=last.c-S[t].open; S[t].changePct=S[t].change/S[t].open*100; }
@@ -436,44 +649,51 @@ function tickDemo() {
   renderAll(); updateStats();
 }
 
-// ââ CROSSOVER ââ
-function checkCross(t, tf, p5, p20, close) {
-  const s = S[t][tf];
-  if (!s.ema5 || !s.ema20 || !s.vwap) return;
-  const isCross = p5 < p20 && s.ema5 > s.ema20;
-  const aboveVWAP = close > s.vwap;
-  if (!isCross || !aboveVWAP) return;
+// ══ ALERT ENGINE ══
+function dispatchAlert(t, tf, price, signal) {
   const now = Date.now();
-  if (now - S[t].lastAlert < 120000) return; // debounce 2min
+  if (now - S[t].lastAlert < 90000) return; // 90s debounce per ticker
   S[t].lastAlert = now;
-  fireAlert(t, tf, close, s.ema5, s.ema20, s.vwap);
-}
-
-function fireAlert(t, tf, price, e5, e20, vw) {
   totalAlerts++;
   playSound();
+
   const card = document.getElementById('c-'+t);
   if (card) { card.classList.remove('signal'); void card.offsetWidth; card.classList.add('signal'); }
+
   const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
-  const wr = HIST_WR[t];
+  const meta = STRAT_META[signal.strategy] || { label:signal.strategy, emoji:'🚀', color:'#38bdf8' };
+  const wr = getBrainWR(t, signal.strategy);
+
+  let detail = '';
+  if (signal.e5)    detail = `EMA5 ${fmt(signal.e5)} · EMA20 ${fmt(signal.e20)} · VWAP ${fmt(signal.vw)}`;
+  else if (signal.rvol && signal.orHigh) detail = `OR High ${fmt(signal.orHigh)} · RVOL ${signal.rvol}× · VWAP ${fmt(signal.vw)}`;
+  else if (signal.gap)   detail = `Gap +${signal.gap}% · RVOL ${signal.rvol}× · VWAP ${fmt(signal.vw)}`;
+  else if (signal.hod)   detail = `Prior HOD ${fmt(signal.hod)} · RVOL ${signal.rvol}× · VWAP ${fmt(signal.vw)}`;
+  else if (signal.rvol)  detail = `RVOL ${signal.rvol}× · VWAP ${fmt(signal.vw)}`;
+  else if (signal.e9)    detail = `EMA9 ${fmt(signal.e9)} · EMA20 ${fmt(signal.e20)} · VWAP ${fmt(signal.vw)}`;
+
+  const brainTag = brainState
+    ? `Brain · ${new Date(brainState.generated_at).toLocaleDateString()}`
+    : '1-yr OOS backtest';
+
   const wrHtml = wr ? `
     <div class="ai-wr">
-      <div class="ai-wr-badge call">ð CALL ${wr.call}%</div>
-      <div class="ai-wr-badge put">ð PUT ${wr.put}%</div>
+      <div class="ai-wr-badge call" style="background:${meta.color}18;border-color:${meta.color}50;color:${meta.color}">
+        ${meta.emoji} OOS WR ${wr}
+      </div>
+      <div class="ai-wr-badge put">📐 2:1 R:R · 60-min exit</div>
     </div>
-    <div style="font-size:9px;color:#4b5563;margin-top:-4px;margin-bottom:7px;text-align:center;">1-yr OOS Â· 60-min window</div>` : '';
+    <div style="font-size:9px;color:#4b5563;margin-top:-4px;margin-bottom:6px;text-align:center">${brainTag}</div>` : '';
+
   const el = document.createElement('div');
   el.className = 'alert-item';
   el.innerHTML = `
     <div class="ai-top"><span class="ai-sym">${t}</span><span class="ai-time">${time}</span></div>
-    <div class="ai-sig">ð 5 EMA Ã 20 EMA Crossover Â· ${tf}min Â· Above VWAP</div>
+    <div class="ai-sig" style="color:${meta.color}">${meta.emoji} ${meta.label} · ${tf}min · ${signal.direction}</div>
     ${wrHtml}
-    <div class="ai-grid">
-      <div class="ai-cell"><div class="lbl">Price</div><div class="val">${fmt(price)}</div></div>
-      <div class="ai-cell"><div class="lbl">EMA5</div><div class="val">${fmt(e5)}</div></div>
-      <div class="ai-cell"><div class="lbl">VWAP</div><div class="val">${fmt(vw)}</div></div>
-    </div>
-    <button class="ai-plan" onclick="openPlanner('${t}',${price.toFixed(2)})">ð Plan This Trade â</button>`;
+    <div style="font-size:10px;color:#6b7280;padding:2px 4px 6px">${detail}</div>
+    <button class="ai-plan" onclick="openPlanner('${t}',${price.toFixed(2)})">📋 Plan This Trade →</button>`;
+
   const feed = document.getElementById('alertFeed');
   const noMsg = feed.querySelector('.no-alerts-msg');
   if (noMsg) noMsg.remove();
@@ -488,14 +708,17 @@ function openPlanner(t, price) {
 }
 
 function clearAlerts() {
-  document.getElementById('alertFeed').innerHTML = '<div class="no-alerts-msg">Watching 11 tickers for<br>5 EMA Ã 20 EMA crossovers<br>above VWAPâ¦<br><br>Alerts show real 1-yr win rates<br>from backtest (AMD: 21.4% call).</div>';
+  const feed = document.getElementById('alertFeed');
+  feed.innerHTML = '<div class="no-alerts-msg">Watching 11 tickers · 7 strategies<br>EMA Cross · VWAP Reclaim · ORB<br>Gap & Go · Pullback · HOD Break<br><br>Brain selects best strategy per ticker<br>using walk-forward OOS validation.</div>';
+  const msg = feed.querySelector('.no-alerts-msg');
+  if (msg && brainState) renderNoAlertsMsg(msg);
   totalAlerts = 0;
   document.getElementById('alertCnt').textContent = '0';
   document.getElementById('alertCnt').className = 'alert-cnt';
   document.getElementById('statAlerts').textContent = '0';
 }
 
-// ââ SOUND ââ
+// ══ SOUND ══
 function playSound() {
   if (muted) return;
   try {
@@ -513,33 +736,36 @@ function playSound() {
 }
 function toggleMute() {
   muted = !muted;
-  document.getElementById('muteBtn').textContent = muted ? 'ð' : 'ð';
+  document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔔';
   document.getElementById('muteBtn').classList.toggle('muted', muted);
 }
 
-// ââ RENDER ââ
+// ══ RENDER ══
 function buildCards() {
   const g = document.getElementById('tickerGrid'); g.innerHTML = '';
   TICKERS.forEach(t => {
     const wr = HIST_WR[t];
-    const wrRow = wr ? `<div class="tc-wr-row">
-      <div class="tc-wr-badge call">C ${wr.call}%</div>
-      <div class="tc-wr-badge put">P ${wr.put}%</div>
-    </div>` : '';
+    // If brain loaded, show brain strategy; else show fallback C/P rates
+    const bdata = brainState?.tickers?.[t];
+    const c1 = bdata ? `🧠 ${(bdata.best_strategy||'').replace(/_/g,' ')}` : `C ${wr?.call||'–'}%`;
+    const c2 = bdata ? `WR ${(bdata.oos_win_rate*100).toFixed(1)}%` : `P ${wr?.put||'–'}%`;
     const d = document.createElement('div');
     d.id = 'c-'+t; d.className = 't-card';
     d.innerHTML = `
-      <div class="tc-row1"><span class="tc-sym">${t}</span><span class="chip chip-muted" id="badge-${t}">â</span></div>
+      <div class="tc-row1"><span class="tc-sym">${t}</span><span class="chip chip-muted" id="badge-${t}">–</span></div>
       <div class="tc-price" id="price-${t}">$${SEED[t].toFixed(2)}</div>
       <div class="tc-chg flat" id="chg-${t}">+0.00%</div>
       <div class="tc-inds">
-        <div class="tc-ind"><div class="tc-ind-lbl">EMA 5</div><div class="tc-ind-val muted" id="ema5-${t}">â</div></div>
-        <div class="tc-ind"><div class="tc-ind-lbl">EMA 20</div><div class="tc-ind-val blue" id="ema20-${t}">â</div></div>
-        <div class="tc-ind"><div class="tc-ind-lbl">VWAP</div><div class="tc-ind-val muted" id="vwap-${t}">â</div></div>
-        <div class="tc-ind"><div class="tc-ind-lbl">EMA Î</div><div class="tc-ind-val muted" id="spread-${t}">â</div></div>
+        <div class="tc-ind"><div class="tc-ind-lbl">EMA 5</div><div class="tc-ind-val muted" id="ema5-${t}">–</div></div>
+        <div class="tc-ind"><div class="tc-ind-lbl">EMA 20</div><div class="tc-ind-val blue" id="ema20-${t}">–</div></div>
+        <div class="tc-ind"><div class="tc-ind-lbl">VWAP</div><div class="tc-ind-val muted" id="vwap-${t}">–</div></div>
+        <div class="tc-ind"><div class="tc-ind-lbl">EMA Δ</div><div class="tc-ind-val muted" id="spread-${t}">–</div></div>
       </div>
-      <div class="tc-vwap-pill" id="pill-${t}">Loadingâ¦</div>
-      ${wrRow}`;
+      <div class="tc-vwap-pill" id="pill-${t}">Loading…</div>
+      <div class="tc-wr-row">
+        <div class="tc-wr-badge call" id="wr-call-${t}">${c1}</div>
+        <div class="tc-wr-badge put"  id="wr-put-${t}">${c2}</div>
+      </div>`;
     g.appendChild(d);
   });
 }
@@ -556,10 +782,10 @@ function renderCard(t) {
 
   // Badge
   let badgeText='Watching', badgeClass='chip-muted';
-  if (card.classList.contains('signal')) { badgeText='ð¨ SIGNAL'; badgeClass='chip-alert'; }
-  else if (bullEMA && aboveVWAP) { badgeText='â² Bull Setup'; badgeClass='chip-bull'; card.classList.remove('bear'); card.classList.add('bull'); }
-  else if (!bullEMA && near)     { badgeText='â³ Near Cross'; badgeClass='chip-neutral'; card.classList.remove('bull','bear'); }
-  else if (!bullEMA)             { badgeText='â¼ Bear'; badgeClass='chip-bear'; card.classList.remove('bull'); card.classList.add('bear'); }
+  if (card.classList.contains('signal')) { badgeText='🚨 SIGNAL'; badgeClass='chip-alert'; }
+  else if (bullEMA && aboveVWAP) { badgeText='▲ Bull Setup'; badgeClass='chip-bull'; card.classList.remove('bear'); card.classList.add('bull'); }
+  else if (!bullEMA && near)     { badgeText='⏳ Near Cross'; badgeClass='chip-neutral'; card.classList.remove('bull','bear'); }
+  else if (!bullEMA)             { badgeText='▼ Bear'; badgeClass='chip-bear'; card.classList.remove('bull'); card.classList.add('bear'); }
   else                           { card.classList.remove('bull','bear'); }
 
   const b = document.getElementById('badge-'+t);
@@ -570,11 +796,11 @@ function renderCard(t) {
   ce.className = 'tc-chg '+(chg>0?'up':chg<0?'down':'flat');
 
   const ema5El = document.getElementById('ema5-'+t);
-  ema5El.textContent = e5 ? '$'+e5.toFixed(2) : 'â';
+  ema5El.textContent = e5 ? '$'+e5.toFixed(2) : '–';
   ema5El.className = 'tc-ind-val '+(bullEMA?'green':'red');
-  document.getElementById('ema20-'+t).textContent = e20 ? '$'+e20.toFixed(2) : 'â';
+  document.getElementById('ema20-'+t).textContent = e20 ? '$'+e20.toFixed(2) : '–';
   const vwEl = document.getElementById('vwap-'+t);
-  vwEl.textContent = vw ? '$'+vw.toFixed(2) : 'â';
+  vwEl.textContent = vw ? '$'+vw.toFixed(2) : '–';
   vwEl.className = 'tc-ind-val '+(aboveVWAP?'green':'red');
 
   const spreadEl = document.getElementById('spread-'+t);
@@ -586,7 +812,7 @@ function renderCard(t) {
 
   const pill = document.getElementById('pill-'+t);
   if (vw) {
-    pill.textContent = aboveVWAP ? 'â² Above VWAP' : 'â¼ Below VWAP';
+    pill.textContent = aboveVWAP ? '▲ Above VWAP' : '▼ Below VWAP';
     pill.className = 'tc-vwap-pill '+(aboveVWAP?'above':'below');
   }
 }
@@ -603,7 +829,7 @@ function updateStats() {
   document.getElementById('statTime').textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
 }
 
-// ââ TIMEFRAME ââ
+// ══ TIMEFRAME ══
 function switchTF(tf) {
   TF = tf;
   document.getElementById('tab1').classList.toggle('active', tf===1);
@@ -611,7 +837,7 @@ function switchTF(tf) {
   renderAll();
 }
 
-// ââ LIVE DATA ââ
+// ══ LIVE DATA ══
 async function connectLive() {
   const key = document.getElementById('apiKey').value.trim() || localStorage.getItem('polygonKey');
   if (!key) { alert('Enter your Polygon API key.'); return; }
@@ -627,7 +853,7 @@ async function connectLive() {
   document.getElementById('sLabel').textContent = 'LIVE';
   document.getElementById('sDot').style.background = '#4ade80';
   document.getElementById('demoStrip').classList.add('live');
-  document.getElementById('apiKey').value = 'â¢'.repeat(20);
+  document.getElementById('apiKey').value = '•'.repeat(20);
   await fetchAll();
   setInterval(fetchAll, 20000);
 }
@@ -647,26 +873,39 @@ async function fetchBars(t, tf, date) {
   try {
     const r = await fetch(`https://api.polygon.io/v2/aggs/ticker/${t}/range/${tf}/minute/${date}/${date}?adjusted=true&sort=asc&limit=300&apiKey=${apiKey}`);
     const d = await r.json(); if (!d.results?.length) return;
-    const prev5=S[t][tf].ema5, prev20=S[t][tf].ema20;
-    S[t][tf].bars = d.results.map(b=>({o:b.o,h:b.h,l:b.l,c:b.c,v:b.v,t:b.t}));
+    const p5=S[t][tf].ema5, p20=S[t][tf].ema20, prevVwap=S[t][tf].vwap;
+    const bars = d.results.map(b=>({o:b.o,h:b.h,l:b.l,c:b.c,v:b.v,t:b.t}));
+    S[t][tf].bars = bars;
     recalc(t, tf);
-    if (tf===1) { const last=S[t][tf].bars.at(-1); S[t].price=last.c; S[t].change=last.c-S[t][tf].bars[0].o; S[t].changePct=S[t].change/S[t][tf].bars[0].o*100; }
-    if (prev5&&prev20) checkCross(t, tf, prev5, prev20, S[t][tf].bars.at(-1).c);
+    if (tf===1) {
+      // Rebuild session state from bars
+      resetSession(t, S[t].open);
+      bars.forEach(bar => updateSessionState(t, bar));
+      SS[t].prevVwap = prevVwap;
+      const last=bars.at(-1);
+      S[t].price=last.c; S[t].change=last.c-bars[0].o; S[t].changePct=S[t].change/bars[0].o*100;
+    }
+    if (p5&&p20) {
+      const lastBar = bars.at(-1);
+      const sig = checkAllStrategies(t, tf, p5, p20, lastBar);
+      if (sig) dispatchAlert(t, tf, S[t].price, sig);
+    }
   } catch(e){}
 }
 
 // Auto-connect if key saved
 window.addEventListener('DOMContentLoaded', () => {
+  loadBrainState(); // load brain state (non-blocking)
   const saved = localStorage.getItem('polygonKey');
   if (saved && saved.charCodeAt(0) !== 8226) {
     document.getElementById('apiKey').value = saved;
     connectLive();
   } else if (saved) {
-    document.getElementById('apiKey').value = 'â¢'.repeat(20);
+    document.getElementById('apiKey').value = '•'.repeat(20);
   }
 });
 
-// ââ CLOCK ââ
+// ══ CLOCK ══
 function updateMarket() {
   const now = new Date();
   const dst = now.getTimezoneOffset() < new Date(now.getFullYear(),0,1).getTimezoneOffset();
@@ -674,14 +913,14 @@ function updateMarket() {
   const h=et.getHours(), m=et.getMinutes();
   const b=document.getElementById('mktBadge');
   const open=(h>9||(h===9&&m>=30))&&h<16; const pre=h>=4&&(h<9||(h===9&&m<30)); const aft=h>=16&&h<20;
-  if (open)     {b.textContent='â Market Open';b.className='market-badge open';}
-  else if (pre) {b.textContent='â Pre-Market';b.className='market-badge pre';}
-  else if (aft) {b.textContent='â After Hours';b.className='market-badge after';}
-  else          {b.textContent='â Market Closed';b.className='market-badge closed';}
+  if (open)     {b.textContent='● Market Open';b.className='market-badge open';}
+  else if (pre) {b.textContent='● Pre-Market';b.className='market-badge pre';}
+  else if (aft) {b.textContent='● After Hours';b.className='market-badge after';}
+  else          {b.textContent='● Market Closed';b.className='market-badge closed';}
 }
 updateMarket(); setInterval(updateMarket,30000);
 
-// ââ INIT ââ
+// ══ INIT ══
 buildCards(); initDemo(); renderAll(); updateStats();
 setInterval(() => { if (!isLive) tickDemo(); }, 3000);
 </script>
