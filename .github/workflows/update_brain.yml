@@ -1,0 +1,40 @@
+name: Update Brain State
+
+on:
+  schedule:
+    - cron: '30 12 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  run-brain:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements_brain.txt
+
+      - name: Run backtest brain
+        env:
+          POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
+        run: |
+          python3 backtest_brain.py
+
+      - name: Commit brain_state.json
+        run: |
+          git config user.name  "Brain Bot"
+          git config user.email "brain-bot@trading-suite"
+          git add brain_state.json
+          git diff --cached --quiet || git commit -m "🧠 Auto-update brain state $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
