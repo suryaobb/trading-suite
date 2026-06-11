@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-backtest_brain.py — Adaptive Trading Strategy Optimizer v1.0
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+backtest_brain.py â Adaptive Trading Strategy Optimizer v1.0
+âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 Tests 7 institutional intraday strategies across 11 tickers using
 walk-forward validation. Scores each by win rate, profit factor,
 and expectancy. Outputs brain_state.json consumed by scanner.html.
 
 Strategies tested:
-  EMA_CROSS     — EMA5×EMA20 crossover above VWAP (baseline)
-  VWAP_RECLAIM  — VWAP reclaim with volume spike + slope filter
-  ORB_5         — 5-min opening range breakout + RVOL + VWAP
-  ORB_15        — 15-min opening range breakout + RVOL + VWAP
-  GAP_GO        — Gap ≥2% + ORB15 aligned + RVOL ≥2.0
-  EMA_PULLBACK  — First pullback to 9/20 EMA zone in uptrend
-  HOD_BREAK     — Intraday HOD break with RVOL + VWAP confirm
+  EMA_CROSS     â EMA5ÃEMA20 crossover above VWAP (baseline)
+  VWAP_RECLAIM  â VWAP reclaim with volume spike + slope filter
+  ORB_5         â 5-min opening range breakout + RVOL + VWAP
+  ORB_15        â 15-min opening range breakout + RVOL + VWAP
+  GAP_GO        â Gap â¥2% + ORB15 aligned + RVOL â¥2.0
+  EMA_PULLBACK  â First pullback to 9/20 EMA zone in uptrend
+  HOD_BREAK     â Intraday HOD break with RVOL + VWAP confirm
 
-Exit logic: ATR-based 2:1 R:R (stop = 0.8×ATR14, target = 1.6×ATR14)
+Exit logic: ATR-based 2:1 R:R (stop = 0.8ÃATR14, target = 1.6ÃATR14)
 Walk-forward: 9 months training / 3 months OOS
 
 Usage:
@@ -30,7 +30,7 @@ Usage:
   30 7 * * 1-5 cd /path/to/trading-suite && POLYGON_API_KEY=your_key python3 backtest_brain.py
 
   # Or let GitHub Actions run it automatically (see .github/workflows/update_brain.yml)
-  # Add POLYGON_API_KEY as a repository secret in GitHub Settings → Secrets → Actions
+  # Add POLYGON_API_KEY as a repository secret in GitHub Settings â Secrets â Actions
 """
 
 import pandas as pd
@@ -44,7 +44,7 @@ from datetime import datetime, timedelta, date
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
-# ━━━ CONFIGURATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# âââ CONFIGURATION ââââââââââââââââââââââââââââââââââââââââ
 
 TICKERS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AMD', 'SPY', 'QQQ', 'IWM']
 
@@ -56,9 +56,9 @@ OOS_DAYS        = 63    # ~3 months OOS (what we report)
 TRAIN_DAYS      = 189   # ~9 months training
 
 # Exit parameters (all strategies use consistent 2:1 R:R)
-STOP_ATR_MULT   = 0.8   # stop = 0.8 × ATR14 from entry
-TARGET_ATR_MULT = 1.6   # target = 1.6 × ATR14  →  2:1 R:R
-FORWARD_BARS    = 12    # max 12 × 5-min bars = 60 min to exit
+STOP_ATR_MULT   = 0.8   # stop = 0.8 Ã ATR14 from entry
+TARGET_ATR_MULT = 1.6   # target = 1.6 Ã ATR14  â  2:1 R:R
+FORWARD_BARS    = 12    # max 12 Ã 5-min bars = 60 min to exit
 
 MIN_TRADES      = 12    # skip strategies with fewer OOS trades
 
@@ -66,8 +66,8 @@ MIN_TRADES      = 12    # skip strategies with fewer OOS trades
 STRATEGY_CONFIGS = {
     'EMA_CROSS':    {'ema_fast': 5,  'ema_slow': 20, 'rvol_min': 1.0},
     'VWAP_RECLAIM': {'rvol_min': 2.0, 'slope_bars': 3},
-    'ORB_5':        {'orb_bars': 1,  'rvol_min': 1.5},   # 1 × 5-min bar
-    'ORB_15':       {'orb_bars': 3,  'rvol_min': 1.5},   # 3 × 5-min bars
+    'ORB_5':        {'orb_bars': 1,  'rvol_min': 1.5},   # 1 Ã 5-min bar
+    'ORB_15':       {'orb_bars': 3,  'rvol_min': 1.5},   # 3 Ã 5-min bars
     'GAP_GO':       {'orb_bars': 3,  'rvol_min': 2.0, 'gap_min': 0.02},
     'EMA_PULLBACK': {'ema_fast': 9,  'ema_slow': 20, 'rvol_min': 1.2},
     'HOD_BREAK':    {'rvol_min': 1.5, 'min_bar': 6},     # 30+ min into session
@@ -77,7 +77,7 @@ STRATEGY_NAMES  = list(STRATEGY_CONFIGS.keys())
 API_DELAY       = 0.25  # seconds between ticker fetches (rate limit)
 
 
-# ━━━ API KEY ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# âââ API KEY ââââââââââââââââââââââââââââââââââââââââââââââ
 
 def get_api_key() -> str:
     key = os.getenv("POLYGON_API_KEY", "").strip()
@@ -91,7 +91,7 @@ def get_api_key() -> str:
     return key
 
 
-# ━━━ DATA FETCHING ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# âââ DATA FETCHING ââââââââââââââââââââââââââââââââââââââââ
 
 def fetch_bars(ticker: str, api_key: str) -> Optional[pd.DataFrame]:
     """Fetch 5-min bars from Polygon.io for the past HISTORY_DAYS days."""
@@ -101,19 +101,37 @@ def fetch_bars(ticker: str, api_key: str) -> Optional[pd.DataFrame]:
     url = (
         f"https://api.polygon.io/v2/aggs/ticker/{ticker}/range/5/minute"
         f"/{start_dt.isoformat()}/{end_dt.isoformat()}"
-        f"?adjusted=true&sort=asc&limit=50000&apiKey={api_key}"
     )
+    params = {
+        "adjusted": "true",
+        "sort": "asc",
+        "limit": 50000,
+        "apiKey": api_key,
+    }
 
     try:
-        resp = requests.get(url, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
+        all_results: list = []
 
-        if data.get("resultsCount", 0) == 0 or not data.get("results"):
-            print(f"    ⚠  No data returned for {ticker}")
+        while url:
+            resp = requests.get(url, params=params, timeout=30)
+            resp.raise_for_status()
+            data = resp.json()
+
+            results = data.get("results") or []
+            if not results:
+                break
+            all_results.extend(results)
+
+            # Polygon pagination: follow next_url until exhausted.
+            # next_url already includes the cursor and the API key.
+            url = data.get("next_url")
+            params = None
+
+        if not all_results:
+            print(f"    â   No data returned for {ticker}")
             return None
 
-        df = pd.DataFrame(data["results"])
+        df = pd.DataFrame(all_results)
         df["ts"] = pd.to_datetime(df["t"], unit="ms", utc=True).dt.tz_convert("America/New_York")
         df = df.rename(columns={"o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"})
         df = df.set_index("ts").sort_index()
@@ -121,27 +139,27 @@ def fetch_bars(ticker: str, api_key: str) -> Optional[pd.DataFrame]:
         df = df[["open", "high", "low", "close", "volume"]]
 
         # Trim to exactly HISTORY_DAYS trading days
-        unique_days = sorted(df.index.date)
+        unique_days = sorted(set(df.index.date))
         if len(unique_days) > HISTORY_DAYS:
             keep_from = unique_days[-HISTORY_DAYS]
             df = df[df.index.date >= keep_from]
 
-        print(f"    ✓  {ticker}: {len(df):,} bars  ({df.index.date.min()} → {df.index.date.max()})")
+        print(f"    â  {ticker}: {len(df):,} bars  ({df.index.date.min()} â {df.index.date.max()})")
         return df
 
     except requests.exceptions.HTTPError as e:
         code = e.response.status_code if e.response else "?"
         if code == 403:
-            print(f"    ✗  {ticker}: API key invalid or insufficient tier (403)")
+            print(f"    â  {ticker}: API key invalid or insufficient tier (403)")
         else:
-            print(f"    ✗  {ticker}: HTTP {code}")
+            print(f"    â  {ticker}: HTTP {code}")
         return None
     except Exception as e:
-        print(f"    ✗  {ticker}: {type(e).__name__}: {e}")
+        print(f"    â  {ticker}: {type(e).__name__}: {e}")
         return None
 
 
-# ━━━ INDICATORS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# âââ INDICATORS ââââââââââââââââââââââââââââââââââââââââââ
 
 def ema(series: pd.Series, period: int) -> pd.Series:
     return series.ewm(span=period, adjust=False).mean()
@@ -228,7 +246,7 @@ def add_all_indicators(df: pd.DataFrame) -> pd.DataFrame:
     return df.dropna(subset=["ema5", "ema20", "atr", "vwap"])
 
 
-# ━━━ SIGNAL GENERATORS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# âââ SIGNAL GENERATORS ââââââââââââââââââââââââââââââââââââ
 
 def sig_ema_cross(df: pd.DataFrame, cfg: dict) -> pd.Series:
     """EMA5 crosses EMA20, price above VWAP."""
@@ -265,7 +283,7 @@ def sig_vwap_reclaim(df: pd.DataFrame, cfg: dict) -> pd.Series:
 
 
 def sig_orb(df: pd.DataFrame, cfg: dict, label: str) -> pd.Series:
-    """Opening range breakout — close above OR high or below OR low."""
+    """Opening range breakout â close above OR high or below OR low."""
     min_bar = cfg["orb_bars"]
     h_col   = f"{label}_h"
     l_col   = f"{label}_l"
@@ -284,7 +302,7 @@ def sig_orb(df: pd.DataFrame, cfg: dict, label: str) -> pd.Series:
 
 
 def sig_gap_go(df: pd.DataFrame, cfg: dict) -> pd.Series:
-    """Gap ≥2% + ORB15 breakout aligned with gap direction."""
+    """Gap â¥2% + ORB15 breakout aligned with gap direction."""
     min_bar = cfg["orb_bars"]
     gm      = cfg["gap_min"]
 
@@ -303,7 +321,7 @@ def sig_gap_go(df: pd.DataFrame, cfg: dict) -> pd.Series:
 
 def sig_ema_pullback(df: pd.DataFrame, cfg: dict) -> pd.Series:
     """First pullback to 9/20 EMA zone after prior momentum leg, with drying volume."""
-    # Prior momentum: price was ≥1.5% above ema20 within last 6 bars
+    # Prior momentum: price was â¥1.5% above ema20 within last 6 bars
     prior_high = df["close"].rolling(6).max().shift(1)
     had_momentum_long  = (prior_high / df["ema20"]) >= 1.015
     had_momentum_short = (df["close"].rolling(6).min().shift(1) / df["ema20"]) <= 0.985
@@ -353,7 +371,7 @@ def get_signals(df: pd.DataFrame) -> Dict[str, pd.Series]:
     }
 
 
-# ━━━ BACKTESTING ENGINE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# âââ BACKTESTING ENGINE ââââââââââââââââââââââââââââââââââââ
 
 def backtest(df: pd.DataFrame, signals: pd.Series) -> Dict:
     """ATR-based 2:1 R:R exit. Returns performance metrics dict."""
@@ -435,7 +453,7 @@ def backtest(df: pd.DataFrame, signals: pd.Series) -> Dict:
     }
 
 
-# ━━━ WALK-FORWARD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# âââ WALK-FORWARD âââââââââââââââââââââââââââââââââââââââââ
 
 def walk_forward(df: pd.DataFrame) -> Dict[str, Dict]:
     """
@@ -464,7 +482,7 @@ def walk_forward(df: pd.DataFrame) -> Dict[str, Dict]:
     return results
 
 
-# ━━━ STRATEGY SELECTION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# âââ STRATEGY SELECTION âââââââââââââââââââââââââââââââââââ
 
 def best_strategy(results: Dict[str, Dict]) -> Tuple[str, float]:
     """Return (strategy_name, score) for the best OOS strategy."""
@@ -480,17 +498,17 @@ def best_strategy(results: Dict[str, Dict]) -> Tuple[str, float]:
     return best_name, best_score
 
 
-# ━━━ MAIN ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# âââ MAIN âââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def run_brain():
     api_key = get_api_key()
     if not api_key:
-        print("❌  No POLYGON_API_KEY found.")
+        print("â  No POLYGON_API_KEY found.")
         print("    Set env var:  export POLYGON_API_KEY=your_key")
         print("    Or create:    echo 'POLYGON_API_KEY=your_key' > .env")
         sys.exit(1)
 
-    print(f"\n🧠  Backtest Brain v1.0  —  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"\nð§   Backtest Brain v1.0  â  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"    Tickers  : {', '.join(TICKERS)}")
     print(f"    Strategies: {', '.join(STRATEGY_NAMES)}")
     print(f"    Walk-fwd : {TRAIN_DAYS}d train  /  {OOS_DAYS}d OOS  |  2:1 R:R  |  60-min exits\n")
@@ -515,27 +533,27 @@ def run_brain():
                             for s in STRATEGY_NAMES}
 
     for ticker in TICKERS:
-        print(f"  📊  {ticker}")
+        print(f"  ð  {ticker}")
         df = fetch_bars(ticker, api_key)
         if df is None or len(df) < (TRAIN_DAYS + OOS_DAYS) * 5:
-            print(f"       ↳ Skipped (insufficient data)\n")
+            print(f"       â³ Skipped (insufficient data)\n")
             continue
         time.sleep(API_DELAY)
 
         try:
             df = add_all_indicators(df)
         except Exception as e:
-            print(f"       ↳ Indicator error: {e}\n")
+            print(f"       â³ Indicator error: {e}\n")
             continue
 
         try:
             results = walk_forward(df)
         except Exception as e:
-            print(f"       ↳ Backtest error: {e}\n")
+            print(f"       â³ Backtest error: {e}\n")
             continue
 
         if not results:
-            print(f"       ↳ No results\n")
+            print(f"       : No results\n")
             continue
 
         # Best strategy for this ticker
@@ -549,7 +567,7 @@ def run_brain():
             train = sres["train"]
             all_strat[sname] = {
                 "oos_win_rate":      oos["win_rate"],
-                "oos_profit_factor": oos["profit_factor"],
+                "oos_profit_factor": oos["profit_factor'],
                 "oos_expectancy":    oos["expectancy"],
                 "oos_avg_win_r":     oos["avg_win_r"],
                 "oos_trades":        oos["trade_count"],
@@ -561,7 +579,7 @@ def run_brain():
                 lb[sname]["score"]    += oos["score"]
                 lb[sname]["win_rate"] += oos["win_rate"]
                 lb[sname]["pf"]       += oos["profit_factor"]
-                lb[sname]["exp"]      += oos["expectancy"]
+                lb[sname]["exp"]     += oos["expectancy"]
                 lb[sname]["n"]        += 1
 
         brain["tickers"][ticker] = {
@@ -575,7 +593,7 @@ def run_brain():
             "all_strategies":    all_strat,
         }
 
-        print(f"       ↳ Best: {bname:<15}  WR: {boos['win_rate']:.1%}  "
+        print(f"       â³ Best: {bname:<15}  WR: {boos['win_rate']:.1%}  "
               f"PF: {boos['profit_factor']:.2f}  Exp: {boos['expectancy']:+.3f}R  "
               f"Trades: {boos['trade_count']}\n")
 
@@ -598,17 +616,17 @@ def run_brain():
 
     # Save output
     OUTPUT_PATH.write_text(json.dumps(brain, indent=2, default=str))
-    print(f"✅  Saved → {OUTPUT_PATH}\n")
+    print(f"â  Saved â {OUTPUT_PATH}\n")
 
     # Print leaderboard
-    print("🏆  Strategy Leaderboard (ranked by avg composite score across all tickers):")
+    print("ð  Strategy Leaderboard (ranked by avg composite score across all tickers):")
     print(f"    {'Rank':<5}{'Strategy':<17}{'Avg WR':>8}{'Avg PF':>8}{'Avg Exp':>9}{'Tickers':>9}")
     print(f"    {'-'*52}")
     for i, row in enumerate(leaderboard, 1):
         print(f"    {i:<5}{row['strategy']:<17}{row['avg_win_rate']:.1%}{row['avg_profit_factor']:>8.2f}"
               f"{row['avg_expectancy']:>+9.3f}R{row['ticker_count']:>8}")
 
-    print(f"\n📈  Best Strategy Per Ticker:")
+    print(f"\nð  Best Strategy Per Ticker:")
     print(f"    {'Ticker':<8}{'Strategy':<17}{'OOS WR':>8}{'OOS PF':>8}{'Expectancy':>11}{'Trades':>8}")
     print(f"    {'-'*60}")
     for tk, data in brain["tickers"].items():
