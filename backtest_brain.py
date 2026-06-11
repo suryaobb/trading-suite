@@ -553,7 +553,7 @@ def run_brain():
             continue
 
         if not results:
-            print(f"       : No results\n")
+            print(f"       â³ No results\n")
             continue
 
         # Best strategy for this ticker
@@ -567,7 +567,7 @@ def run_brain():
             train = sres["train"]
             all_strat[sname] = {
                 "oos_win_rate":      oos["win_rate"],
-                "oos_profit_factor": oos["profit_factor'],
+                "oos_profit_factor": oos["profit_factor"],
                 "oos_expectancy":    oos["expectancy"],
                 "oos_avg_win_r":     oos["avg_win_r"],
                 "oos_trades":        oos["trade_count"],
@@ -579,7 +579,7 @@ def run_brain():
                 lb[sname]["score"]    += oos["score"]
                 lb[sname]["win_rate"] += oos["win_rate"]
                 lb[sname]["pf"]       += oos["profit_factor"]
-                lb[sname]["exp"]     += oos["expectancy"]
+                lb[sname]["exp"]      += oos["expectancy"]
                 lb[sname]["n"]        += 1
 
         brain["tickers"][ticker] = {
