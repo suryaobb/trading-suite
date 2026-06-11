@@ -105,7 +105,7 @@ def fetch_bars(ticker: str, api_key: str) -> Optional[pd.DataFrame]:
     params = {
         "adjusted": "true",
         "sort": "asc",
-        "limit": 50000,
+        "limit": 5000,          # 5000 works on free/starter tier; pagination handles the rest
         "apiKey": api_key,
     }
 
@@ -148,11 +148,14 @@ def fetch_bars(ticker: str, api_key: str) -> Optional[pd.DataFrame]:
         return df
 
     except requests.exceptions.HTTPError as e:
-        code = e.response.status_code if e.response else "?"
+        code = e.response.status_code if e.response is not None else "?"
+        body = e.response.text[:200] if e.response is not None else ""
         if code == 403:
-            print(f"    ✗  {ticker}: API key invalid or insufficient tier (403)")
+            print(f"    ✗  {ticker}: API key invalid or insufficient tier (403): {body}")
+        elif code == 429:
+            print(f"    ✗  {ticker}: Rate limited (429) — try again later")
         else:
-            print(f"    ✗  {ticker}: HTTP {code}")
+            print(f"    ✗  {ticker}: HTTP {code}: {body}")
         return None
     except Exception as e:
         print(f"    ✗  {ticker}: {type(e).__name__}: {e}")
