@@ -2,8 +2,8 @@ name: Daily Apartment Scan
 
 on:
   schedule:
-    - cron: '0 * * * *'   # every hour — fastest possible notification
-  workflow_dispatch:        # manual trigger via Scan Now button
+    - cron: '0 13 * * *'   # once daily ~06:00 PT (browser-scraping 3 sites hourly risks IP bans)
+  workflow_dispatch:        # manual trigger via Scan Now button (on-demand, any time)
 
 jobs:
   scan:
