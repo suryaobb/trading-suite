@@ -317,6 +317,16 @@
   color: var(--text-muted);
 }
 .alert-cnt.hot { background: #2d1f00; color: #fbbf24; }
+.src-toggle {
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
+  color: var(--accent); cursor: pointer; padding: 3px 7px;
+}
+.src-toggle:hover { border-color: var(--border-hi); }
+.src-toggle.all { color: var(--text-muted); }
+/* Quantbot-only view: the local engine's alerts stay in the DOM (and in the
+   count) but are hidden, so flipping the toggle is instant. */
+.alerts-feed.qb-only .alert-item:not(.qb) { display: none; }
 .clear-btn { background: none; border: none; font-size: 11px; color: var(--text-faint); cursor: pointer; padding: 2px 4px; }
 .clear-btn:hover { color: var(--red); }
 
@@ -450,8 +460,10 @@
   <!-- RIGHT: Alerts -->
   <div class="alert-col">
     <div class="alert-header">
-      <h3>🧠 Brain Alerts</h3>
+      <h3>🚨 Alerts</h3>
       <div style="display:flex;align-items:center;gap:7px;">
+        <button class="src-toggle" id="srcToggle" onclick="toggleAlertSource()"
+                title="Quantbot is the always-on scanner; Local is this page's own engine">Quantbot</button>
         <span class="alert-cnt" id="alertCnt">0</span>
         <button class="clear-btn" onclick="clearAlerts()">Clear</button>
       </div>
@@ -836,6 +848,7 @@ function dispatchAlert(t, tf, price, signal) {
   const noMsg = feed.querySelector('.no-alerts-msg');
   if (noMsg) noMsg.remove();
   feed.insertBefore(el, feed.firstChild);
+  if (typeof applyAlertSource === 'function') applyAlertSource();
   document.getElementById('alertCnt').textContent = totalAlerts;
   document.getElementById('alertCnt').className = 'alert-cnt hot';
   document.getElementById('statAlerts').textContent = totalAlerts;
@@ -1233,6 +1246,7 @@ function renderQuantbot() {
   document.getElementById('qbCounts').textContent =
     `${c.armed || 0} armed · ${c.triggered || 0} fired`;
 
+  applyAlertSource();
   renderQbArmed();
   renderQbTable();
   mergeQbAlerts();
@@ -1306,8 +1320,11 @@ function mergeQbAlerts() {
 function renderQbAlert(a, backfill) {
   const tierColor = a.tier === 'GO' ? '#4ade80' : a.tier === 'WATCH' ? '#fbbf24' : '#64748b';
   const tierIcon  = a.tier === 'GO' ? '🟢' : a.tier === 'WATCH' ? '🟡' : '⚪️';
+  // Quantbot timestamps are ET; render them as ET regardless of where the
+  // viewer is, so the feed matches the charts and the market clock.
   const time = new Date(a.ts).toLocaleTimeString('en-US',
-    { hour: '2-digit', minute: '2-digit', hour12: true });
+    { hour: '2-digit', minute: '2-digit', hour12: true,
+      timeZone: 'America/New_York' }) + ' ET';
   const tg = a.telegram && a.telegram.delivered
     ? '<span style="color:#4ade80">✈️ sent</span>'
     : `<span style="color:#64748b" title="${(a.telegram && a.telegram.error) || ''}">✈️ not sent</span>`;
@@ -1332,6 +1349,7 @@ function renderQbAlert(a, backfill) {
   const noMsg = feed.querySelector('.no-alerts-msg');
   if (noMsg) noMsg.remove();
   feed.insertBefore(el, feed.firstChild);
+  applyAlertSource();
   if (!backfill) playSound();   // only chime for signals that arrive live
 }
 
@@ -1351,6 +1369,25 @@ function stampCards() {
         (qt.trigger_level ? ' · trigger ' + qt.trigger_level : '');
     }
   });
+}
+
+// Default the feed to Quantbot-only as soon as real scanner data arrives:
+// the brain's alerts should not be buried under the browser engine's.
+let qbOnly = true;
+function toggleAlertSource() {
+  qbOnly = !qbOnly;
+  applyAlertSource();
+}
+function applyAlertSource() {
+  const feed = document.getElementById('alertFeed');
+  const btn = document.getElementById('srcToggle');
+  feed.classList.toggle('qb-only', qbOnly && !!qbData);
+  btn.textContent = qbOnly ? 'Quantbot' : 'All sources';
+  btn.classList.toggle('all', !qbOnly);
+  const empty = feed.querySelector('.no-alerts-msg');
+  const anyVisible = [...feed.querySelectorAll('.alert-item')]
+    .some(el => el.offsetParent !== null);
+  if (empty) empty.style.display = anyVisible ? 'none' : '';
 }
 
 fetchSignals();
