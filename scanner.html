@@ -6,6 +6,87 @@
 <title>Momentum Scanner — Trading Suite</title>
 <link rel="stylesheet" href="shared.css">
 <style>
+/* ── QUANTBOT LIVE PANEL ── */
+/* These aliases were referenced throughout this file but never defined
+   (shared.css names them differently), so cards were rendering on a
+   transparent background. Defined once here. */
+:root {
+  --bg-surface: var(--bg-card);
+  --text-primary: var(--text);
+  --text-secondary: var(--text-dim);
+  --text-muted: var(--text-mute);
+  --blue: var(--accent);
+  --r-sm: 5px;
+  --r-md: 8px;
+}
+
+.qb-panel {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  max-height: 46%;
+  display: flex;
+  flex-direction: column;
+}
+.qb-head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 9px 16px; border-bottom: 1px solid var(--border);
+}
+.qb-title { font-size: 12px; font-weight: 800; color: var(--text-primary); letter-spacing: 0.2px; }
+.qb-title b { color: var(--accent); }
+.qb-strategy { font-size: 10px; font-weight: 600; color: var(--text-muted); margin-left: 4px; }
+.qb-meta { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.qb-pill {
+  font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 10px;
+  background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.qb-pill.fresh { color: var(--green); border-color: #1a4a28; background: #0a1f12; }
+.qb-pill.stale { color: var(--yellow); border-color: #4a3a1a; background: #1f1a0a; }
+.qb-pill.dead  { color: var(--red);   border-color: #4a1a1a; background: #1a0a0a; }
+.qb-pill.open  { color: var(--green); }
+
+.qb-armed { display: flex; gap: 6px; padding: 8px 16px; flex-wrap: wrap; align-items: center;
+            border-bottom: 1px solid var(--border); min-height: 34px; }
+.qb-armed-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase;
+                letter-spacing: 0.5px; color: var(--text-faint); margin-right: 2px; }
+.qb-chip {
+  font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px;
+  border: 1px solid var(--border); background: var(--bg-input); color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.qb-chip.long  { border-color: #1a4a28; color: #4ade80; background: #0a1f12; }
+.qb-chip.short { border-color: #4a1a1a; color: #f87171; background: #1a0a0a; }
+.qb-chip .qb-lvl { color: var(--text-muted); font-weight: 600; }
+.qb-empty { font-size: 10px; color: var(--text-faint); }
+
+.qb-table-wrap { overflow-y: auto; flex: 1; }
+.qb-table { width: 100%; border-collapse: collapse; font-size: 11px;
+            font-variant-numeric: tabular-nums; }
+.qb-table th {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--bg-input); color: var(--text-faint);
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  text-align: right; padding: 5px 10px; border-bottom: 1px solid var(--border);
+}
+.qb-table th:first-child { text-align: left; }
+.qb-table td { padding: 4px 10px; text-align: right; color: var(--text-secondary);
+               border-bottom: 1px solid rgba(26,37,64,0.5); }
+.qb-table td:first-child { text-align: left; font-weight: 800; color: var(--text-primary); }
+.qb-table tr.armed  td:first-child { color: var(--yellow); }
+.qb-table tr.fired  td:first-child { color: var(--accent); }
+.qb-table .up { color: var(--green); } .qb-table .down { color: var(--red); }
+.qb-table .dim { color: var(--text-faint); }
+.qb-state { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
+            background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted); }
+.qb-state.long { color: #4ade80; border-color: #1a4a28; }
+.qb-state.short { color: #f87171; border-color: #4a1a1a; }
+
+.alert-item.qb { border-left: 2px solid var(--accent); }
+.ai-src { font-size: 8px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase;
+          color: #0b1220; background: var(--accent); padding: 1px 5px; border-radius: 3px; }
+.ai-src.local { background: var(--text-faint); color: var(--text-secondary); }
+
 /* ── LAYOUT ── */
 .scanner-layout {
   display: grid;
@@ -328,12 +409,40 @@
       🔴 <b><span id="errMsg"></span></b> <span class="err-detail" id="errDetail"></span>
     </div>
 
+    <!-- Quantbot: the always-on scanner's own state, fetched from signals.json.
+         This panel is authoritative; the cards below are the local Polygon view. -->
+    <div class="qb-panel" id="qbPanel">
+      <div class="qb-head">
+        <div class="qb-title">🤖 <b>Quantbot</b><span class="qb-strategy" id="qbStrategy">connecting…</span></div>
+        <div class="qb-meta">
+          <span class="qb-pill" id="qbFresh">no data yet</span>
+          <span class="qb-pill" id="qbMarket">–</span>
+          <span class="qb-pill" id="qbVix">VIX –</span>
+          <span class="qb-pill" id="qbCounts">–</span>
+        </div>
+      </div>
+      <div class="qb-armed" id="qbArmed">
+        <span class="qb-armed-lbl">Armed</span>
+        <span class="qb-empty">waiting for the first scan…</span>
+      </div>
+      <div class="qb-table-wrap">
+        <table class="qb-table">
+          <thead><tr>
+            <th>Ticker</th><th>Price</th><th>EMA 5</th><th>EMA 20</th>
+            <th>VWAP</th><th>RVOL</th><th>Signal</th>
+          </tr></thead>
+          <tbody id="qbBody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="ticker-grid" id="tickerGrid"></div>
 
     <div class="stats-bar">
       <span>Bulls: <b class="green" id="statBull">0</b></span>
       <span>Near Cross: <b class="yellow" id="statNear">0</b></span>
       <span>Alerts: <b class="yellow" id="statAlerts">0</b></span>
+      <span>Quantbot armed: <b class="yellow" id="statArmed">0</b></span>
       <span>Updated: <b id="statTime">–</b></span>
     </div>
   </div>
@@ -491,6 +600,7 @@ const DEFAULT_API_KEY = 'qBwiH2I6cgnDzR4xKbDs1p2oaPoTVrgE';
 
 let TF = 1, muted = false, apiKey = DEFAULT_API_KEY, isLive = false, totalAlerts = 0, audioCtx = null;
 
+let qbData = null;   // Quantbot's signals.json (see the bridge at the bottom)
 const S = {};
 TICKERS.forEach(t => {
   S[t] = {
@@ -716,7 +826,7 @@ function dispatchAlert(t, tf, price, signal) {
   const el = document.createElement('div');
   el.className = 'alert-item';
   el.innerHTML = `
-    <div class="ai-top"><span class="ai-sym">${t}</span><span class="ai-time">${time}</span></div>
+    <div class="ai-top"><span class="ai-sym">${t} <span class="ai-src local">Local</span></span><span class="ai-time">${time}</span></div>
     <div class="ai-sig" style="color:${meta.color}">${meta.emoji} ${meta.label} · ${tf}min · ${signal.direction}</div>
     ${wrHtml}
     <div style="font-size:10px;color:#6b7280;padding:2px 4px 6px">${detail}</div>
@@ -798,7 +908,7 @@ function buildCards() {
   });
 }
 
-function renderAll() { TICKERS.forEach(t => renderCard(t)); }
+function renderAll() { TICKERS.forEach(t => renderCard(t)); if (qbData) stampCards(); }
 
 function renderCard(t) {
   const card = document.getElementById('c-'+t); if (!card) return;
@@ -1034,6 +1144,219 @@ updateMarket(); setInterval(updateMarket,30000);
 // ══ INIT ══
 buildCards(); initDemo(); renderAll(); updateStats();
 setInterval(() => { if (!isLive) tickDemo(); }, 3000);
+
+// ══════════════════════════════════════════════════════════════════════
+// QUANTBOT BRIDGE
+// The always-on scanner (python -m quantbot.scanner) owns the rules and
+// publishes signals.json after every scan. This dashboard renders that
+// file — it does not re-derive signals. The local Polygon engine below
+// still runs, but its alerts are tagged LOCAL so the two never get
+// confused for each other.
+// ══════════════════════════════════════════════════════════════════════
+const QB_REPO   = 'suryaobb/trading-suite';
+const QB_BRANCH = 'main';
+const QB_RAW    = `https://raw.githubusercontent.com/${QB_REPO}/${QB_BRANCH}/signals.json`;
+const QB_POLL_MS = 30000;   // owner spec: refresh every 30 seconds
+const QB_STALE_S = 180;     // 3 min without a scan during RTH = suspicious
+const QB_DEAD_S  = 900;     // 15 min = the scanner is probably down
+
+let qbLastOk = null;        // Date of the last successful fetch
+let qbSeenAlerts = new Set();
+let qbFirstRender = true;
+
+function qbNum(v, digits = 2, prefix = '$') {
+  return (v === null || v === undefined) ? '–' : prefix + Number(v).toFixed(digits);
+}
+
+// raw.githubusercontent is CDN-cached (~5 min); the cache-buster forces a
+// revalidate. Falls back to a same-origin copy when this page is served from
+// the same Pages repo, which covers rate-limit and offline-CDN cases.
+async function fetchSignals() {
+  const bust = '?_=' + Date.now();
+  for (const url of [QB_RAW + bust, 'signals.json' + bust]) {
+    try {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) continue;
+      const d = await r.json();
+      if (!d || d.source !== 'quantbot') continue;
+      qbData = d;
+      qbLastOk = new Date();
+      renderQuantbot();
+      return true;
+    } catch (e) { /* try the next source */ }
+  }
+  renderQuantbot();   // still repaint so the freshness pill decays visibly
+  return false;
+}
+
+function qbAgeSeconds() {
+  if (!qbData || !qbData.generated_at) return null;
+  return Math.max(0, (Date.now() - new Date(qbData.generated_at).getTime()) / 1000);
+}
+
+function qbAgeLabel(sec) {
+  if (sec === null) return 'no data';
+  if (sec < 60)   return Math.round(sec) + 's ago';
+  if (sec < 3600) return Math.round(sec / 60) + 'm ago';
+  if (sec < 86400) return Math.round(sec / 3600) + 'h ago';
+  return Math.round(sec / 86400) + 'd ago';
+}
+
+function renderQuantbot() {
+  const freshEl = document.getElementById('qbFresh');
+  if (!freshEl) return;
+  const age = qbAgeSeconds();
+
+  // ── freshness: the single most important thing on this panel ──
+  const open = qbData && qbData.market && qbData.market.is_open;
+  let cls = 'fresh';
+  if (age === null) cls = 'dead';
+  else if (age > QB_DEAD_S && open) cls = 'dead';
+  else if (age > QB_STALE_S && open) cls = 'stale';
+  else if (!open && age > 3600) cls = 'stale';   // closed: staleness is expected
+  freshEl.className = 'qb-pill ' + cls;
+  freshEl.textContent = age === null
+    ? 'no data yet'
+    : 'updated ' + qbAgeLabel(age) + (cls === 'dead' ? ' · scanner down?' : '');
+  freshEl.title = qbData ? 'Last scan: ' + qbData.generated_at : 'signals.json not reachable';
+
+  if (!qbData) return;
+
+  document.getElementById('qbStrategy').textContent = qbData.strategy || '';
+  const mk = document.getElementById('qbMarket');
+  const status = (qbData.market && qbData.market.status) || '–';
+  mk.textContent = '● ' + status.toUpperCase();
+  mk.className = 'qb-pill' + (open ? ' open' : '');
+  const vix = qbData.vix && qbData.vix.value;
+  document.getElementById('qbVix').textContent = 'VIX ' + (vix == null ? '–' : vix.toFixed(1));
+  const c = qbData.counts || {};
+  document.getElementById('qbCounts').textContent =
+    `${c.armed || 0} armed · ${c.triggered || 0} fired`;
+
+  renderQbArmed();
+  renderQbTable();
+  mergeQbAlerts();
+  stampCards();
+  document.getElementById('statArmed').textContent = (qbData.counts || {}).armed || 0;
+}
+
+function renderQbArmed() {
+  const el = document.getElementById('qbArmed');
+  const armed = qbData.armed || [];
+  const chips = armed.map(a => {
+    const lvl = a.trigger_level != null
+      ? `<span class="qb-lvl">→ ${qbNum(a.trigger_level)}</span>`
+      : `<span class="qb-lvl">no trigger yet</span>`;
+    const arrow = a.direction === 'long' ? '▲' : '▼';
+    return `<span class="qb-chip ${a.direction}" title="${a.state} · ${a.bars_since_cross} bars since cross">
+              ${arrow} ${a.symbol} ${lvl}</span>`;
+  }).join('');
+  el.innerHTML = '<span class="qb-armed-lbl">Armed</span>' +
+    (chips || '<span class="qb-empty">nothing armed — no EMA cross pending</span>');
+}
+
+function renderQbTable() {
+  const body = document.getElementById('qbBody');
+  const tickers = qbData.tickers || {};
+  const firedSyms = new Set((qbData.triggered || []).map(a => a.symbol));
+  body.innerHTML = Object.keys(tickers).map(sym => {
+    const t = tickers[sym];
+    const bull = t.ema5 != null && t.ema20 != null && t.ema5 > t.ema20;
+    const rvolHot = t.rvol != null && t.rvol >= 1.5;
+    let state = '<span class="qb-state">idle</span>';
+    if (t.direction) {
+      const label = t.signal === 'pullback' ? 'pullback' : 'armed';
+      state = `<span class="qb-state ${t.direction}">${label} ${t.direction === 'long' ? '▲' : '▼'}</span>`;
+    }
+    const rowCls = firedSyms.has(sym) ? 'fired' : (t.direction ? 'armed' : '');
+    return `<tr class="${rowCls}">
+      <td>${sym}</td>
+      <td>${qbNum(t.price)}</td>
+      <td class="${bull ? 'up' : 'down'}">${qbNum(t.ema5)}</td>
+      <td>${qbNum(t.ema20)}</td>
+      <td class="${t.above_vwap ? 'up' : 'down'}">${qbNum(t.vwap)}</td>
+      <td class="${rvolHot ? 'up' : 'dim'}">${t.rvol == null ? '–' : t.rvol.toFixed(2) + '×'}</td>
+      <td>${state}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="dim">no tickers in this scan</td></tr>';
+}
+
+// Quantbot's fired signals go into the same feed as the local ones, tagged by
+// source. Dedup key is symbol+timestamp so a re-poll never double-posts.
+function mergeQbAlerts() {
+  const alerts = (qbData.triggered || []).slice().reverse();  // oldest first
+  let added = 0;
+  alerts.forEach(a => {
+    const key = a.symbol + '|' + a.ts;
+    if (qbSeenAlerts.has(key)) return;
+    qbSeenAlerts.add(key);
+    renderQbAlert(a, qbFirstRender);
+    added++;
+  });
+  qbFirstRender = false;
+  if (added) {
+    totalAlerts += added;
+    const cnt = document.getElementById('alertCnt');
+    cnt.textContent = totalAlerts;
+    cnt.className = 'alert-cnt hot';
+    document.getElementById('statAlerts').textContent = totalAlerts;
+  }
+}
+
+function renderQbAlert(a, backfill) {
+  const tierColor = a.tier === 'GO' ? '#4ade80' : a.tier === 'WATCH' ? '#fbbf24' : '#64748b';
+  const tierIcon  = a.tier === 'GO' ? '🟢' : a.tier === 'WATCH' ? '🟡' : '⚪️';
+  const time = new Date(a.ts).toLocaleTimeString('en-US',
+    { hour: '2-digit', minute: '2-digit', hour12: true });
+  const tg = a.telegram && a.telegram.delivered
+    ? '<span style="color:#4ade80">✈️ sent</span>'
+    : `<span style="color:#64748b" title="${(a.telegram && a.telegram.error) || ''}">✈️ not sent</span>`;
+  const el = document.createElement('div');
+  el.className = 'alert-item qb';
+  el.innerHTML = `
+    <div class="ai-top">
+      <span class="ai-sym">${a.symbol} <span class="ai-src">Quantbot</span></span>
+      <span class="ai-time">${time}</span>
+    </div>
+    <div class="ai-sig" style="color:${tierColor}">
+      ${tierIcon} ${a.tier} · ${a.side} · ${a.direction} · ${a.score}/100
+    </div>
+    <div style="font-size:10px;color:#6b7280;padding:2px 4px 4px">${a.strategy}</div>
+    <div style="font-size:10px;color:#6b7280;padding:0 4px 6px">
+      Entry ${qbNum(a.price)} · EMA5 ${qbNum(a.ema5)} · EMA20 ${qbNum(a.ema20)}
+      · VWAP ${qbNum(a.vwap)} · RVOL ${a.rvol == null ? '–' : a.rvol.toFixed(1) + '×'} · ${tg}
+    </div>
+    <button class="ai-plan" onclick="openPlanner('${a.symbol}',${a.price || 0})">📋 Plan This Trade →</button>`;
+
+  const feed = document.getElementById('alertFeed');
+  const noMsg = feed.querySelector('.no-alerts-msg');
+  if (noMsg) noMsg.remove();
+  feed.insertBefore(el, feed.firstChild);
+  if (!backfill) playSound();   // only chime for signals that arrive live
+}
+
+// Where Quantbot and the local watchlist overlap, Quantbot's verdict wins on
+// the card badge — one brain, one answer.
+function stampCards() {
+  const tickers = qbData.tickers || {};
+  TICKERS.forEach(t => {
+    const qt = tickers[t];
+    const badge = document.getElementById('badge-' + t);
+    if (!qt || !badge) return;
+    if (qt.direction) {
+      badge.textContent = (qt.signal === 'pullback' ? '🎯 Pullback ' : '⚡ Armed ') +
+                          (qt.direction === 'long' ? '▲' : '▼');
+      badge.className = 'chip ' + (qt.direction === 'long' ? 'chip-bull' : 'chip-bear');
+      badge.title = 'Quantbot: ' + qt.state +
+        (qt.trigger_level ? ' · trigger ' + qt.trigger_level : '');
+    }
+  });
+}
+
+fetchSignals();
+setInterval(fetchSignals, QB_POLL_MS);
+setInterval(renderQuantbot, 5000);   // keep the "updated Ns ago" pill honest
+
 </script>
 </body>
 </html>
