@@ -1181,25 +1181,36 @@ function qbNum(v, digits = 2, prefix = '$') {
   return (v === null || v === undefined) ? '–' : prefix + Number(v).toFixed(digits);
 }
 
-// raw.githubusercontent is CDN-cached (~5 min); the cache-buster forces a
-// revalidate. Falls back to a same-origin copy when this page is served from
-// the same Pages repo, which covers rate-limit and offline-CDN cases.
+// Two sources carry the same file and either one can lag:
+//   * raw.githubusercontent.com is CDN-cached for ~5 min and — measured,
+//     2026-09-17 — ignores a cache-busting query string, so it can sit
+//     minutes behind a push.
+//   * GitHub Pages serves the same signals.json from this page's own origin
+//     and generally rebuilds faster.
+// So fetch both and keep whichever reports the newer generated_at. A stale
+// source can never pull the dashboard backwards.
+async function fetchOne(url) {
+  try {
+    const r = await fetch(url + '?_=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return (d && d.source === 'quantbot' && d.generated_at) ? d : null;
+  } catch (e) { return null; }
+}
+
 async function fetchSignals() {
-  const bust = '?_=' + Date.now();
-  for (const url of [QB_RAW + bust, 'signals.json' + bust]) {
-    try {
-      const r = await fetch(url, { cache: 'no-store' });
-      if (!r.ok) continue;
-      const d = await r.json();
-      if (!d || d.source !== 'quantbot') continue;
-      qbData = d;
+  const candidates = (await Promise.all([fetchOne('signals.json'), fetchOne(QB_RAW)]))
+    .filter(Boolean);
+  if (candidates.length) {
+    candidates.sort((a, b) => new Date(b.generated_at) - new Date(a.generated_at));
+    const best = candidates[0];
+    if (!qbData || new Date(best.generated_at) >= new Date(qbData.generated_at)) {
+      qbData = best;
       qbLastOk = new Date();
-      renderQuantbot();
-      return true;
-    } catch (e) { /* try the next source */ }
+    }
   }
-  renderQuantbot();   // still repaint so the freshness pill decays visibly
-  return false;
+  renderQuantbot();   // repaint either way so the freshness pill keeps decaying
+  return candidates.length > 0;
 }
 
 function qbAgeSeconds() {
