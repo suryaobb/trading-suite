@@ -93,6 +93,22 @@
 .demo-strip b { color: #fbbf24; }
 .demo-strip.live { display: none; }
 
+/* Error banner */
+.err-strip {
+  display: none;
+  background: #1f0a0a;
+  border-bottom: 1px solid #5a1a1a;
+  padding: 6px 16px;
+  font-size: 11px;
+  color: #fca5a5;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.err-strip.show { display: flex; }
+.err-strip b { color: #f87171; }
+.err-strip .err-detail { color: #9a6a6a; font-family: monospace; font-size: 10px; }
+
 /* Ticker grid */
 .ticker-grid {
   flex: 1;
@@ -305,7 +321,11 @@
     </div>
 
     <div class="demo-strip" id="demoStrip">
-      🟡 <b>DEMO MODE</b> — Simulated data. Paste your Polygon key above to go live.
+      🟡 <b>DEMO MODE</b> — Simulated data. Connecting to Polygon…
+    </div>
+
+    <div class="err-strip" id="errStrip">
+      🔴 <b><span id="errMsg"></span></b> <span class="err-detail" id="errDetail"></span>
     </div>
 
     <div class="ticker-grid" id="tickerGrid"></div>
@@ -461,7 +481,15 @@ const STRAT_META = {
 };
 
 // ══ STATE ══
-let TF = 1, muted = false, apiKey = '', isLive = false, totalAlerts = 0, audioCtx = null;
+// Polygon REST host — single source of truth for every data call.
+const REST_HOST = 'https://api.polygon.io';
+
+// Built-in key so the scanner goes live without manual entry. A key pasted into the
+// toolbar (or one already in localStorage) still takes precedence over this default.
+// Note: this ships in client-side JS on a public site and is therefore publicly readable.
+const DEFAULT_API_KEY = 'qBwiH2I6cgnDzR4xKbDs1p2oaPoTVrgE';
+
+let TF = 1, muted = false, apiKey = DEFAULT_API_KEY, isLive = false, totalAlerts = 0, audioCtx = null;
 
 const S = {};
 TICKERS.forEach(t => {
@@ -837,42 +865,123 @@ function switchTF(tf) {
   renderAll();
 }
 
-// ══ LIVE DATA ══
-async function connectLive() {
-  const key = document.getElementById('apiKey').value.trim() || localStorage.getItem('polygonKey');
-  if (!key) { alert('Enter your Polygon API key.'); return; }
-  apiKey = key; localStorage.setItem('polygonKey', key);
-  document.getElementById('sLabel').textContent = 'Connecting...';
-  document.getElementById('sDot').style.background = '#fbbf24';
-  try {
-    const r = await fetch(`https://api.polygon.io/v2/aggs/ticker/SPY/range/1/minute/2024-01-02/2024-01-02?limit=1&apiKey=${apiKey}`);
-    const d = await r.json();
-    if (d.status==='ERROR'||d.status==='FORBIDDEN') { alert('Invalid API key.'); document.getElementById('sDot').style.background='#f87171'; return; }
-  } catch(e) { alert('Connection failed.'); return; }
+// ══ STATUS / ERROR REPORTING ══
+// weak:true = informational; never paints over a more serious error already on screen.
+function showError(msg, detail, opts) {
+  const strip = document.getElementById('errStrip');
+  if (!strip) return;
+  const weak = opts && opts.weak;
+  if (weak && strip.classList.contains('show')) { console.warn('[scanner] ' + msg + (detail ? ' — ' + detail : '')); return; }
+  document.getElementById('errMsg').textContent = msg;
+  document.getElementById('errDetail').textContent = detail ? '— ' + detail : '';
+  strip.classList.add('show');
+  if (!weak) document.getElementById('sDot').style.background = '#f87171';
+  console.error('[scanner] ' + msg + (detail ? ' — ' + detail : ''));
+}
+
+function clearError() {
+  const strip = document.getElementById('errStrip');
+  if (strip) strip.classList.remove('show');
+}
+
+// Turn a Polygon REST failure into something a human can act on.
+function describeApiError(resp, body) {
+  if (body && body.error) return String(body.error);
+  if (body && body.message) return String(body.message);
+  if (resp && resp.status === 401) return 'HTTP 401 — key not recognized';
+  if (resp && resp.status === 403) return 'HTTP 403 — plan does not include this endpoint';
+  if (resp && resp.status === 429) return 'HTTP 429 — rate limit exceeded';
+  if (resp && !resp.ok) return 'HTTP ' + resp.status + ' ' + (resp.statusText || '');
+  if (body && body.status) return 'status: ' + body.status;
+  return 'unknown error';
+}
+
+// Single chokepoint for leaving demo mode.
+function goLive(sourceLabel) {
+  if (isLive) return;
   isLive = true;
   document.getElementById('sLabel').textContent = 'LIVE';
   document.getElementById('sDot').style.background = '#4ade80';
   document.getElementById('demoStrip').classList.add('live');
-  document.getElementById('apiKey').value = '•'.repeat(20);
-  await fetchAll();
+  clearError();
+  console.log('[scanner] live via ' + sourceLabel);
+}
+
+// ══ LIVE DATA ══
+async function connectLive() {
+  const field = document.getElementById('apiKey');
+  const typed = field ? field.value.trim() : '';
+  // A pasted key wins; otherwise fall back to a saved key, then the built-in default.
+  const key = (typed && typed.charCodeAt(0) !== 8226 ? typed : '') || localStorage.getItem('polygonKey') || DEFAULT_API_KEY;
+  if (!key) { showError('No API key available', 'paste a Polygon key in the toolbar'); return; }
+  apiKey = key;
+  document.getElementById('sLabel').textContent = 'Connecting...';
+  document.getElementById('sDot').style.background = '#fbbf24';
+  clearError();
+
+  // 1. Validate the key against a cheap, known-good request.
+  try {
+    const r = await fetch(`${REST_HOST}/v2/aggs/ticker/SPY/range/1/minute/2024-01-02/2024-01-02?limit=1&apiKey=${apiKey}`);
+    const d = await r.json().catch(() => null);
+    if (!r.ok || !d || d.status === 'ERROR' || d.status === 'FORBIDDEN' || d.status === 'NOT_AUTHORIZED') {
+      const reason = describeApiError(r, d);
+      showError(r.status === 401 || r.status === 403 ? 'API key rejected' : 'Validation request failed', reason);
+      localStorage.removeItem('polygonKey'); // don't let a bad key poison the next load
+      return;
+    }
+    // Only persist a user-supplied key once it has actually been accepted.
+    if (key !== DEFAULT_API_KEY) localStorage.setItem('polygonKey', key);
+  } catch(e) {
+    showError('Connection failed', (e && e.message) ? e.message : String(e));
+    return;
+  }
+
+  // 2. Key is good — pull real bars, and only promote to LIVE if data actually arrives.
+  if (field) field.value = '•'.repeat(20);
+  const loaded = await fetchAll();
+  if (loaded > 0) {
+    goLive(`REST — ${loaded}/${TICKERS.length} tickers loaded`);
+    if (loaded < TICKERS.length) {
+      showError('Partial data', `${TICKERS.length - loaded} of ${TICKERS.length} tickers returned no bars` + (lastFetchError ? ` (${lastFetchError})` : ''), { weak: true });
+    }
+  } else {
+    showError('No market data returned', lastFetchError || 'every aggregates request came back empty — market may be closed');
+  }
   setInterval(fetchAll, 20000);
 }
 
+let lastFetchError = null;
+
+// Returns the number of tickers that came back with usable bars.
 async function fetchAll() {
   const today = new Date(); const y=today.getFullYear(), m=String(today.getMonth()+1).padStart(2,'0'), d=String(today.getDate()).padStart(2,'0');
   const date = `${y}-${m}-${d}`;
-  await Promise.allSettled(TICKERS.map(t => fetchTicker(t, date)));
+  const results = await Promise.all(TICKERS.map(t => fetchTicker(t, date)));
   renderAll(); updateStats();
+  const ok = results.filter(Boolean).length;
+  // On a refresh cycle (already live), surface a total outage rather than freezing silently.
+  if (isLive && ok === 0) {
+    showError('Data refresh failed', lastFetchError || 'no tickers returned bars — prices may be stale');
+  } else if (isLive && ok > 0) {
+    clearError();
+  }
+  return ok;
 }
 
 async function fetchTicker(t, date) {
-  await Promise.all([fetchBars(t,1,date), fetchBars(t,5,date)]);
+  const [one, five] = await Promise.all([fetchBars(t,1,date), fetchBars(t,5,date)]);
+  return one || five;
 }
 
 async function fetchBars(t, tf, date) {
   try {
-    const r = await fetch(`https://api.polygon.io/v2/aggs/ticker/${t}/range/${tf}/minute/${date}/${date}?adjusted=true&sort=asc&limit=300&apiKey=${apiKey}`);
-    const d = await r.json(); if (!d.results?.length) return;
+    const r = await fetch(`${REST_HOST}/v2/aggs/ticker/${t}/range/${tf}/minute/${date}/${date}?adjusted=true&sort=asc&limit=300&apiKey=${apiKey}`);
+    const d = await r.json().catch(() => null);
+    if (!r.ok || !d || d.status === 'ERROR' || d.status === 'NOT_AUTHORIZED') {
+      lastFetchError = `${t}: ${describeApiError(r, d)}`;
+      return false;
+    }
+    if (!d.results?.length) { lastFetchError = `${t}: no bars for ${date}`; return false; }
     const p5=S[t][tf].ema5, p20=S[t][tf].ema20, prevVwap=S[t][tf].vwap;
     const bars = d.results.map(b=>({o:b.o,h:b.h,l:b.l,c:b.c,v:b.v,t:b.t}));
     S[t][tf].bars = bars;
@@ -890,19 +999,21 @@ async function fetchBars(t, tf, date) {
       const sig = checkAllStrategies(t, tf, p5, p20, lastBar);
       if (sig) dispatchAlert(t, tf, S[t].price, sig);
     }
-  } catch(e){}
+    return true;
+  } catch(e) {
+    lastFetchError = `${t}: ${(e && e.message) ? e.message : String(e)}`;
+    return false;
+  }
 }
 
-// Auto-connect if key saved
+// Auto-connect on load — a saved key wins, otherwise the built-in default is used.
 window.addEventListener('DOMContentLoaded', () => {
   loadBrainState(); // load brain state (non-blocking)
   const saved = localStorage.getItem('polygonKey');
-  if (saved && saved.charCodeAt(0) !== 8226) {
-    document.getElementById('apiKey').value = saved;
-    connectLive();
-  } else if (saved) {
-    document.getElementById('apiKey').value = '•'.repeat(20);
-  }
+  const field = document.getElementById('apiKey');
+  if (field) field.value = '•'.repeat(20);
+  if (saved && saved.charCodeAt(0) === 8226) localStorage.removeItem('polygonKey');
+  connectLive();
 });
 
 // ══ CLOCK ══
