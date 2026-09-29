@@ -444,6 +444,15 @@ function renderSignals() {
   if (!CHART_SYM) CHART_SYM = sigs[0].ticker;
 }
 
+/* the chart should still draw when nothing is firing — fall back to the first
+   symbol that actually has bars in the snapshot */
+function pickChartSymbol() {
+  if (CHART_SYM && ((DATA.bars || {})[CHART_SYM] || []).length > 2) return;
+  const withBars = Object.keys(DATA.bars || {})
+    .filter(k => (DATA.bars[k] || []).length > 2);
+  if (withBars.length) CHART_SYM = withBars.includes('SPY') ? 'SPY' : withBars[0];
+}
+
 /* ─────────────────────── candlestick chart (inline SVG) ─────────────── */
 function ema(vals, n) {
   const k = 2 / (n + 1); let e = null;
@@ -654,7 +663,7 @@ function logResult(kind) {
 /* ───────────────────────────── plumbing ───────────────────────────── */
 function render() {
   renderRegime(); renderGex(); renderEvents(); renderSignals();
-  renderChart(); renderFeed(); renderBrain();
+  pickChartSymbol(); renderChart(); renderFeed(); renderBrain();
   const g = DATA.generated_at ? new Date(DATA.generated_at) : null;
   $('#stamp').textContent = g
     ? 'updated ' + g.toLocaleTimeString('en-US',
