@@ -150,6 +150,14 @@ h2.sec .count{background:var(--bg-input);border:1px solid var(--border);
   <!-- 3. REGIME -->
   <div class="regime" id="regime"></div>
 
+  <!-- 3b. GEX + SKEW -->
+  <h2 class="sec">Dealer gamma &amp; skew</h2>
+  <div id="gex"></div>
+
+  <!-- 3c. CALENDAR -->
+  <h2 class="sec">Today's events <span class="count" id="nevents">0</span></h2>
+  <div id="events"></div>
+
   <!-- 1. ACTIVE SIGNALS -->
   <h2 class="sec">Active signals <span class="count" id="nsig">0</span></h2>
   <div id="signals"></div>
@@ -254,10 +262,100 @@ function renderRegime() {
       tod.minutes_left ? tod.minutes_left + ' min left in window' :
       (d.market || {}).status || ''],
   ];
+  const spySkew = (d.skew || {}).SPY;
+  if (spySkew && spySkew.skew_points != null)
+    cells.push(['IV skew (SPY)',
+      (spySkew.skew_points > 0 ? '+' : '') + spySkew.skew_points.toFixed(1),
+      esc(spySkew.label || '')]);
+  const spyGex = (d.gex || {}).SPY;
+  if (spyGex) cells.push(['Dealer gamma', '<span class="pill ' +
+    (spyGex.regime === 'long_gamma' ? 'IDEAL'
+      : spyGex.regime === 'short_gamma' ? 'AVOID' : 'UNKNOWN') + '">' +
+    esc(spyGex.label) + '</span>', esc(spyGex.favours || '')]);
+  const cal = d.calendar || {};
+  if (cal.news_window) cells.push(['News window',
+    '<span class="pill AVOID">' + (cal.suppressed ? 'SUPPRESSED' : 'CAUTION') +
+    '</span>', esc(cal.reason || '')]);
   $('#regime').innerHTML = cells.map(([k, v, s]) =>
     '<div class="rcell"><div class="rlab">' + k + '</div>' +
     '<div class="rval">' + v + '</div><div class="rsub">' + s + '</div></div>'
   ).join('');
+}
+
+/* ──────────────────────────── gex + skew ───────────────────────────── */
+function bn(v) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  const a = Math.abs(v), sign = v < 0 ? '-' : '';
+  if (a >= 1e9) return sign + '$' + (a / 1e9).toFixed(2) + 'B';
+  if (a >= 1e6) return sign + '$' + (a / 1e6).toFixed(0) + 'M';
+  return sign + '$' + a.toLocaleString('en-US', { maximumFractionDigits: 0 });
+}
+
+function renderGex() {
+  const g = DATA.gex || {}, sk = DATA.skew || {};
+  const names = Object.keys(g).length ? Object.keys(g) : Object.keys(sk);
+  const box = $('#gex');
+  if (!names.length) {
+    box.innerHTML = '<div class="empty">No dealer-gamma reading in the last ' +
+      'snapshot. It is computed from the full same-day chain and refreshes ' +
+      'every 15 minutes while the scanner runs.</div>';
+    return;
+  }
+  box.innerHTML = '<div class="cards">' + names.map(t => {
+    const r = g[t] || {}, s2 = sk[t] || {};
+    const cls = r.regime === 'long_gamma' ? 'call'
+      : r.regime === 'short_gamma' ? 'put' : '';
+    const pillCls = r.regime === 'long_gamma' ? 'IDEAL'
+      : r.regime === 'short_gamma' ? 'AVOID' : 'UNKNOWN';
+    const skewCls = s2.regime === 'downside' ? 'bad'
+      : s2.regime === 'upside' ? 'good' : '';
+    return '<div class="card ' + cls + '">' +
+      '<div class="chead"><span class="ctick">' + esc(t) + '</span>' +
+      '<span class="cstrike"><span class="pill ' + pillCls + '">' +
+        esc(r.label || 'n/a') + ' ' + esc(r.arrow || '') + '</span></span></div>' +
+      '<div class="rows">' +
+        row('Net GEX', bn(r.net_gex), r.net_gex > 0 ? 'good' : 'bad') +
+        row('Magnet strike', r.magnet_strike != null
+          ? money(r.magnet_strike, 0) + ' (' + (r.magnet_oi || 0)
+            .toLocaleString('en-US') + ' OI)' : '—') +
+        row('Gamma flip', r.flip_point != null ? money(r.flip_point, 2) : '—') +
+        row('Spot', r.spot != null ? money(r.spot, 2) : '—') +
+        row('IV skew (25Δ)', s2.skew_points != null
+          ? (s2.skew_points > 0 ? '+' : '') + s2.skew_points.toFixed(1) +
+            ' · ' + esc(s2.regime || '') : '—', skewCls) +
+      '</div>' +
+      (r.implication ? '<div class="exitif" style="background:rgba(56,189,248,.07);' +
+        'border-color:rgba(56,189,248,.25);color:#7dd3fc"><b>Implication:</b> ' +
+        esc(r.implication) + '</div>' : '') +
+      '</div>';
+  }).join('') + '</div>' +
+  '<p class="note">GEX = open interest × gamma × 100 × spot, summed with calls ' +
+  'positive and puts negative. Dealer inventory is not public, so this is the ' +
+  'standard proxy, not a position report.</p>';
+}
+
+function renderEvents() {
+  const c = DATA.calendar || {};
+  const evs = (c.events_today || []).filter(e => e.impact !== 'low');
+  $('#nevents').textContent = evs.length;
+  const box = $('#events');
+  if (!evs.length) {
+    box.outerHTML = '<div class="empty" id="events">No high or medium impact ' +
+      'events scheduled today.</div>';
+    return;
+  }
+  box.className = 'feed';
+  box.innerHTML = evs.map(e => {
+    const hi = e.impact === 'high';
+    return '<div class="fitem"><span>' + (hi ? '⛔' : '⚠️') + '</span>' +
+      '<span class="tk">' + esc(e.time_et || '') + '</span>' +
+      '<span class="st">' + esc(e.title) + '</span>' +
+      '<span class="pnl ' + (hi ? 'bad' : '') + '">' +
+      (hi ? 'suppress ±30m' : 'caution') + '</span></div>';
+  }).join('') +
+  (c.news_window ? '<div class="fitem"><span>🔴</span><span class="st">' +
+    esc(c.reason || 'inside a news window') + ' — signals ' +
+    (c.suppressed ? 'suppressed' : 'downgraded') + ' right now</span></div>' : '');
 }
 
 /* ───────────────────────────── sparkline ───────────────────────────── */
@@ -555,7 +653,8 @@ function logResult(kind) {
 
 /* ───────────────────────────── plumbing ───────────────────────────── */
 function render() {
-  renderRegime(); renderSignals(); renderChart(); renderFeed(); renderBrain();
+  renderRegime(); renderGex(); renderEvents(); renderSignals();
+  renderChart(); renderFeed(); renderBrain();
   const g = DATA.generated_at ? new Date(DATA.generated_at) : null;
   $('#stamp').textContent = g
     ? 'updated ' + g.toLocaleTimeString('en-US',
