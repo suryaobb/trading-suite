@@ -415,6 +415,13 @@ function signalCard(s) {
     '</div>' +
     (s.exit_if ? '<div class="exitif"><b>Exit if:</b> ' + esc(s.exit_if) +
       '</div>' : '') +
+    (((s.context || {}).flow_flags || []).length
+      ? '<div class="exitif" style="background:rgba(56,189,248,.07);' +
+        'border-color:rgba(56,189,248,.25);color:#7dd3fc"><b>🌊 Flow:</b> ' +
+        esc(((s.context || {}).flow_flags || []).join(' · ')) +
+        ((s.context || {}).flow_detail
+          ? ' — ' + esc((s.context.flow_detail.status || '')) : '') +
+        '</div>' : '') +
     (bars.length > 1 ? '<div class="spark">' + sparkline(bars, 300, 44) +
       '</div>' : '') +
     '<div class="cfoot"><button class="btn primary" data-log="' +
