@@ -2,1409 +2,604 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Momentum Scanner — Trading Suite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Quantbot Scanner — Trading Suite</title>
 <link rel="stylesheet" href="shared.css">
 <style>
-/* ── QUANTBOT LIVE PANEL ── */
-/* These aliases were referenced throughout this file but never defined
-   (shared.css names them differently), so cards were rendering on a
-   transparent background. Defined once here. */
-:root {
-  --bg-surface: var(--bg-card);
-  --text-primary: var(--text);
-  --text-secondary: var(--text-dim);
-  --text-muted: var(--text-mute);
-  --blue: var(--accent);
-  --r-sm: 5px;
-  --r-md: 8px;
+:root{
+  --bg-surface:var(--bg-card); --text-primary:var(--text);
+  --text-secondary:var(--text-dim); --text-muted:var(--text-mute);
+  --r:10px; --r-sm:6px;
+  --call:#4ade80; --put:#f87171; --warn:#fbbf24;
 }
+body{padding:0 0 48px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px}
 
-.qb-panel {
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  max-height: 46%;
-  display: flex;
-  flex-direction: column;
-}
-.qb-head {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  padding: 9px 16px; border-bottom: 1px solid var(--border);
-}
-.qb-title { font-size: 12px; font-weight: 800; color: var(--text-primary); letter-spacing: 0.2px; }
-.qb-title b { color: var(--accent); }
-.qb-strategy { font-size: 10px; font-weight: 600; color: var(--text-muted); margin-left: 4px; }
-.qb-meta { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
-.qb-pill {
-  font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 10px;
-  background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-.qb-pill.fresh { color: var(--green); border-color: #1a4a28; background: #0a1f12; }
-.qb-pill.stale { color: var(--yellow); border-color: #4a3a1a; background: #1f1a0a; }
-.qb-pill.dead  { color: var(--red);   border-color: #4a1a1a; background: #1a0a0a; }
-.qb-pill.open  { color: var(--green); }
+/* ── top bar ── */
+.topbar{position:sticky;top:0;z-index:20;background:rgba(8,12,24,.94);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--border);padding:10px 0}
+.topbar .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:15px;letter-spacing:.3px}
+.brand span{color:var(--accent)}
+.nav{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
+.nav a{color:var(--text-secondary);text-decoration:none;font-size:12px;
+  padding:4px 9px;border-radius:var(--r-sm);border:1px solid transparent}
+.nav a:hover{color:var(--text);border-color:var(--border-hi)}
+.nav a.on{color:var(--accent);border-color:var(--border-hi)}
+.stamp{font-size:11px;color:var(--text-muted);font-variant-numeric:tabular-nums}
 
-.qb-armed { display: flex; gap: 6px; padding: 8px 16px; flex-wrap: wrap; align-items: center;
-            border-bottom: 1px solid var(--border); min-height: 34px; }
-.qb-armed-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase;
-                letter-spacing: 0.5px; color: var(--text-faint); margin-right: 2px; }
-.qb-chip {
-  font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px;
-  border: 1px solid var(--border); background: var(--bg-input); color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-.qb-chip.long  { border-color: #1a4a28; color: #4ade80; background: #0a1f12; }
-.qb-chip.short { border-color: #4a1a1a; color: #f87171; background: #1a0a0a; }
-.qb-chip .qb-lvl { color: var(--text-muted); font-weight: 600; }
-.qb-empty { font-size: 10px; color: var(--text-faint); }
+/* ── regime strip ── */
+.regime{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:10px;margin:16px 0}
+.rcell{background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:12px 14px}
+.rlab{font-size:10px;letter-spacing:.9px;text-transform:uppercase;
+  color:var(--text-muted);margin-bottom:5px}
+.rval{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.rsub{font-size:11px;color:var(--text-secondary);margin-top:3px;line-height:1.35}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;
+  font-weight:700;letter-spacing:.6px}
+.pill.IDEAL{background:rgba(74,222,128,.15);color:var(--call);
+  border:1px solid rgba(74,222,128,.35)}
+.pill.CAUTION{background:rgba(251,191,36,.15);color:var(--warn);
+  border:1px solid rgba(251,191,36,.35)}
+.pill.AVOID{background:rgba(248,113,113,.15);color:var(--put);
+  border:1px solid rgba(248,113,113,.4)}
+.pill.UNKNOWN{background:rgba(148,163,184,.12);color:var(--text-secondary);
+  border:1px solid var(--border-hi)}
 
-.qb-table-wrap { overflow-y: auto; flex: 1; }
-.qb-table { width: 100%; border-collapse: collapse; font-size: 11px;
-            font-variant-numeric: tabular-nums; }
-.qb-table th {
-  position: sticky; top: 0; z-index: 1;
-  background: var(--bg-input); color: var(--text-faint);
-  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-  text-align: right; padding: 5px 10px; border-bottom: 1px solid var(--border);
-}
-.qb-table th:first-child { text-align: left; }
-.qb-table td { padding: 4px 10px; text-align: right; color: var(--text-secondary);
-               border-bottom: 1px solid rgba(26,37,64,0.5); }
-.qb-table td:first-child { text-align: left; font-weight: 800; color: var(--text-primary); }
-.qb-table tr.armed  td:first-child { color: var(--yellow); }
-.qb-table tr.fired  td:first-child { color: var(--accent); }
-.qb-table .up { color: var(--green); } .qb-table .down { color: var(--red); }
-.qb-table .dim { color: var(--text-faint); }
-.qb-state { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
-            background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted); }
-.qb-state.long { color: #4ade80; border-color: #1a4a28; }
-.qb-state.short { color: #f87171; border-color: #4a1a1a; }
+h2.sec{font-size:12px;letter-spacing:1.1px;text-transform:uppercase;
+  color:var(--text-muted);margin:26px 0 10px;display:flex;align-items:center;gap:8px}
+h2.sec .count{background:var(--bg-input);border:1px solid var(--border);
+  border-radius:99px;padding:1px 8px;font-size:10px;color:var(--text-secondary)}
 
-.alert-item.qb { border-left: 2px solid var(--accent); }
-.ai-src { font-size: 8px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase;
-          color: #0b1220; background: var(--accent); padding: 1px 5px; border-radius: 3px; }
-.ai-src.local { background: var(--text-faint); color: var(--text-secondary); }
+/* ── signal cards ── */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.card{background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.card.call{border-top:3px solid var(--call)}
+.card.put{border-top:3px solid var(--put)}
+.chead{display:flex;align-items:baseline;gap:8px;padding:12px 14px 8px}
+.cside{font-size:15px;font-weight:800;letter-spacing:.5px}
+.card.call .cside{color:var(--call)} .card.put .cside{color:var(--put)}
+.ctick{font-size:19px;font-weight:800}
+.cstrike{font-size:13px;color:var(--text-secondary);margin-left:auto;
+  font-variant-numeric:tabular-nums}
+.rows{padding:0 14px 10px;font-size:13px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;
+  border-bottom:1px dashed rgba(42,58,85,.45)}
+.row:last-child{border-bottom:0}
+.row .k{color:var(--text-secondary)}
+.row .v{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.v.good{color:var(--call)} .v.bad{color:var(--put)} .v.warn{color:var(--warn)}
+.exitif{margin:0 14px 10px;padding:8px 10px;border-radius:var(--r-sm);
+  background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);
+  font-size:12px;color:#fca5a5}
+.exitif b{color:var(--put)}
+.spark{padding:0 6px 6px}
+.cfoot{margin-top:auto;display:flex;gap:8px;padding:10px 14px;
+  border-top:1px solid var(--border);background:rgba(10,15,30,.4)}
+.btn{flex:1;background:var(--bg-input);color:var(--text);border:1px solid var(--border-hi);
+  border-radius:var(--r-sm);padding:7px 10px;font-size:12px;font-weight:600;
+  cursor:pointer;font-family:inherit}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--grad);border-color:transparent;color:#04121f}
+.countdown{font-variant-numeric:tabular-nums}
+.countdown.urgent{color:var(--warn);font-weight:700}
+.countdown.dead{color:var(--put)}
 
-/* ── LAYOUT ── */
-.scanner-layout {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  height: calc(100vh - 52px);
-  overflow: hidden;
-}
-@media (max-width: 860px) {
-  .scanner-layout { grid-template-columns: 1fr; height: auto; }
-  .alert-col { border-left: none; border-top: 1px solid var(--border); height: 360px; }
-}
+/* ── chart ── */
+.chartbox{background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:12px 14px}
+.chead2{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.chead2 .t{font-size:16px;font-weight:800}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-left:auto;font-size:11px;
+  color:var(--text-secondary)}
+.legend i{display:inline-block;width:14px;height:0;border-top-width:2px;
+  border-top-style:solid;vertical-align:middle;margin-right:5px}
+.chart-scroll{overflow-x:auto}
 
-/* ── LEFT PANEL ── */
-.left-panel { display: flex; flex-direction: column; overflow: hidden; }
+/* ── feed ── */
+.feed{background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden}
+.fitem{display:flex;align-items:center;gap:10px;padding:9px 14px;
+  border-bottom:1px solid var(--border);font-size:13px}
+.fitem:last-child{border-bottom:0}
+.fitem .tk{font-weight:700;min-width:48px}
+.fitem .st{color:var(--text-secondary);font-size:12px;flex:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fitem .pnl{font-variant-numeric:tabular-nums;font-weight:700}
+.fitem .when{color:var(--text-muted);font-size:11px;font-variant-numeric:tabular-nums}
 
-.scanner-toolbar {
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border);
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  flex-shrink: 0;
-}
-
-.api-row { display: flex; gap: 6px; flex: 1; min-width: 200px; }
-.api-row input {
-  flex: 1;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 7px 12px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  outline: none;
-  font-family: monospace;
-  transition: border-color 0.15s;
-}
-.api-row input:focus { border-color: var(--blue); }
-.api-row input::placeholder { color: var(--text-faint); }
-
-.tf-tabs { display: flex; gap: 3px; }
-.tf-tab {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.12s;
-}
-.tf-tab.active {
-  background: rgba(56,189,248,0.1);
-  border-color: var(--blue);
-  color: var(--blue);
-}
-
-.mute-toggle {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 6px 10px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.12s;
-  flex-shrink: 0;
-}
-.mute-toggle.muted { border-color: var(--red); }
-
-/* Demo banner */
-.demo-strip {
-  background: #1c1200;
-  border-bottom: 1px solid #4a3010;
-  padding: 6px 16px;
-  font-size: 11px;
-  color: #92400e;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.demo-strip b { color: #fbbf24; }
-.demo-strip.live { display: none; }
-
-/* Error banner */
-.err-strip {
-  display: none;
-  background: #1f0a0a;
-  border-bottom: 1px solid #5a1a1a;
-  padding: 6px 16px;
-  font-size: 11px;
-  color: #fca5a5;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.err-strip.show { display: flex; }
-.err-strip b { color: #f87171; }
-.err-strip .err-detail { color: #9a6a6a; font-family: monospace; font-size: 10px; }
-
-/* Ticker grid */
-.ticker-grid {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(188px, 1fr));
-  gap: 8px;
-  align-content: start;
-}
-
-/* Ticker card */
-.t-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  padding: 13px;
-  position: relative;
-  overflow: hidden;
-  cursor: default;
-  transition: border-color 0.2s;
-}
-.t-card::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: transparent;
-  transition: background 0.3s;
-}
-.t-card.bull::after { background: linear-gradient(90deg, var(--green), var(--blue)); }
-.t-card.bear::after { background: var(--red); opacity: 0.5; }
-.t-card.signal {
-  border-color: var(--yellow);
-  animation: signalPulse 1.2s ease-in-out 4;
-}
-.t-card.signal::after { background: linear-gradient(90deg, var(--yellow), var(--green)); }
-@keyframes signalPulse {
-  0%,100% { box-shadow: none; }
-  50%      { box-shadow: 0 0 18px rgba(245,158,11,0.35); }
-}
-
-.tc-row1 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-.tc-sym { font-size: 17px; font-weight: 900; color: var(--text-primary); }
-.tc-price { font-size: 18px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.3px; margin-bottom: 1px; }
-.tc-chg { font-size: 11px; font-weight: 700; margin-bottom: 8px; }
-.tc-chg.up   { color: var(--green); }
-.tc-chg.down { color: var(--red); }
-.tc-chg.flat { color: var(--text-muted); }
-
-.tc-inds { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px; }
-.tc-ind { }
-.tc-ind-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); }
-.tc-ind-val { font-size: 12px; font-weight: 700; }
-.tc-ind-val.green  { color: #4ade80; }
-.tc-ind-val.red    { color: #f87171; }
-.tc-ind-val.blue   { color: #38bdf8; }
-.tc-ind-val.yellow { color: #fbbf24; }
-.tc-ind-val.muted  { color: var(--text-muted); }
-
-.tc-vwap-pill {
-  margin-top: 7px;
-  text-align: center;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 4px 6px;
-  border-radius: 6px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-}
-.tc-vwap-pill.above { background: #0a1f12; border-color: #1a4a28; color: #4ade80; }
-.tc-vwap-pill.below { background: #1a0a0a; border-color: #4a1a1a; color: #f87171; }
-
-/* WR badge on card */
-.tc-wr-row {
-  display: flex; gap: 4px; margin-top: 6px;
-}
-.tc-wr-badge {
-  flex: 1; text-align: center; font-size: 9px; font-weight: 800;
-  padding: 3px 4px; border-radius: 4px; letter-spacing: 0.3px;
-}
-.tc-wr-badge.call { background: #0a1f12; border: 1px solid #1a4a28; color: #4ade80; }
-.tc-wr-badge.put  { background: #1a0a0a; border: 1px solid #4a1a1a; color: #f87171; }
-
-/* Stats bar */
-.stats-bar {
-  background: var(--bg-surface);
-  border-top: 1px solid var(--border);
-  padding: 7px 16px;
-  display: flex;
-  gap: 20px;
-  font-size: 11px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-.stats-bar b { color: var(--text-secondary); }
-.stats-bar .green { color: var(--green); }
-.stats-bar .yellow { color: var(--yellow); }
-
-/* ── RIGHT PANEL (Alerts) ── */
-.alert-col {
-  border-left: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.alert-header {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-.alert-header h3 { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.alert-cnt {
-  background: var(--bg-raised);
-  border-radius: 10px;
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-}
-.alert-cnt.hot { background: #2d1f00; color: #fbbf24; }
-.src-toggle {
-  background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px;
-  font-size: 9px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
-  color: var(--accent); cursor: pointer; padding: 3px 7px;
-}
-.src-toggle:hover { border-color: var(--border-hi); }
-.src-toggle.all { color: var(--text-muted); }
-/* Quantbot-only view: the local engine's alerts stay in the DOM (and in the
-   count) but are hidden, so flipping the toggle is instant. */
-.alerts-feed.qb-only .alert-item:not(.qb) { display: none; }
-.clear-btn { background: none; border: none; font-size: 11px; color: var(--text-faint); cursor: pointer; padding: 2px 4px; }
-.clear-btn:hover { color: var(--red); }
-
-.alerts-feed {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
-}
-
-.no-alerts-msg {
-  padding: 32px 16px;
-  text-align: center;
-  color: var(--text-faint);
-  font-size: 12px;
-  line-height: 1.7;
-}
-
-.alert-item {
-  background: var(--bg-surface);
-  border: 1px solid #2d1f00;
-  border-left: 3px solid var(--yellow);
-  border-radius: var(--r-md);
-  padding: 11px 12px;
-  margin-bottom: 7px;
-  animation: fadeInUp 0.25s ease;
-}
-
-.ai-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.ai-sym { font-size: 15px; font-weight: 900; color: var(--text-primary); }
-.ai-time { font-size: 10px; color: var(--text-faint); }
-.ai-sig { font-size: 11px; font-weight: 700; color: var(--yellow); margin-bottom: 7px; }
-.ai-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-bottom: 7px; }
-.ai-cell { background: var(--bg-input); border-radius: 5px; padding: 5px 6px; }
-.ai-cell .lbl { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 1px; }
-.ai-cell .val { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
-.ai-wr { display: flex; gap: 5px; margin-bottom: 7px; }
-.ai-wr-badge { flex:1; text-align:center; font-size:10px; font-weight:800; padding:4px 6px; border-radius:5px; }
-.ai-wr-badge.call { background:#0a1f12; border:1px solid #1a4a28; color:#4ade80; }
-.ai-wr-badge.put  { background:#1a0a0a; border:1px solid #4a1a1a; color:#f87171; }
-.ai-plan { width: 100%; background: var(--grad-blue); border: none; border-radius: 6px; padding: 7px; font-size: 11px; font-weight: 700; color: #fff; cursor: pointer; transition: opacity 0.15s; }
-.ai-plan:hover { opacity: 0.85; }
-
-@keyframes fadeInUp {
-  from { opacity:0; transform:translateY(6px); }
-  to   { opacity:1; transform:translateY(0); }
-}
+/* ── modal ── */
+.veil{position:fixed;inset:0;background:rgba(4,8,18,.78);display:none;
+  align-items:center;justify-content:center;z-index:60;padding:16px}
+.veil[data-open]{display:flex}
+.modal{background:var(--bg-surface);border:1px solid var(--border-hi);
+  border-radius:var(--r);padding:18px;max-width:380px;width:100%}
+.modal h3{font-size:15px;margin-bottom:4px}
+.modal p{font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.45}
+.mrow{display:flex;gap:8px;margin-bottom:8px}
+.modal input{width:100%;background:var(--bg-input);border:1px solid var(--border);
+  color:var(--text);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;
+  font-family:inherit;margin-bottom:8px}
+.empty{background:var(--bg-surface);border:1px dashed var(--border-hi);
+  border-radius:var(--r);padding:26px 16px;text-align:center;
+  color:var(--text-secondary);font-size:13px;line-height:1.5}
+.note{font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5}
+.err{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);
+  color:#fca5a5;padding:10px 12px;border-radius:var(--r-sm);font-size:12px;margin:12px 0}
+@media (max-width:520px){.cards{grid-template-columns:1fr}.rval{font-size:17px}}
 </style>
 </head>
 <body>
 
-<nav class="nav">
-  <a class="nav-logo" href="index.html">⚡ <span class="accent">Trading</span> Suite</a>
-  <div class="nav-links">
-    <a class="nav-link" href="index.html">Dashboard</a>
-    <a class="nav-link active" href="scanner.html">Scanner</a>
-    <a class="nav-link" href="planner.html">Planner</a>
-    <a class="nav-link" href="journal.html">Journal</a>
-    <a class="nav-link" href="backtest.html">Backtest</a>
-  </div>
-  <div style="display:flex;align-items:center;gap:10px;margin-left:auto;padding-right:16px;">
-    <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--text-muted);">
-      <div id="sDot" style="width:7px;height:7px;border-radius:50%;background:#92400e;"></div>
-      <span id="sLabel">DEMO</span>
-    </div>
-    <div id="mktBadge" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-muted);">–</div>
-  </div>
-</nav>
+<div class="topbar"><div class="wrap">
+  <div class="brand">QUANT<span>BOT</span> SCANNER</div>
+  <nav class="nav">
+    <a href="index.html">Home</a><a class="on" href="scanner.html">Scanner</a>
+    <a href="backtest.html">Backtest</a><a href="journal.html">Journal</a>
+    <a href="planner.html">Planner</a>
+  </nav>
+  <div class="stamp" id="stamp">loading…</div>
+</div></div>
 
-<div class="scanner-layout">
+<div class="wrap">
+  <div id="err"></div>
 
-  <!-- LEFT -->
-  <div class="left-panel">
-    <div class="scanner-toolbar">
-      <div class="api-row">
-        <input type="password" id="apiKey" placeholder="Paste Polygon API key to go live...">
-        <button class="btn btn-primary btn-sm" onclick="connectLive()">Connect</button>
-      </div>
-      <div class="tf-tabs">
-        <button class="tf-tab active" id="tab1" onclick="switchTF(1)">1 Min</button>
-        <button class="tf-tab" id="tab5" onclick="switchTF(5)">5 Min</button>
-      </div>
-      <button class="mute-toggle" id="muteBtn" onclick="toggleMute()" title="Toggle alerts">🔔</button>
-    </div>
+  <!-- 3. REGIME -->
+  <div class="regime" id="regime"></div>
 
-    <div class="demo-strip" id="demoStrip">
-      🟡 <b>DEMO MODE</b> — Simulated data. Connecting to Polygon…
-    </div>
+  <!-- 1. ACTIVE SIGNALS -->
+  <h2 class="sec">Active signals <span class="count" id="nsig">0</span></h2>
+  <div id="signals"></div>
 
-    <div class="err-strip" id="errStrip">
-      🔴 <b><span id="errMsg"></span></b> <span class="err-detail" id="errDetail"></span>
-    </div>
+  <!-- 2. LIVE CHART -->
+  <h2 class="sec">Live chart</h2>
+  <div id="chartwrap"></div>
 
-    <!-- Quantbot: the always-on scanner's own state, fetched from signals.json.
-         This panel is authoritative; the cards below are the local Polygon view. -->
-    <div class="qb-panel" id="qbPanel">
-      <div class="qb-head">
-        <div class="qb-title">🤖 <b>Quantbot</b><span class="qb-strategy" id="qbStrategy">connecting…</span></div>
-        <div class="qb-meta">
-          <span class="qb-pill" id="qbFresh">no data yet</span>
-          <span class="qb-pill" id="qbMarket">–</span>
-          <span class="qb-pill" id="qbVix">VIX –</span>
-          <span class="qb-pill" id="qbCounts">–</span>
-        </div>
-      </div>
-      <div class="qb-armed" id="qbArmed">
-        <span class="qb-armed-lbl">Armed</span>
-        <span class="qb-empty">waiting for the first scan…</span>
-      </div>
-      <div class="qb-table-wrap">
-        <table class="qb-table">
-          <thead><tr>
-            <th>Ticker</th><th>Price</th><th>EMA 5</th><th>EMA 20</th>
-            <th>VWAP</th><th>RVOL</th><th>Signal</th>
-          </tr></thead>
-          <tbody id="qbBody"></tbody>
-        </table>
-      </div>
-    </div>
+  <!-- 4. RECENT -->
+  <h2 class="sec">Recent signals <span class="count" id="nfeed">0</span></h2>
+  <div id="feed"></div>
 
-    <div class="ticker-grid" id="tickerGrid"></div>
+  <!-- 5. BRAIN -->
+  <h2 class="sec">Brain status</h2>
+  <div class="regime" id="brain"></div>
 
-    <div class="stats-bar">
-      <span>Bulls: <b class="green" id="statBull">0</b></span>
-      <span>Near Cross: <b class="yellow" id="statNear">0</b></span>
-      <span>Alerts: <b class="yellow" id="statAlerts">0</b></span>
-      <span>Quantbot armed: <b class="yellow" id="statArmed">0</b></span>
-      <span>Updated: <b id="statTime">–</b></span>
-    </div>
-  </div>
-
-  <!-- RIGHT: Alerts -->
-  <div class="alert-col">
-    <div class="alert-header">
-      <h3>🚨 Alerts</h3>
-      <div style="display:flex;align-items:center;gap:7px;">
-        <button class="src-toggle" id="srcToggle" onclick="toggleAlertSource()"
-                title="Quantbot is the always-on scanner; Local is this page's own engine">Quantbot</button>
-        <span class="alert-cnt" id="alertCnt">0</span>
-        <button class="clear-btn" onclick="clearAlerts()">Clear</button>
-      </div>
-    </div>
-    <div class="alerts-feed" id="alertFeed">
-      <div class="no-alerts-msg">
-        Watching 11 tickers for<br>5 EMA × 20 EMA crossovers<br>above VWAP…<br><br>
-        Alerts show real 1-yr win rates<br>from backtest (AMD: 21.4% call).
-      </div>
-    </div>
-  </div>
-
+  <p class="note" id="foot"></p>
 </div>
 
+<div class="veil" id="veil"><div class="modal">
+  <h3 id="mtitle">Log trade</h3>
+  <p>This opens Telegram with the result pre-filled — the bot records it and
+     updates the pattern's live win rate.</p>
+  <div class="mrow">
+    <button class="btn" id="mwin">💚 Win</button>
+    <button class="btn" id="mloss">❤️ Loss</button>
+  </div>
+  <input id="mcustom" placeholder="Custom — e.g. +$180, -144, scratched">
+  <div class="mrow">
+    <button class="btn primary" id="msend">Send to Telegram</button>
+    <button class="btn" id="mclose">Cancel</button>
+  </div>
+</div></div>
+
 <script>
-// ══ CONFIG ══
-const TICKERS = ['AAPL','MSFT','GOOGL','AMZN','META','NVDA','TSLA','AMD','SPY','QQQ','IWM'];
-const SEED = { AAPL:211, MSFT:449, GOOGL:178, AMZN:198, META:617, NVDA:1080, TSLA:348, AMD:138, SPY:585, QQQ:510, IWM:209 };
-const DEMO_SESSION_BARS = 78; // 78 1-min bars per simulated trading session
+'use strict';
+/* ────────────────────────────────────────────────────────────────────────
+   Quantbot dashboard. Renders entirely from signals.json, which the scanner
+   publishes every ~60s and which now carries the regime, the brain status,
+   the dollar-denominated signal cards and a 30-bar price tail per symbol.
 
-// ── WIN RATE FALLBACK (used until brain_state.json loads) ──
-const HIST_WR = {
-  AAPL:  { call: 7.9,  put: 7.5  },
-  MSFT:  { call: 6.8,  put: 8.3  },
-  GOOGL: { call: 10.2, put: 11.8 },
-  AMZN:  { call: 10.6, put: 11.2 },
-  META:  { call: 10.4, put: 11.1 },
-  NVDA:  { call: 13.2, put: 15.4 },
-  TSLA:  { call: 21.2, put: 20.6 },
-  AMD:   { call: 21.4, put: 20.6 },
-  SPY:   { call: 1.2,  put: 3.2  },
-  QQQ:   { call: 2.6,  put: 6.5  },
-  IWM:   { call: 5.4,  put: 7.5  },
-};
+   No API key lives in this file. The previous version hardcoded a Polygon
+   key in a PUBLIC repo, which handed a paid subscription to anyone who
+   viewed source. Live mode is opt-in and reads a key the viewer pastes,
+   which is kept in localStorage on their own machine and never committed.
+   ──────────────────────────────────────────────────────────────────────── */
 
-// ── BRAIN STATE (loaded from brain_state.json) ──
-let brainState = null;
+const SRC = 'signals.json';
+const POLL_MS = 20000;
+const TG_BOT = 'quantclawwwbot';
+const $ = s => document.querySelector(s);
+const el = (t, c, h) => { const n = document.createElement(t);
+  if (c) n.className = c; if (h !== undefined) n.innerHTML = h; return n; };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
+  ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
 
-async function loadBrainState() {
+/* dollars with the sign outside the symbol: -$144, not $-144 */
+function money(v, dp) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  const n = Number(v), a = Math.abs(n);
+  const d = dp !== undefined ? dp : (a >= 100 ? 0 : 2);
+  return (n < 0 ? '-$' : '$') + a.toLocaleString('en-US',
+    { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+const num = (v, d = 2) => (v === null || v === undefined || isNaN(v))
+  ? '—' : Number(v).toFixed(d);
+const pct = v => (v === null || v === undefined || isNaN(v))
+  ? '—' : (Number(v) * 100).toFixed(0) + '%';
+
+let DATA = null, CHART_SYM = null;
+
+/* ───────────────────────────── fetch loop ───────────────────────────── */
+async function load() {
   try {
-    const r = await fetch('brain_state.json?_=' + Date.now());
-    if (!r.ok) return;
-    brainState = await r.json();
-    console.log('[Brain] Loaded:', brainState.generated_at);
-    updateBrainBadges();
-    const msg = document.getElementById('alertFeed').querySelector('.no-alerts-msg');
-    if (msg) renderNoAlertsMsg(msg);
-  } catch(e) { console.log('[Brain] brain_state.json not found — using defaults'); }
-}
-
-function renderNoAlertsMsg(el) {
-  const top = brainState?.strategy_leaderboard?.[0];
-  if (!top) return;
-  el.innerHTML = `Watching 11 tickers · 7 strategies<br>
-    <b style="color:#38bdf8">Top strategy: ${top.strategy}</b><br>
-    Avg WR: ${(top.avg_win_rate*100).toFixed(1)}%&nbsp;&nbsp;PF: ${top.avg_profit_factor.toFixed(2)}<br><br>
-    <span style="color:#4b5563;font-size:10px">Brain updated ${new Date(brainState.generated_at).toLocaleDateString()}</span>`;
-}
-
-function getBrainWR(ticker, strategy) {
-  if (brainState?.tickers?.[ticker]?.all_strategies?.[strategy]?.oos_win_rate != null) {
-    return (brainState.tickers[ticker].all_strategies[strategy].oos_win_rate * 100).toFixed(1) + '%';
-  }
-  if (brainState?.tickers?.[ticker]?.oos_win_rate != null) {
-    return (brainState.tickers[ticker].oos_win_rate * 100).toFixed(1) + '%';
-  }
-  const wr = HIST_WR[ticker];
-  return wr ? wr.call + '%' : null;
-}
-
-function getBrainBest(ticker) {
-  return brainState?.tickers?.[ticker]?.best_strategy || 'EMA_CROSS';
-}
-
-function updateBrainBadges() {
-  if (!brainState) return;
-  TICKERS.forEach(t => {
-    const tdata = brainState.tickers[t];
-    if (!tdata) return;
-    const wr = (tdata.oos_win_rate * 100).toFixed(1);
-    const strat = (tdata.best_strategy || 'EMA_CROSS').replace('_', ' ');
-    const b1 = document.getElementById('wr-call-' + t);
-    const b2 = document.getElementById('wr-put-' + t);
-    if (b1) { b1.textContent = `🧠 ${strat}`; b1.title = 'Brain-selected strategy'; }
-    if (b2) { b2.textContent = `WR ${wr}%`; b2.title = `OOS win rate: ${wr}%  PF: ${tdata.oos_profit_factor?.toFixed(2)}`; }
-  });
-}
-
-// ── SESSION STATE (tracks OR, HOD/LOD per ticker) ──
-const SS = {};
-TICKERS.forEach(t => {
-  SS[t] = {
-    prevClose: SEED[t], prevVwap: null,
-    or5H: null, or5L: null, or5Ready: false,
-    or15H: null, or15L: null, or15Ready: false,
-    hod: null, lod: null, sessionBars: 0,
-  };
-});
-
-function resetSession(t, lastClose) {
-  SS[t].prevClose = lastClose || SS[t].prevClose;
-  SS[t].or5H = null; SS[t].or5L = null; SS[t].or5Ready = false;
-  SS[t].or15H = null; SS[t].or15L = null; SS[t].or15Ready = false;
-  SS[t].hod = null; SS[t].lod = null; SS[t].sessionBars = 0;
-}
-
-function updateSessionState(t, bar) {
-  const ss = SS[t];
-  ss.sessionBars++;
-  if (!isLive && ss.sessionBars >= DEMO_SESSION_BARS) resetSession(t, bar.c);
-  // OR tracking
-  if (!ss.or5Ready) {
-    ss.or5H = ss.or5H === null ? bar.h : Math.max(ss.or5H, bar.h);
-    ss.or5L = ss.or5L === null ? bar.l : Math.min(ss.or5L, bar.l);
-    if (ss.sessionBars >= 5) ss.or5Ready = true;
-  }
-  if (!ss.or15Ready) {
-    ss.or15H = ss.or15H === null ? bar.h : Math.max(ss.or15H, bar.h);
-    ss.or15L = ss.or15L === null ? bar.l : Math.min(ss.or15L, bar.l);
-    if (ss.sessionBars >= 15) ss.or15Ready = true;
-  }
-  // HOD / LOD
-  ss.hod = ss.hod === null ? bar.h : Math.max(ss.hod, bar.h);
-  ss.lod = ss.lod === null ? bar.l : Math.min(ss.lod, bar.l);
-}
-
-// ── STRATEGY METADATA ──
-const STRAT_META = {
-  EMA_CROSS:    { label:'5×20 EMA Cross',  emoji:'📈', color:'#38bdf8' },
-  VWAP_RECLAIM: { label:'VWAP Reclaim',    emoji:'🔄', color:'#4ade80' },
-  ORB_5:        { label:'5-Min ORB',       emoji:'🚀', color:'#fb923c' },
-  ORB_15:       { label:'15-Min ORB',      emoji:'📊', color:'#f97316' },
-  GAP_GO:       { label:'Gap & Go',        emoji:'⚡', color:'#fbbf24' },
-  EMA_PULLBACK: { label:'EMA Pullback',    emoji:'🎯', color:'#34d399' },
-  HOD_BREAK:    { label:'HOD Break',       emoji:'💥', color:'#a78bfa' },
-};
-
-// ══ STATE ══
-// Polygon REST host — single source of truth for every data call.
-const REST_HOST = 'https://api.polygon.io';
-
-// Built-in key so the scanner goes live without manual entry. A key pasted into the
-// toolbar (or one already in localStorage) still takes precedence over this default.
-// Note: this ships in client-side JS on a public site and is therefore publicly readable.
-const DEFAULT_API_KEY = 'qBwiH2I6cgnDzR4xKbDs1p2oaPoTVrgE';
-
-let TF = 1, muted = false, apiKey = DEFAULT_API_KEY, isLive = false, totalAlerts = 0, audioCtx = null;
-
-let qbData = null;   // Quantbot's signals.json (see the bridge at the bottom)
-const S = {};
-TICKERS.forEach(t => {
-  S[t] = {
-    price: SEED[t], open: SEED[t], change: 0, changePct: 0, lastAlert: 0,
-    1: { bars:[], ema5:null, ema9:null, ema20:null, vwap:null },
-    5: { bars:[], ema5:null, ema9:null, ema20:null, vwap:null }
-  };
-});
-const DS = {};
-TICKERS.forEach(t => {
-  DS[t] = { price: SEED[t], trend: (Math.random()-0.48), vol: SEED[t]*0.009 };
-});
-
-// ══ MATH ══
-function ema(bars, n) {
-  if (bars.length < 2) return null;
-  const k = 2/(n+1); let e = bars[0].c;
-  for (let i=1; i<bars.length; i++) e = bars[i].c*k + e*(1-k);
-  return e;
-}
-function vwap(bars) {
-  if (!bars.length) return null;
-  let sv=0, vol=0;
-  bars.forEach(b => { sv += ((b.h+b.l+b.c)/3)*b.v; vol += b.v; });
-  return vol ? sv/vol : null;
-}
-function calcRVOL(t, tf) {
-  const bars = S[t][tf].bars;
-  if (bars.length < 5) return 1.0;
-  const last = bars[bars.length-1].v;
-  const avg  = bars.slice(-21,-1).reduce((s,b)=>s+b.v,0) / Math.min(20, bars.length-1);
-  return avg > 0 ? last/avg : 1.0;
-}
-function recalc(t, tf) {
-  const s = S[t][tf]; const bs = s.bars;
-  if (bs.length < 20) return;
-  s.ema5 = ema(bs,5); s.ema9 = ema(bs,9); s.ema20 = ema(bs,20); s.vwap = vwap(bs);
-}
-function fmt(n) { return n != null ? '$'+n.toFixed(2) : '–'; }
-
-// ══ SIGNAL CHECKS ══
-function chkEmaCross(t, tf, p5, p20) {
-  const s = S[t][tf];
-  if (!s.ema5||!s.ema20||!s.vwap) return null;
-  if (p5 < p20 && s.ema5 > s.ema20 && S[t].price > s.vwap)
-    return { strategy:'EMA_CROSS', direction:'LONG', e5:s.ema5, e20:s.ema20, vw:s.vwap };
-  return null;
-}
-
-function chkVwapReclaim(t, tf, bar) {
-  const s = S[t][tf]; const ss = SS[t];
-  if (!s.vwap||!ss.prevVwap||ss.sessionBars < 3) return null;
-  const bars = s.bars; if (bars.length < 2) return null;
-  const prevP = bars[bars.length-2].c, price = bar.c;
-  const rvol = calcRVOL(t,tf);
-  const slopeUp = s.vwap > ss.prevVwap;
-  if (prevP <= ss.prevVwap && price > s.vwap && rvol >= 2.0 && slopeUp)
-    return { strategy:'VWAP_RECLAIM', direction:'LONG', rvol:rvol.toFixed(1), vw:s.vwap };
-  return null;
-}
-
-function chkORB(t, tf, bar, type) {
-  const s = S[t][tf]; const ss = SS[t];
-  if (!s.vwap) return null;
-  const bars = s.bars; if (bars.length < 2) return null;
-  const prevP = bars[bars.length-2].c, price = bar.c;
-  const rvol = calcRVOL(t,tf);
-  if (type==='ORB_5' && ss.or5Ready && ss.or5H) {
-    if (prevP <= ss.or5H && price > ss.or5H && price > s.vwap && rvol >= 1.5)
-      return { strategy:'ORB_5', direction:'LONG', orHigh:ss.or5H, rvol:rvol.toFixed(1), vw:s.vwap };
-  }
-  if (type==='ORB_15' && ss.or15Ready && ss.or15H) {
-    if (prevP <= ss.or15H && price > ss.or15H && price > s.vwap && rvol >= 1.5)
-      return { strategy:'ORB_15', direction:'LONG', orHigh:ss.or15H, rvol:rvol.toFixed(1), vw:s.vwap };
-  }
-  return null;
-}
-
-function chkGapGo(t, tf, bar) {
-  const s = S[t][tf]; const ss = SS[t];
-  if (!s.vwap||!ss.or15Ready||!ss.or15H) return null;
-  const bars = s.bars; if (bars.length < 2) return null;
-  const prevP = bars[bars.length-2].c, price = bar.c;
-  const rvol = calcRVOL(t,tf);
-  const gapPct = ss.prevClose > 0 ? (S[t].open - ss.prevClose) / ss.prevClose : 0;
-  if (gapPct >= 0.02 && prevP <= ss.or15H && price > ss.or15H && price > s.vwap && rvol >= 2.0)
-    return { strategy:'GAP_GO', direction:'LONG', gap:(gapPct*100).toFixed(1), rvol:rvol.toFixed(1), vw:s.vwap };
-  return null;
-}
-
-function chkEmaPullback(t, tf, bar) {
-  const s = S[t][tf]; const ss = SS[t];
-  if (!s.ema9||!s.ema20||!s.vwap||ss.sessionBars < 6) return null;
-  const price = bar.c;
-  const bullTrend = s.ema9 > s.ema20;
-  const inZone = price >= s.ema20*0.997 && price <= s.ema9*1.003;
-  const bars = s.bars; if (bars.length < 8) return null;
-  const recentMax = Math.max(...bars.slice(-7,-1).map(b=>b.c));
-  const hadMomentum = recentMax > s.ema9 * 1.012;
-  if (bullTrend && inZone && price > s.vwap && hadMomentum && calcRVOL(t,tf) >= 1.2)
-    return { strategy:'EMA_PULLBACK', direction:'LONG', e9:s.ema9, e20:s.ema20, vw:s.vwap };
-  return null;
-}
-
-function chkHodBreak(t, tf, bar) {
-  const s = S[t][tf]; const ss = SS[t];
-  if (!s.vwap||!ss.hod||ss.sessionBars < 6) return null;
-  const bars = s.bars; if (bars.length < 2) return null;
-  const prevP = bars[bars.length-2].c, price = bar.c;
-  const rvol = calcRVOL(t,tf);
-  const prevHod = ss.hod;
-  if (prevP < prevHod*0.9997 && price > prevHod && price > s.vwap && rvol >= 1.5)
-    return { strategy:'HOD_BREAK', direction:'LONG', hod:prevHod, rvol:rvol.toFixed(1), vw:s.vwap };
-  return null;
-}
-
-function checkAllStrategies(t, tf, p5, p20, bar) {
-  const hits = [
-    chkEmaCross(t,tf,p5,p20),
-    chkVwapReclaim(t,tf,bar),
-    chkORB(t,tf,bar,'ORB_5'),
-    chkORB(t,tf,bar,'ORB_15'),
-    chkGapGo(t,tf,bar),
-    chkEmaPullback(t,tf,bar),
-    chkHodBreak(t,tf,bar),
-  ].filter(Boolean);
-  if (!hits.length) return null;
-  // Prefer brain's recommended strategy; otherwise first hit
-  const best = getBrainBest(t);
-  return hits.find(h=>h.strategy===best) || hits[0];
-}
-
-// ══ DEMO ══
-function demoBar(t) {
-  const d = DS[t];
-  d.trend = d.trend*0.97 + (Math.random()-0.5)*0.05;
-  const move = d.trend*d.vol + (Math.random()-0.5)*d.vol;
-  const o = d.price, c = Math.max(o+move, o*0.97);
-  const h = Math.max(o,c)+Math.random()*d.vol*0.4;
-  const l = Math.min(o,c)-Math.random()*d.vol*0.4;
-  d.price = c;
-  // Randomly spike volume ~8% of bars to simulate RVOL surges
-  const base = Math.floor(40000+Math.random()*180000);
-  const v = Math.random() < 0.08 ? Math.floor(base*(2.5+Math.random()*2)) : base;
-  return { o, h, l, c, v, t: Date.now() };
-}
-
-function initDemo() {
-  TICKERS.forEach(t => {
-    DS[t].price = SEED[t];
-    resetSession(t, SEED[t]);
-    [1,5].forEach(tf => {
-      S[t][tf].bars = [];
-      for (let i=0; i<35; i++) {
-        const bar = demoBar(t);
-        S[t][tf].bars.push(bar);
-        if (tf===1) updateSessionState(t, bar);
-      }
-      recalc(t, tf);
-    });
-    S[t].price = DS[t].price; S[t].open = SEED[t];
-    S[t].change = S[t].price - S[t].open;
-    S[t].changePct = S[t].change / S[t].open * 100;
-  });
-}
-
-function tickDemo() {
-  TICKERS.forEach(t => {
-    [1,5].forEach(tf => {
-      const s = S[t][tf];
-      const p5 = s.ema5, p20 = s.ema20, prevVwap = s.vwap;
-      const bar = demoBar(t);
-      s.bars.push(bar); if (s.bars.length > 80) s.bars.shift();
-      recalc(t, tf);
-      if (tf===1) { SS[t].prevVwap = prevVwap; updateSessionState(t, bar); }
-      if (p5 && p20) {
-        const sig = checkAllStrategies(t, tf, p5, p20, bar);
-        if (sig) dispatchAlert(t, tf, S[t].price, sig);
-      }
-    });
-    const last = S[t][1].bars.at(-1);
-    if (last) { S[t].price=last.c; S[t].change=last.c-S[t].open; S[t].changePct=S[t].change/S[t].open*100; }
-  });
-  renderAll(); updateStats();
-}
-
-// ══ ALERT ENGINE ══
-function dispatchAlert(t, tf, price, signal) {
-  const now = Date.now();
-  if (now - S[t].lastAlert < 90000) return; // 90s debounce per ticker
-  S[t].lastAlert = now;
-  totalAlerts++;
-  playSound();
-
-  const card = document.getElementById('c-'+t);
-  if (card) { card.classList.remove('signal'); void card.offsetWidth; card.classList.add('signal'); }
-
-  const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
-  const meta = STRAT_META[signal.strategy] || { label:signal.strategy, emoji:'🚀', color:'#38bdf8' };
-  const wr = getBrainWR(t, signal.strategy);
-
-  let detail = '';
-  if (signal.e5)    detail = `EMA5 ${fmt(signal.e5)} · EMA20 ${fmt(signal.e20)} · VWAP ${fmt(signal.vw)}`;
-  else if (signal.rvol && signal.orHigh) detail = `OR High ${fmt(signal.orHigh)} · RVOL ${signal.rvol}× · VWAP ${fmt(signal.vw)}`;
-  else if (signal.gap)   detail = `Gap +${signal.gap}% · RVOL ${signal.rvol}× · VWAP ${fmt(signal.vw)}`;
-  else if (signal.hod)   detail = `Prior HOD ${fmt(signal.hod)} · RVOL ${signal.rvol}× · VWAP ${fmt(signal.vw)}`;
-  else if (signal.rvol)  detail = `RVOL ${signal.rvol}× · VWAP ${fmt(signal.vw)}`;
-  else if (signal.e9)    detail = `EMA9 ${fmt(signal.e9)} · EMA20 ${fmt(signal.e20)} · VWAP ${fmt(signal.vw)}`;
-
-  const brainTag = brainState
-    ? `Brain · ${new Date(brainState.generated_at).toLocaleDateString()}`
-    : '1-yr OOS backtest';
-
-  const wrHtml = wr ? `
-    <div class="ai-wr">
-      <div class="ai-wr-badge call" style="background:${meta.color}18;border-color:${meta.color}50;color:${meta.color}">
-        ${meta.emoji} OOS WR ${wr}
-      </div>
-      <div class="ai-wr-badge put">📐 2:1 R:R · 60-min exit</div>
-    </div>
-    <div style="font-size:9px;color:#4b5563;margin-top:-4px;margin-bottom:6px;text-align:center">${brainTag}</div>` : '';
-
-  const el = document.createElement('div');
-  el.className = 'alert-item';
-  el.innerHTML = `
-    <div class="ai-top"><span class="ai-sym">${t} <span class="ai-src local">Local</span></span><span class="ai-time">${time}</span></div>
-    <div class="ai-sig" style="color:${meta.color}">${meta.emoji} ${meta.label} · ${tf}min · ${signal.direction}</div>
-    ${wrHtml}
-    <div style="font-size:10px;color:#6b7280;padding:2px 4px 6px">${detail}</div>
-    <button class="ai-plan" onclick="openPlanner('${t}',${price.toFixed(2)})">📋 Plan This Trade →</button>`;
-
-  const feed = document.getElementById('alertFeed');
-  const noMsg = feed.querySelector('.no-alerts-msg');
-  if (noMsg) noMsg.remove();
-  feed.insertBefore(el, feed.firstChild);
-  if (typeof applyAlertSource === 'function') applyAlertSource();
-  document.getElementById('alertCnt').textContent = totalAlerts;
-  document.getElementById('alertCnt').className = 'alert-cnt hot';
-  document.getElementById('statAlerts').textContent = totalAlerts;
-}
-
-function openPlanner(t, price) {
-  window.open(`planner.html?ticker=${t}&price=${price}`, '_blank');
-}
-
-function clearAlerts() {
-  const feed = document.getElementById('alertFeed');
-  feed.innerHTML = '<div class="no-alerts-msg">Watching 11 tickers · 7 strategies<br>EMA Cross · VWAP Reclaim · ORB<br>Gap & Go · Pullback · HOD Break<br><br>Brain selects best strategy per ticker<br>using walk-forward OOS validation.</div>';
-  const msg = feed.querySelector('.no-alerts-msg');
-  if (msg && brainState) renderNoAlertsMsg(msg);
-  totalAlerts = 0;
-  document.getElementById('alertCnt').textContent = '0';
-  document.getElementById('alertCnt').className = 'alert-cnt';
-  document.getElementById('statAlerts').textContent = '0';
-}
-
-// ══ SOUND ══
-function playSound() {
-  if (muted) return;
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    [[880,0],[660,0.13]].forEach(([freq,del]) => {
-      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-      o.connect(g); g.connect(audioCtx.destination);
-      o.type = 'sine'; o.frequency.value = freq;
-      const t = audioCtx.currentTime+del;
-      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.22,t+0.02);
-      g.gain.exponentialRampToValueAtTime(0.001,t+0.28);
-      o.start(t); o.stop(t+0.28);
-    });
-  } catch(e){}
-}
-function toggleMute() {
-  muted = !muted;
-  document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔔';
-  document.getElementById('muteBtn').classList.toggle('muted', muted);
-}
-
-// ══ RENDER ══
-function buildCards() {
-  const g = document.getElementById('tickerGrid'); g.innerHTML = '';
-  TICKERS.forEach(t => {
-    const wr = HIST_WR[t];
-    // If brain loaded, show brain strategy; else show fallback C/P rates
-    const bdata = brainState?.tickers?.[t];
-    const c1 = bdata ? `🧠 ${(bdata.best_strategy||'').replace(/_/g,' ')}` : `C ${wr?.call||'–'}%`;
-    const c2 = bdata ? `WR ${(bdata.oos_win_rate*100).toFixed(1)}%` : `P ${wr?.put||'–'}%`;
-    const d = document.createElement('div');
-    d.id = 'c-'+t; d.className = 't-card';
-    d.innerHTML = `
-      <div class="tc-row1"><span class="tc-sym">${t}</span><span class="chip chip-muted" id="badge-${t}">–</span></div>
-      <div class="tc-price" id="price-${t}">$${SEED[t].toFixed(2)}</div>
-      <div class="tc-chg flat" id="chg-${t}">+0.00%</div>
-      <div class="tc-inds">
-        <div class="tc-ind"><div class="tc-ind-lbl">EMA 5</div><div class="tc-ind-val muted" id="ema5-${t}">–</div></div>
-        <div class="tc-ind"><div class="tc-ind-lbl">EMA 20</div><div class="tc-ind-val blue" id="ema20-${t}">–</div></div>
-        <div class="tc-ind"><div class="tc-ind-lbl">VWAP</div><div class="tc-ind-val muted" id="vwap-${t}">–</div></div>
-        <div class="tc-ind"><div class="tc-ind-lbl">EMA Δ</div><div class="tc-ind-val muted" id="spread-${t}">–</div></div>
-      </div>
-      <div class="tc-vwap-pill" id="pill-${t}">Loading…</div>
-      <div class="tc-wr-row">
-        <div class="tc-wr-badge call" id="wr-call-${t}">${c1}</div>
-        <div class="tc-wr-badge put"  id="wr-put-${t}">${c2}</div>
-      </div>`;
-    g.appendChild(d);
-  });
-}
-
-function renderAll() { TICKERS.forEach(t => renderCard(t)); if (qbData) stampCards(); }
-
-function renderCard(t) {
-  const card = document.getElementById('c-'+t); if (!card) return;
-  const s = S[t][TF]; const price = S[t].price; const chg = S[t].changePct;
-  const e5 = s.ema5, e20 = s.ema20, vw = s.vwap;
-  const bullEMA = e5 && e20 && e5 > e20;
-  const aboveVWAP = vw && price > vw;
-  const near = e5 && e20 && Math.abs(e5-e20)/e20 < 0.0018;
-
-  // Badge
-  let badgeText='Watching', badgeClass='chip-muted';
-  if (card.classList.contains('signal')) { badgeText='🚨 SIGNAL'; badgeClass='chip-alert'; }
-  else if (bullEMA && aboveVWAP) { badgeText='▲ Bull Setup'; badgeClass='chip-bull'; card.classList.remove('bear'); card.classList.add('bull'); }
-  else if (!bullEMA && near)     { badgeText='⏳ Near Cross'; badgeClass='chip-neutral'; card.classList.remove('bull','bear'); }
-  else if (!bullEMA)             { badgeText='▼ Bear'; badgeClass='chip-bear'; card.classList.remove('bull'); card.classList.add('bear'); }
-  else                           { card.classList.remove('bull','bear'); }
-
-  const b = document.getElementById('badge-'+t);
-  b.textContent = badgeText; b.className = 'chip '+badgeClass;
-  document.getElementById('price-'+t).textContent = '$'+price.toFixed(2);
-  const ce = document.getElementById('chg-'+t);
-  ce.textContent = (chg>=0?'+':'')+chg.toFixed(2)+'%  ('+(S[t].change>=0?'+':'')+S[t].change.toFixed(2)+')';
-  ce.className = 'tc-chg '+(chg>0?'up':chg<0?'down':'flat');
-
-  const ema5El = document.getElementById('ema5-'+t);
-  ema5El.textContent = e5 ? '$'+e5.toFixed(2) : '–';
-  ema5El.className = 'tc-ind-val '+(bullEMA?'green':'red');
-  document.getElementById('ema20-'+t).textContent = e20 ? '$'+e20.toFixed(2) : '–';
-  const vwEl = document.getElementById('vwap-'+t);
-  vwEl.textContent = vw ? '$'+vw.toFixed(2) : '–';
-  vwEl.className = 'tc-ind-val '+(aboveVWAP?'green':'red');
-
-  const spreadEl = document.getElementById('spread-'+t);
-  if (e5 && e20) {
-    const d = (e5-e20)/e20*100;
-    spreadEl.textContent = (d>=0?'+':'')+d.toFixed(3)+'%';
-    spreadEl.className = 'tc-ind-val '+(d>0?'green':'red');
-  }
-
-  const pill = document.getElementById('pill-'+t);
-  if (vw) {
-    pill.textContent = aboveVWAP ? '▲ Above VWAP' : '▼ Below VWAP';
-    pill.className = 'tc-vwap-pill '+(aboveVWAP?'above':'below');
+    const r = await fetch(SRC + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    DATA = await r.json();
+    $('#err').innerHTML = '';
+    render();
+  } catch (e) {
+    $('#err').innerHTML = '<div class="err">Could not load signals.json (' +
+      esc(e.message) + '). The scanner publishes it while the market is open; ' +
+      'this page shows the last snapshot it pushed.</div>';
   }
 }
 
-function updateStats() {
-  let bulls=0, near=0;
-  TICKERS.forEach(t => {
-    const s=S[t][TF]; const bullEMA=s.ema5&&s.ema20&&s.ema5>s.ema20; const aboveVWAP=s.vwap&&S[t].price>s.vwap;
-    if (bullEMA && aboveVWAP) bulls++;
-    else if (s.ema5&&s.ema20&&Math.abs(s.ema5-s.ema20)/s.ema20<0.0018) near++;
-  });
-  document.getElementById('statBull').textContent = bulls;
-  document.getElementById('statNear').textContent = near;
-  document.getElementById('statTime').textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+/* ───────────────────────────── regime panel ─────────────────────────── */
+function renderRegime() {
+  const d = DATA, g = d.regime || {}, tod = d.time_of_day || {};
+  const trend = { vix_rising: '▲ rising', vix_falling: '▼ falling',
+                  vix_flat: '▬ flat' }[g.vix_trend] || '—';
+  const trendCls = g.vix_trend === 'vix_rising' ? 'bad'
+    : g.vix_trend === 'vix_falling' ? 'good' : '';
+  const cells = [
+    ['VIX', num(g.vix ?? (d.vix || {}).value, 2),
+      esc((g.vix_source || (d.vix || {}).source || ''))],
+    ['VIX trend', '<span class="' + trendCls + '">' + trend + '</span>',
+      'intraday, from the VIX proxy'],
+    ['Regime', '<span class="pill ' + esc(g.label || 'UNKNOWN') + '">' +
+      esc(g.label || 'UNKNOWN') + '</span>', esc(g.detail || '')],
+    ['Time of day', esc(tod.label || '—'),
+      tod.minutes_left ? tod.minutes_left + ' min left in window' :
+      (d.market || {}).status || ''],
+  ];
+  $('#regime').innerHTML = cells.map(([k, v, s]) =>
+    '<div class="rcell"><div class="rlab">' + k + '</div>' +
+    '<div class="rval">' + v + '</div><div class="rsub">' + s + '</div></div>'
+  ).join('');
 }
 
-// ══ TIMEFRAME ══
-function switchTF(tf) {
-  TF = tf;
-  document.getElementById('tab1').classList.toggle('active', tf===1);
-  document.getElementById('tab5').classList.toggle('active', tf===5);
-  renderAll();
+/* ───────────────────────────── sparkline ───────────────────────────── */
+function sparkline(bars, w, h) {
+  if (!bars || bars.length < 2) return '';
+  const cs = bars.map(b => b.c).filter(v => v != null);
+  if (cs.length < 2) return '';
+  const lo = Math.min(...cs), hi = Math.max(...cs), span = (hi - lo) || 1;
+  const step = w / (cs.length - 1);
+  const pts = cs.map((c, i) =>
+    [i * step, h - ((c - lo) / span) * (h - 6) - 3]);
+  const up = cs[cs.length - 1] >= cs[0];
+  const col = up ? 'var(--call)' : 'var(--put)';
+  const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' +
+    p[1].toFixed(1)).join(' ');
+  const area = line + ` L${w} ${h} L0 ${h} Z`;
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h +
+    '" preserveAspectRatio="none" role="img" aria-label="price, last ' +
+    cs.length + ' minutes">' +
+    '<path d="' + area + '" fill="' + col + '" opacity=".10"/>' +
+    '<path d="' + line + '" fill="none" stroke="' + col +
+    '" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 }
 
-// ══ STATUS / ERROR REPORTING ══
-// weak:true = informational; never paints over a more serious error already on screen.
-function showError(msg, detail, opts) {
-  const strip = document.getElementById('errStrip');
-  if (!strip) return;
-  const weak = opts && opts.weak;
-  if (weak && strip.classList.contains('show')) { console.warn('[scanner] ' + msg + (detail ? ' — ' + detail : '')); return; }
-  document.getElementById('errMsg').textContent = msg;
-  document.getElementById('errDetail').textContent = detail ? '— ' + detail : '';
-  strip.classList.add('show');
-  if (!weak) document.getElementById('sDot').style.background = '#f87171';
-  console.error('[scanner] ' + msg + (detail ? ' — ' + detail : ''));
+/* ───────────────────────── active signal cards ──────────────────────── */
+function countdownHTML(iso) {
+  if (!iso) return '<span class="countdown">—</span>';
+  const mins = Math.max(0, Math.floor((new Date(iso) - Date.now()) / 60000));
+  const cls = mins === 0 ? 'dead' : mins < 5 ? 'urgent' : '';
+  const t = new Date(iso).toLocaleTimeString('en-US',
+    { hour: 'numeric', minute: '2-digit' });
+  const txt = mins === 0 ? 'CLOSED' : mins + ' min left';
+  return '<span class="countdown ' + cls + '" data-close="' + esc(iso) + '">' +
+    txt + '</span> <span style="color:var(--text-muted);font-size:11px">(' +
+    esc(t) + ')</span>';
 }
 
-function clearError() {
-  const strip = document.getElementById('errStrip');
-  if (strip) strip.classList.remove('show');
+function signalCard(s) {
+  const side = String(s.side || 'CALL').toUpperCase();
+  const isCall = side === 'CALL';
+  const z = s.sizing || {};
+  const c = s.context || {};
+  const bars = (DATA.bars || {})[s.ticker] || [];
+  const card = el('div', 'card ' + (isCall ? 'call' : 'put'));
+  card.innerHTML =
+    '<div class="chead"><span class="cside">' + (isCall ? '🟢 CALL' : '🔴 PUT') +
+      '</span><span class="ctick">' + esc(s.ticker) + '</span>' +
+      '<span class="cstrike">' + (s.strike != null ? money(s.strike, 0) : '') +
+      (s.delta != null ? ' · Δ' + num(Math.abs(s.delta)) : '') + '</span></div>' +
+    '<div class="rows">' +
+      row('Entry', money(z.entry_low) + '–' + money(z.entry_high)) +
+      row('Stale above', money(z.stale_above), 'warn') +
+      row('Stop', money(z.stop) + ' → risk ' + money(z.risk_dollars), 'bad') +
+      row('Target', money(z.target) + ' → gain ' + money(z.gain_dollars), 'good') +
+      row('Contracts', (z.contracts ?? '—') + ' @ ' + money(z.entry_mid)) +
+      row('Window', countdownHTML(s.window_close)) +
+    '</div>' +
+    (s.exit_if ? '<div class="exitif"><b>Exit if:</b> ' + esc(s.exit_if) +
+      '</div>' : '') +
+    (bars.length > 1 ? '<div class="spark">' + sparkline(bars, 300, 44) +
+      '</div>' : '') +
+    '<div class="cfoot"><button class="btn primary" data-log="' +
+      esc(s.signal_id) + '">Log trade</button>' +
+      '<button class="btn" data-chart="' + esc(s.ticker) + '">Chart</button></div>';
+  return card;
+}
+function row(k, v, cls) {
+  return '<div class="row"><span class="k">' + k + '</span><span class="v ' +
+    (cls || '') + '">' + v + '</span></div>';
 }
 
-// Turn a Polygon REST failure into something a human can act on.
-function describeApiError(resp, body) {
-  if (body && body.error) return String(body.error);
-  if (body && body.message) return String(body.message);
-  if (resp && resp.status === 401) return 'HTTP 401 — key not recognized';
-  if (resp && resp.status === 403) return 'HTTP 403 — plan does not include this endpoint';
-  if (resp && resp.status === 429) return 'HTTP 429 — rate limit exceeded';
-  if (resp && !resp.ok) return 'HTTP ' + resp.status + ' ' + (resp.statusText || '');
-  if (body && body.status) return 'status: ' + body.status;
-  return 'unknown error';
-}
-
-// Single chokepoint for leaving demo mode.
-function goLive(sourceLabel) {
-  if (isLive) return;
-  isLive = true;
-  document.getElementById('sLabel').textContent = 'LIVE';
-  document.getElementById('sDot').style.background = '#4ade80';
-  document.getElementById('demoStrip').classList.add('live');
-  clearError();
-  console.log('[scanner] live via ' + sourceLabel);
-}
-
-// ══ LIVE DATA ══
-async function connectLive() {
-  const field = document.getElementById('apiKey');
-  const typed = field ? field.value.trim() : '';
-  // A pasted key wins; otherwise fall back to a saved key, then the built-in default.
-  const key = (typed && typed.charCodeAt(0) !== 8226 ? typed : '') || localStorage.getItem('polygonKey') || DEFAULT_API_KEY;
-  if (!key) { showError('No API key available', 'paste a Polygon key in the toolbar'); return; }
-  apiKey = key;
-  document.getElementById('sLabel').textContent = 'Connecting...';
-  document.getElementById('sDot').style.background = '#fbbf24';
-  clearError();
-
-  // 1. Validate the key against a cheap, known-good request.
-  try {
-    const r = await fetch(`${REST_HOST}/v2/aggs/ticker/SPY/range/1/minute/2024-01-02/2024-01-02?limit=1&apiKey=${apiKey}`);
-    const d = await r.json().catch(() => null);
-    if (!r.ok || !d || d.status === 'ERROR' || d.status === 'FORBIDDEN' || d.status === 'NOT_AUTHORIZED') {
-      const reason = describeApiError(r, d);
-      showError(r.status === 401 || r.status === 403 ? 'API key rejected' : 'Validation request failed', reason);
-      localStorage.removeItem('polygonKey'); // don't let a bad key poison the next load
-      return;
-    }
-    // Only persist a user-supplied key once it has actually been accepted.
-    if (key !== DEFAULT_API_KEY) localStorage.setItem('polygonKey', key);
-  } catch(e) {
-    showError('Connection failed', (e && e.message) ? e.message : String(e));
+function renderSignals() {
+  const box = $('#signals');
+  const sigs = DATA.active_signals || [];
+  $('#nsig').textContent = sigs.length;
+  box.innerHTML = '';
+  if (!sigs.length) {
+    box.appendChild(el('div', 'empty',
+      'No signal cards fired today.<br>The Telegram bot writes them here when ' +
+      'it sends one — ask it for a setup, or wait for the scanner to trigger.'));
     return;
   }
+  const grid = el('div', 'cards');
+  sigs.forEach(s => grid.appendChild(signalCard(s)));
+  box.appendChild(grid);
+  if (!CHART_SYM) CHART_SYM = sigs[0].ticker;
+}
 
-  // 2. Key is good — pull real bars, and only promote to LIVE if data actually arrives.
-  if (field) field.value = '•'.repeat(20);
-  const loaded = await fetchAll();
-  if (loaded > 0) {
-    goLive(`REST — ${loaded}/${TICKERS.length} tickers loaded`);
-    if (loaded < TICKERS.length) {
-      showError('Partial data', `${TICKERS.length - loaded} of ${TICKERS.length} tickers returned no bars` + (lastFetchError ? ` (${lastFetchError})` : ''), { weak: true });
-    }
-  } else {
-    showError('No market data returned', lastFetchError || 'every aggregates request came back empty — market may be closed');
+/* ─────────────────────── candlestick chart (inline SVG) ─────────────── */
+function ema(vals, n) {
+  const k = 2 / (n + 1); let e = null;
+  return vals.map(v => { e = (e === null) ? v : v * k + e * (1 - k); return e; });
+}
+function vwapSeries(bars) {
+  let pv = 0, vv = 0;
+  return bars.map(b => {
+    const tp = (b.h != null && b.l != null) ? (b.h + b.l + b.c) / 3 : b.c;
+    pv += tp * (b.v || 0); vv += (b.v || 0);
+    return vv ? pv / vv : b.c;
+  });
+}
+
+function renderChart() {
+  const wrap = $('#chartwrap');
+  const sym = CHART_SYM;
+  const bars = sym ? ((DATA.bars || {})[sym] || []) : [];
+  if (!sym || bars.length < 3) {
+    wrap.innerHTML = '<div class="empty">No intraday bars in the last snapshot.' +
+      '<br>The scanner publishes a 30-bar tail per symbol while it is running.</div>';
+    return;
   }
-  setInterval(fetchAll, 20000);
-}
+  const sig = (DATA.active_signals || []).find(s => s.ticker === sym) || null;
+  const tk = (DATA.tickers || {})[sym] || {};
 
-let lastFetchError = null;
+  const W = Math.max(620, bars.length * 16), H = 300;
+  const PL = 54, PR = 16, PT = 12, PB = 26;
+  const iw = W - PL - PR, ih = H - PT - PB;
 
-// Returns the number of tickers that came back with usable bars.
-async function fetchAll() {
-  const today = new Date(); const y=today.getFullYear(), m=String(today.getMonth()+1).padStart(2,'0'), d=String(today.getDate()).padStart(2,'0');
-  const date = `${y}-${m}-${d}`;
-  const results = await Promise.all(TICKERS.map(t => fetchTicker(t, date)));
-  renderAll(); updateStats();
-  const ok = results.filter(Boolean).length;
-  // On a refresh cycle (already live), surface a total outage rather than freezing silently.
-  if (isLive && ok === 0) {
-    showError('Data refresh failed', lastFetchError || 'no tickers returned bars — prices may be stale');
-  } else if (isLive && ok > 0) {
-    clearError();
+  const closes = bars.map(b => b.c);
+  const e5 = ema(closes, 5), e20 = ema(closes, 20), vw = vwapSeries(bars);
+  let lo = Math.min(...bars.map(b => b.l ?? b.c)),
+      hi = Math.max(...bars.map(b => b.h ?? b.c));
+  const levels = [];
+  if (sig) {
+    const spot = (sig.context || {}).spot, vwapLvl = (sig.context || {}).vwap;
+    if (sig.strike != null) levels.push(['strike', sig.strike, 'var(--accent)', '4 3']);
+    if (vwapLvl != null) levels.push(['exit / VWAP', vwapLvl, 'var(--put)', '6 4']);
+    if (spot != null) levels.push(['entry zone', spot, 'var(--call)', null]);
   }
-  return ok;
-}
+  levels.forEach(l => { lo = Math.min(lo, l[1]); hi = Math.max(hi, l[1]); });
+  const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+  const Y = v => PT + ih - ((v - lo) / (hi - lo)) * ih;
+  const X = i => PL + (i + 0.5) * (iw / bars.length);
+  const cw = Math.max(2.5, (iw / bars.length) * 0.58);
 
-async function fetchTicker(t, date) {
-  const [one, five] = await Promise.all([fetchBars(t,1,date), fetchBars(t,5,date)]);
-  return one || five;
-}
-
-async function fetchBars(t, tf, date) {
-  try {
-    const r = await fetch(`${REST_HOST}/v2/aggs/ticker/${t}/range/${tf}/minute/${date}/${date}?adjusted=true&sort=asc&limit=300&apiKey=${apiKey}`);
-    const d = await r.json().catch(() => null);
-    if (!r.ok || !d || d.status === 'ERROR' || d.status === 'NOT_AUTHORIZED') {
-      lastFetchError = `${t}: ${describeApiError(r, d)}`;
-      return false;
-    }
-    if (!d.results?.length) { lastFetchError = `${t}: no bars for ${date}`; return false; }
-    const p5=S[t][tf].ema5, p20=S[t][tf].ema20, prevVwap=S[t][tf].vwap;
-    const bars = d.results.map(b=>({o:b.o,h:b.h,l:b.l,c:b.c,v:b.v,t:b.t}));
-    S[t][tf].bars = bars;
-    recalc(t, tf);
-    if (tf===1) {
-      // Rebuild session state from bars
-      resetSession(t, S[t].open);
-      bars.forEach(bar => updateSessionState(t, bar));
-      SS[t].prevVwap = prevVwap;
-      const last=bars.at(-1);
-      S[t].price=last.c; S[t].change=last.c-bars[0].o; S[t].changePct=S[t].change/bars[0].o*100;
-    }
-    if (p5&&p20) {
-      const lastBar = bars.at(-1);
-      const sig = checkAllStrategies(t, tf, p5, p20, lastBar);
-      if (sig) dispatchAlert(t, tf, S[t].price, sig);
-    }
-    return true;
-  } catch(e) {
-    lastFetchError = `${t}: ${(e && e.message) ? e.message : String(e)}`;
-    return false;
+  let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W +
+    '" height="' + H + '" role="img" aria-label="' + esc(sym) +
+    ' one-minute candles">';
+  // gridlines
+  for (let i = 0; i <= 4; i++) {
+    const v = lo + (hi - lo) * i / 4, y = Y(v);
+    svg += '<line x1="' + PL + '" y1="' + y.toFixed(1) + '" x2="' + (W - PR) +
+      '" y2="' + y.toFixed(1) + '" stroke="#1a2540" stroke-width="1"/>' +
+      '<text x="' + (PL - 6) + '" y="' + (y + 3.5).toFixed(1) +
+      '" fill="#475569" font-size="10" text-anchor="end">' + v.toFixed(2) +
+      '</text>';
   }
-}
-
-// Auto-connect on load — a saved key wins, otherwise the built-in default is used.
-window.addEventListener('DOMContentLoaded', () => {
-  loadBrainState(); // load brain state (non-blocking)
-  const saved = localStorage.getItem('polygonKey');
-  const field = document.getElementById('apiKey');
-  if (field) field.value = '•'.repeat(20);
-  if (saved && saved.charCodeAt(0) === 8226) localStorage.removeItem('polygonKey');
-  connectLive();
-});
-
-// ══ CLOCK ══
-function updateMarket() {
-  const now = new Date();
-  const dst = now.getTimezoneOffset() < new Date(now.getFullYear(),0,1).getTimezoneOffset();
-  const et = new Date(now.getTime()+(now.getTimezoneOffset()+(dst?-4:-5)*60)*60000);
-  const h=et.getHours(), m=et.getMinutes();
-  const b=document.getElementById('mktBadge');
-  const open=(h>9||(h===9&&m>=30))&&h<16; const pre=h>=4&&(h<9||(h===9&&m<30)); const aft=h>=16&&h<20;
-  if (open)     {b.textContent='● Market Open';b.className='market-badge open';}
-  else if (pre) {b.textContent='● Pre-Market';b.className='market-badge pre';}
-  else if (aft) {b.textContent='● After Hours';b.className='market-badge after';}
-  else          {b.textContent='● Market Closed';b.className='market-badge closed';}
-}
-updateMarket(); setInterval(updateMarket,30000);
-
-// ══ INIT ══
-buildCards(); initDemo(); renderAll(); updateStats();
-setInterval(() => { if (!isLive) tickDemo(); }, 3000);
-
-// ══════════════════════════════════════════════════════════════════════
-// QUANTBOT BRIDGE
-// The always-on scanner (python -m quantbot.scanner) owns the rules and
-// publishes signals.json after every scan. This dashboard renders that
-// file — it does not re-derive signals. The local Polygon engine below
-// still runs, but its alerts are tagged LOCAL so the two never get
-// confused for each other.
-// ══════════════════════════════════════════════════════════════════════
-const QB_REPO   = 'suryaobb/trading-suite';
-const QB_BRANCH = 'main';
-const QB_RAW    = `https://raw.githubusercontent.com/${QB_REPO}/${QB_BRANCH}/signals.json`;
-const QB_POLL_MS = 30000;   // owner spec: refresh every 30 seconds
-const QB_STALE_S = 180;     // 3 min without a scan during RTH = suspicious
-const QB_DEAD_S  = 900;     // 15 min = the scanner is probably down
-
-let qbLastOk = null;        // Date of the last successful fetch
-let qbSeenAlerts = new Set();
-let qbFirstRender = true;
-
-function qbNum(v, digits = 2, prefix = '$') {
-  return (v === null || v === undefined) ? '–' : prefix + Number(v).toFixed(digits);
-}
-
-// Two sources carry the same file and either one can lag:
-//   * raw.githubusercontent.com is CDN-cached for ~5 min and — measured,
-//     2026-09-17 — ignores a cache-busting query string, so it can sit
-//     minutes behind a push.
-//   * GitHub Pages serves the same signals.json from this page's own origin
-//     and generally rebuilds faster.
-// So fetch both and keep whichever reports the newer generated_at. A stale
-// source can never pull the dashboard backwards.
-async function fetchOne(url) {
-  try {
-    const r = await fetch(url + '?_=' + Date.now(), { cache: 'no-store' });
-    if (!r.ok) return null;
-    const d = await r.json();
-    return (d && d.source === 'quantbot' && d.generated_at) ? d : null;
-  } catch (e) { return null; }
-}
-
-async function fetchSignals() {
-  const candidates = (await Promise.all([fetchOne('signals.json'), fetchOne(QB_RAW)]))
-    .filter(Boolean);
-  if (candidates.length) {
-    candidates.sort((a, b) => new Date(b.generated_at) - new Date(a.generated_at));
-    const best = candidates[0];
-    if (!qbData || new Date(best.generated_at) >= new Date(qbData.generated_at)) {
-      qbData = best;
-      qbLastOk = new Date();
-    }
+  // entry zone band (underlying price when the signal fired, ±0.05%)
+  const ez = levels.find(l => l[0] === 'entry zone');
+  if (ez) {
+    const y1 = Y(ez[1] * 1.0005), y2 = Y(ez[1] * 0.9995);
+    svg += '<rect x="' + PL + '" y="' + y1.toFixed(1) + '" width="' + iw +
+      '" height="' + Math.max(3, (y2 - y1)).toFixed(1) +
+      '" fill="var(--call)" opacity=".14"/>';
   }
-  renderQuantbot();   // repaint either way so the freshness pill keeps decaying
-  return candidates.length > 0;
+  // candles
+  bars.forEach((b, i) => {
+    const x = X(i), up = (b.c >= (b.o ?? b.c));
+    const col = up ? 'var(--call)' : 'var(--put)';
+    svg += '<line x1="' + x.toFixed(1) + '" y1="' + Y(b.h ?? b.c).toFixed(1) +
+      '" x2="' + x.toFixed(1) + '" y2="' + Y(b.l ?? b.c).toFixed(1) +
+      '" stroke="' + col + '" stroke-width="1"/>';
+    const yo = Y(b.o ?? b.c), yc = Y(b.c);
+    svg += '<rect x="' + (x - cw / 2).toFixed(1) + '" y="' +
+      Math.min(yo, yc).toFixed(1) + '" width="' + cw.toFixed(1) +
+      '" height="' + Math.max(1.2, Math.abs(yc - yo)).toFixed(1) +
+      '" fill="' + col + '" opacity="' + (up ? '.85' : '.85') + '"/>';
+  });
+  // overlays
+  const path = arr => arr.map((v, i) =>
+    (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' ');
+  svg += '<path d="' + path(vw) + '" fill="none" stroke="#818cf8" stroke-width="1.6"/>';
+  svg += '<path d="' + path(e5) + '" fill="none" stroke="#38bdf8" stroke-width="1.3"/>';
+  svg += '<path d="' + path(e20) + '" fill="none" stroke="#fbbf24" stroke-width="1.3"/>';
+  levels.filter(l => l[3]).forEach(l => {
+    const y = Y(l[1]).toFixed(1);
+    svg += '<line x1="' + PL + '" y1="' + y + '" x2="' + (W - PR) + '" y2="' + y +
+      '" stroke="' + l[2] + '" stroke-width="1.3" stroke-dasharray="' + l[3] + '"/>' +
+      '<text x="' + (W - PR - 4) + '" y="' + (Number(y) - 4) + '" fill="' + l[2] +
+      '" font-size="10" text-anchor="end">' + esc(l[0]) + ' ' +
+      l[1].toFixed(2) + '</text>';
+  });
+  // x labels
+  bars.forEach((b, i) => {
+    if (i % Math.ceil(bars.length / 7) === 0)
+      svg += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 8) +
+        '" fill="#475569" font-size="10" text-anchor="middle">' + esc(b.t) +
+        '</text>';
+  });
+  svg += '</svg>';
+
+  const opts = Object.keys(DATA.bars || {}).map(s =>
+    '<button class="btn" data-chart="' + esc(s) + '" style="flex:0 0 auto;padding:4px 9px' +
+    (s === sym ? ';border-color:var(--accent);color:var(--accent)' : '') + '">' +
+    esc(s) + '</button>').join('');
+
+  wrap.innerHTML = '<div class="chartbox">' +
+    '<div class="chead2"><span class="t">' + esc(sym) + ' · 1 min</span>' +
+    '<span class="legend">' +
+      '<span><i style="border-color:#818cf8"></i>VWAP</span>' +
+      '<span><i style="border-color:#38bdf8"></i>EMA 5</span>' +
+      '<span><i style="border-color:#fbbf24"></i>EMA 20</span>' +
+      '<span><i style="border-color:var(--put);border-top-style:dashed"></i>exit level</span>' +
+      '<span><i style="border-color:var(--call)"></i>entry zone</span>' +
+    '</span></div>' +
+    '<div class="chart-scroll">' + svg + '</div>' +
+    '<div class="cfoot" style="background:none;border:0;padding:8px 0 0;flex-wrap:wrap">' +
+      opts + '</div>' +
+    '<p class="note">VWAP and EMAs are computed over the published bar tail (' +
+      bars.length + ' bars). The engine’s own session values right now: VWAP ' +
+      num(tk.vwap) + ' · EMA5 ' + num(tk.ema5) + ' · EMA20 ' + num(tk.ema20) +
+      '. Stop and target in dollars are option premiums and live on the signal ' +
+      'card; the dashed level here is the underlying price that invalidates the ' +
+      'trade.</p></div>';
 }
 
-function qbAgeSeconds() {
-  if (!qbData || !qbData.generated_at) return null;
-  return Math.max(0, (Date.now() - new Date(qbData.generated_at).getTime()) / 1000);
-}
-
-function qbAgeLabel(sec) {
-  if (sec === null) return 'no data';
-  if (sec < 60)   return Math.round(sec) + 's ago';
-  if (sec < 3600) return Math.round(sec / 60) + 'm ago';
-  if (sec < 86400) return Math.round(sec / 3600) + 'h ago';
-  return Math.round(sec / 86400) + 'd ago';
-}
-
-function renderQuantbot() {
-  const freshEl = document.getElementById('qbFresh');
-  if (!freshEl) return;
-  const age = qbAgeSeconds();
-
-  // ── freshness: the single most important thing on this panel ──
-  const open = qbData && qbData.market && qbData.market.is_open;
-  let cls = 'fresh';
-  if (age === null) cls = 'dead';
-  else if (age > QB_DEAD_S && open) cls = 'dead';
-  else if (age > QB_STALE_S && open) cls = 'stale';
-  else if (!open && age > 3600) cls = 'stale';   // closed: staleness is expected
-  freshEl.className = 'qb-pill ' + cls;
-  freshEl.textContent = age === null
-    ? 'no data yet'
-    : 'updated ' + qbAgeLabel(age) + (cls === 'dead' ? ' · scanner down?' : '');
-  freshEl.title = qbData ? 'Last scan: ' + qbData.generated_at : 'signals.json not reachable';
-
-  if (!qbData) return;
-
-  document.getElementById('qbStrategy').textContent = qbData.strategy || '';
-  const mk = document.getElementById('qbMarket');
-  const status = (qbData.market && qbData.market.status) || '–';
-  mk.textContent = '● ' + status.toUpperCase();
-  mk.className = 'qb-pill' + (open ? ' open' : '');
-  const vix = qbData.vix && qbData.vix.value;
-  document.getElementById('qbVix').textContent = 'VIX ' + (vix == null ? '–' : vix.toFixed(1));
-  const c = qbData.counts || {};
-  document.getElementById('qbCounts').textContent =
-    `${c.armed || 0} armed · ${c.triggered || 0} fired`;
-
-  applyAlertSource();
-  renderQbArmed();
-  renderQbTable();
-  mergeQbAlerts();
-  stampCards();
-  document.getElementById('statArmed').textContent = (qbData.counts || {}).armed || 0;
-}
-
-function renderQbArmed() {
-  const el = document.getElementById('qbArmed');
-  const armed = qbData.armed || [];
-  const chips = armed.map(a => {
-    const lvl = a.trigger_level != null
-      ? `<span class="qb-lvl">→ ${qbNum(a.trigger_level)}</span>`
-      : `<span class="qb-lvl">no trigger yet</span>`;
-    const arrow = a.direction === 'long' ? '▲' : '▼';
-    return `<span class="qb-chip ${a.direction}" title="${a.state} · ${a.bars_since_cross} bars since cross">
-              ${arrow} ${a.symbol} ${lvl}</span>`;
+/* ──────────────────────────── recent feed ──────────────────────────── */
+function renderFeed() {
+  const rows = DATA.results || [];
+  $('#nfeed').textContent = rows.length;
+  const box = $('#feed');
+  if (!rows.length) {
+    box.outerHTML = '<div class="empty" id="feed">No logged results yet.<br>' +
+      'Tap ✅ Took it on a Telegram signal and the outcome lands here.</div>';
+    return;
+  }
+  box.className = 'feed';
+  box.innerHTML = rows.map(r => {
+    const p = r.pnl_dollars;
+    const win = r.result === 'win' || (p != null && p > 0);
+    const icon = r.result === 'skipped' ? '⊘' : win ? '✅' : (p != null || r.result === 'loss') ? '❌' : '➡️';
+    const cls = r.result === 'skipped' ? '' : win ? 'good' : 'bad';
+    const when = r.logged_at ? new Date(r.logged_at)
+      .toLocaleString('en-US', { month: 'short', day: 'numeric',
+                                 hour: 'numeric', minute: '2-digit' }) : '';
+    return '<div class="fitem"><span>' + icon + '</span>' +
+      '<span class="tk">' + esc(r.ticker || '—') + '</span>' +
+      '<span class="st">' + esc((r.strategy || '').replace(/_0dte$/, '')
+        .replace(/_/g, ' ')) + (r.outcome ? ' · ' + esc(r.outcome) : '') + '</span>' +
+      '<span class="pnl ' + cls + '">' + (p != null ? money(p) : esc(r.result || '')) +
+      '</span><span class="when">' + esc(when) + '</span></div>';
   }).join('');
-  el.innerHTML = '<span class="qb-armed-lbl">Armed</span>' +
-    (chips || '<span class="qb-empty">nothing armed — no EMA cross pending</span>');
 }
 
-function renderQbTable() {
-  const body = document.getElementById('qbBody');
-  const tickers = qbData.tickers || {};
-  const firedSyms = new Set((qbData.triggered || []).map(a => a.symbol));
-  body.innerHTML = Object.keys(tickers).map(sym => {
-    const t = tickers[sym];
-    const bull = t.ema5 != null && t.ema20 != null && t.ema5 > t.ema20;
-    const rvolHot = t.rvol != null && t.rvol >= 1.5;
-    let state = '<span class="qb-state">idle</span>';
-    if (t.direction) {
-      const label = t.signal === 'pullback' ? 'pullback' : 'armed';
-      state = `<span class="qb-state ${t.direction}">${label} ${t.direction === 'long' ? '▲' : '▼'}</span>`;
-    }
-    const rowCls = firedSyms.has(sym) ? 'fired' : (t.direction ? 'armed' : '');
-    return `<tr class="${rowCls}">
-      <td>${sym}</td>
-      <td>${qbNum(t.price)}</td>
-      <td class="${bull ? 'up' : 'down'}">${qbNum(t.ema5)}</td>
-      <td>${qbNum(t.ema20)}</td>
-      <td class="${t.above_vwap ? 'up' : 'down'}">${qbNum(t.vwap)}</td>
-      <td class="${rvolHot ? 'up' : 'dim'}">${t.rvol == null ? '–' : t.rvol.toFixed(2) + '×'}</td>
-      <td>${state}</td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="7" class="dim">no tickers in this scan</td></tr>';
-}
-
-// Quantbot's fired signals go into the same feed as the local ones, tagged by
-// source. Dedup key is symbol+timestamp so a re-poll never double-posts.
-function mergeQbAlerts() {
-  const alerts = (qbData.triggered || []).slice().reverse();  // oldest first
-  let added = 0;
-  alerts.forEach(a => {
-    const key = a.symbol + '|' + a.ts;
-    if (qbSeenAlerts.has(key)) return;
-    qbSeenAlerts.add(key);
-    renderQbAlert(a, qbFirstRender);
-    added++;
-  });
-  qbFirstRender = false;
-  if (added) {
-    totalAlerts += added;
-    const cnt = document.getElementById('alertCnt');
-    cnt.textContent = totalAlerts;
-    cnt.className = 'alert-cnt hot';
-    document.getElementById('statAlerts').textContent = totalAlerts;
+/* ──────────────────────────── brain status ─────────────────────────── */
+function renderBrain() {
+  const b = DATA.brain || {};
+  const ts = b.top_strategy || {};
+  let next = '—';
+  if (b.next_run) {
+    const ms = new Date(b.next_run) - Date.now();
+    const d = Math.floor(ms / 86400000), h = Math.floor(ms % 86400000 / 3600000);
+    next = ms <= 0 ? 'due' : (d ? d + 'd ' : '') + h + 'h';
   }
+  const cells = [
+    ['Last lesson', esc(b.last_lesson_date || '—'),
+      esc(b.last_lesson || 'no lesson yet')],
+    ['Cycle', b.cycle ?? '—', 'completed research cycles'],
+    ['Top strategy', esc((ts.name || '—').replace(/_0dte$/, '').replace(/_/g, ' ')),
+      ts.profit_factor ? 'PF ' + num(ts.profit_factor) + ' · win ' +
+        pct(ts.win_rate) : 'no ranking yet'],
+    ['Validated patterns', b.patterns ?? 0, 'in the vault pattern library'],
+    ['Next brain run', next, b.next_run ? new Date(b.next_run)
+      .toLocaleString('en-US', { weekday: 'short', hour: 'numeric' }) : ''],
+  ];
+  $('#brain').innerHTML = cells.map(([k, v, s]) =>
+    '<div class="rcell"><div class="rlab">' + k + '</div><div class="rval">' +
+    v + '</div><div class="rsub">' + s + '</div></div>').join('');
 }
 
-function renderQbAlert(a, backfill) {
-  const tierColor = a.tier === 'GO' ? '#4ade80' : a.tier === 'WATCH' ? '#fbbf24' : '#64748b';
-  const tierIcon  = a.tier === 'GO' ? '🟢' : a.tier === 'WATCH' ? '🟡' : '⚪️';
-  // Quantbot timestamps are ET; render them as ET regardless of where the
-  // viewer is, so the feed matches the charts and the market clock.
-  const time = new Date(a.ts).toLocaleTimeString('en-US',
-    { hour: '2-digit', minute: '2-digit', hour12: true,
-      timeZone: 'America/New_York' }) + ' ET';
-  const tg = a.telegram && a.telegram.delivered
-    ? '<span style="color:#4ade80">✈️ sent</span>'
-    : `<span style="color:#64748b" title="${(a.telegram && a.telegram.error) || ''}">✈️ not sent</span>`;
-  const el = document.createElement('div');
-  el.className = 'alert-item qb';
-  el.innerHTML = `
-    <div class="ai-top">
-      <span class="ai-sym">${a.symbol} <span class="ai-src">Quantbot</span></span>
-      <span class="ai-time">${time}</span>
-    </div>
-    <div class="ai-sig" style="color:${tierColor}">
-      ${tierIcon} ${a.tier} · ${a.side} · ${a.direction} · ${a.score}/100
-    </div>
-    <div style="font-size:10px;color:#6b7280;padding:2px 4px 4px">${a.strategy}</div>
-    <div style="font-size:10px;color:#6b7280;padding:0 4px 6px">
-      Entry ${qbNum(a.price)} · EMA5 ${qbNum(a.ema5)} · EMA20 ${qbNum(a.ema20)}
-      · VWAP ${qbNum(a.vwap)} · RVOL ${a.rvol == null ? '–' : a.rvol.toFixed(1) + '×'} · ${tg}
-    </div>
-    <button class="ai-plan" onclick="openPlanner('${a.symbol}',${a.price || 0})">📋 Plan This Trade →</button>`;
-
-  const feed = document.getElementById('alertFeed');
-  const noMsg = feed.querySelector('.no-alerts-msg');
-  if (noMsg) noMsg.remove();
-  feed.insertBefore(el, feed.firstChild);
-  applyAlertSource();
-  if (!backfill) playSound();   // only chime for signals that arrive live
+/* ───────────────────────────── log modal ───────────────────────────── */
+let LOG_ID = null;
+function openLog(id) {
+  LOG_ID = id;
+  const s = (DATA.active_signals || []).find(x => x.signal_id === id);
+  $('#mtitle').textContent = s ? 'Log ' + s.ticker + ' ' + s.side : 'Log trade';
+  $('#mcustom').value = '';
+  $('#veil').setAttribute('data-open', '1');
+}
+function tg(text) {
+  window.open('https://t.me/' + TG_BOT + '?text=' + encodeURIComponent(text),
+    '_blank', 'noopener');
+  $('#veil').removeAttribute('data-open');
+}
+function logResult(kind) {
+  const s = (DATA.active_signals || []).find(x => x.signal_id === LOG_ID);
+  if (!s) return;
+  const z = s.sizing || {};
+  const d = kind === 'win' ? z.gain_dollars : kind === 'loss' ? -z.risk_dollars : null;
+  const word = kind === 'win' ? 'WIN' : 'LOSS';
+  tg(word + ': ' + s.ticker + ' ' + (s.strategy || '') + ' ' + s.side +
+     (s.strike ? ' $' + s.strike : '') +
+     (d != null ? ' ' + (d < 0 ? '-$' : '+$') + Math.abs(d) : ''));
 }
 
-// Where Quantbot and the local watchlist overlap, Quantbot's verdict wins on
-// the card badge — one brain, one answer.
-function stampCards() {
-  const tickers = qbData.tickers || {};
-  TICKERS.forEach(t => {
-    const qt = tickers[t];
-    const badge = document.getElementById('badge-' + t);
-    if (!qt || !badge) return;
-    if (qt.direction) {
-      badge.textContent = (qt.signal === 'pullback' ? '🎯 Pullback ' : '⚡ Armed ') +
-                          (qt.direction === 'long' ? '▲' : '▼');
-      badge.className = 'chip ' + (qt.direction === 'long' ? 'chip-bull' : 'chip-bear');
-      badge.title = 'Quantbot: ' + qt.state +
-        (qt.trigger_level ? ' · trigger ' + qt.trigger_level : '');
-    }
+/* ───────────────────────────── plumbing ───────────────────────────── */
+function render() {
+  renderRegime(); renderSignals(); renderChart(); renderFeed(); renderBrain();
+  const g = DATA.generated_at ? new Date(DATA.generated_at) : null;
+  $('#stamp').textContent = g
+    ? 'updated ' + g.toLocaleTimeString('en-US',
+        { hour: 'numeric', minute: '2-digit', second: '2-digit' }) +
+      ' · ' + ((DATA.market || {}).status || '')
+    : '—';
+  $('#foot').textContent =
+    'Rendered from signals.json (schema ' + (DATA.schema ?? '?') + '), published ' +
+    'by the scanner. Dollar figures assume the $4,000 per-trade allocation and a ' +
+    '30% stop. Backtest statistics carry no commissions or slippage. ' +
+    'Alerts and analysis only — nothing here places an order.';
+}
+
+document.addEventListener('click', e => {
+  const l = e.target.closest('[data-log]');
+  if (l) return openLog(l.getAttribute('data-log'));
+  const c = e.target.closest('[data-chart]');
+  if (c) { CHART_SYM = c.getAttribute('data-chart'); renderChart();
+    $('#chartwrap').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+});
+$('#mclose').onclick = () => $('#veil').removeAttribute('data-open');
+$('#veil').onclick = e => { if (e.target === $('#veil'))
+  $('#veil').removeAttribute('data-open'); };
+$('#mwin').onclick = () => logResult('win');
+$('#mloss').onclick = () => logResult('loss');
+$('#msend').onclick = () => {
+  const s = (DATA.active_signals || []).find(x => x.signal_id === LOG_ID);
+  const v = $('#mcustom').value.trim();
+  if (!s || !v) return;
+  tg('WIN: ' + s.ticker + ' ' + (s.strategy || '') + ' ' + v);
+};
+
+/* tick the window countdowns every 15s without refetching */
+setInterval(() => {
+  document.querySelectorAll('.countdown[data-close]').forEach(n => {
+    const mins = Math.max(0, Math.floor(
+      (new Date(n.getAttribute('data-close')) - Date.now()) / 60000));
+    n.textContent = mins === 0 ? 'CLOSED' : mins + ' min left';
+    n.className = 'countdown ' + (mins === 0 ? 'dead' : mins < 5 ? 'urgent' : '');
   });
-}
+}, 15000);
 
-// Default the feed to Quantbot-only as soon as real scanner data arrives:
-// the brain's alerts should not be buried under the browser engine's.
-let qbOnly = true;
-function toggleAlertSource() {
-  qbOnly = !qbOnly;
-  applyAlertSource();
-}
-function applyAlertSource() {
-  const feed = document.getElementById('alertFeed');
-  const btn = document.getElementById('srcToggle');
-  feed.classList.toggle('qb-only', qbOnly && !!qbData);
-  btn.textContent = qbOnly ? 'Quantbot' : 'All sources';
-  btn.classList.toggle('all', !qbOnly);
-  const empty = feed.querySelector('.no-alerts-msg');
-  const anyVisible = [...feed.querySelectorAll('.alert-item')]
-    .some(el => el.offsetParent !== null);
-  if (empty) empty.style.display = anyVisible ? 'none' : '';
-}
-
-fetchSignals();
-setInterval(fetchSignals, QB_POLL_MS);
-setInterval(renderQuantbot, 5000);   // keep the "updated Ns ago" pill honest
-
+load();
+setInterval(load, POLL_MS);
 </script>
 </body>
 </html>
