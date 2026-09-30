@@ -2,8 +2,8 @@
   "schema": 1,
   "source": "quantbot",
   "strategy": "EMA 5/20 Cross + Pullback",
-  "generated_at": "2026-09-30T15:41:01-04:00",
-  "generated_at_utc": "2026-09-30T19:41:01Z",
+  "generated_at": "2026-09-30T15:43:01-04:00",
+  "generated_at_utc": "2026-09-30T19:43:01Z",
   "market": {
     "status": "open",
     "is_open": true,
@@ -21,23 +21,23 @@
   "armed": [
     {
       "symbol": "IWM",
-      "direction": "long",
-      "state": "pullback",
+      "direction": "short",
+      "state": "armed",
       "strategy": "EMA 5/20 Cross + Pullback",
-      "swing": 279.15,
-      "trigger_level": 279.15,
-      "bars_since_cross": 5,
-      "price": 279.1
+      "swing": 278.83,
+      "trigger_level": null,
+      "bars_since_cross": 0,
+      "price": 278.87
     },
     {
       "symbol": "META",
       "direction": "short",
-      "state": "armed",
+      "state": "pullback",
       "strategy": "EMA 5/20 Cross + Pullback",
       "swing": 732.23,
-      "trigger_level": null,
-      "bars_since_cross": 5,
-      "price": 732.84
+      "trigger_level": 732.23,
+      "bars_since_cross": 7,
+      "price": 732.5
     }
   ],
   "triggered": [
@@ -531,12 +531,12 @@
   "tickers": {
     "SPY": {
       "symbol": "SPY",
-      "price": 765.98,
-      "ema5": 765.98,
-      "ema20": 766.22,
-      "vwap": 767.54,
-      "rvol": 1.02,
-      "ema_spread_pct": -0.0312,
+      "price": 765.76,
+      "ema5": 765.91,
+      "ema20": 766.16,
+      "vwap": 767.52,
+      "rvol": 1.04,
+      "ema_spread_pct": -0.0326,
       "above_vwap": false,
       "state": "idle",
       "signal": "idle",
@@ -544,186 +544,50 @@
       "trigger_level": null,
       "bars_since_cross": null,
       "vix": 15.96,
-      "bar_ts": "2026-09-30T15:39:00-04:00"
+      "bar_ts": "2026-09-30T15:41:00-04:00"
     },
     "QQQ": {
       "symbol": "QQQ",
-      "price": 743.46,
-      "ema5": 743.4,
-      "ema20": 743.44,
-      "vwap": 743.19,
-      "rvol": 0.89,
-      "ema_spread_pct": -0.0058,
-      "above_vwap": true,
+      "price": 743.13,
+      "ema5": 743.31,
+      "ema20": 743.41,
+      "vwap": 743.2,
+      "rvol": 0.53,
+      "ema_spread_pct": -0.0135,
+      "above_vwap": false,
       "state": "idle",
       "signal": "idle",
       "direction": null,
       "trigger_level": null,
       "bars_since_cross": null,
       "vix": 15.96,
-      "bar_ts": "2026-09-30T15:39:00-04:00"
+      "bar_ts": "2026-09-30T15:41:00-04:00"
     },
     "IWM": {
       "symbol": "IWM",
-      "price": 279.1,
-      "ema5": 279.05,
-      "ema20": 279.0,
+      "price": 278.87,
+      "ema5": 278.97,
+      "ema20": 278.99,
       "vwap": 279.43,
-      "rvol": 0.87,
-      "ema_spread_pct": 0.0177,
+      "rvol": 0.5,
+      "ema_spread_pct": -0.0053,
       "above_vwap": false,
-      "state": "pullback_long",
-      "signal": "pullback",
-      "direction": "long",
-      "trigger_level": 279.15,
-      "bars_since_cross": 5,
-      "vix": 15.96,
-      "bar_ts": "2026-09-30T15:39:00-04:00"
-    },
-    "AAPL": {
-      "symbol": "AAPL",
-      "price": 335.45,
-      "ema5": 335.35,
-      "ema20": 335.49,
-      "vwap": 336.56,
-      "rvol": 1.42,
-      "ema_spread_pct": -0.0435,
-      "above_vwap": false,
-      "state": "idle",
-      "signal": "idle",
-      "direction": null,
-      "trigger_level": null,
-      "bars_since_cross": null,
-      "vix": 15.96,
-      "bar_ts": "2026-09-30T15:39:00-04:00"
-    },
-    "MSFT": {
-      "symbol": "MSFT",
-      "price": 516.43,
-      "ema5": 516.72,
-      "ema20": 517.17,
-      "vwap": 517.33,
-      "rvol": 1.17,
-      "ema_spread_pct": -0.0878,
-      "above_vwap": false,
-      "state": "idle",
-      "signal": "idle",
-      "direction": null,
-      "trigger_level": null,
-      "bars_since_cross": null,
-      "vix": 15.96,
-      "bar_ts": "2026-09-30T15:39:00-04:00"
-    },
-    "AMZN": {
-      "symbol": "AMZN",
-      "price": 249.97,
-      "ema5": 249.88,
-      "ema20": 249.93,
-      "vwap": 250.41,
-      "rvol": 0.67,
-      "ema_spread_pct": -0.0207,
-      "above_vwap": false,
-      "state": "idle",
-      "signal": "idle",
-      "direction": null,
-      "trigger_level": null,
-      "bars_since_cross": null,
-      "vix": 15.96,
-      "bar_ts": "2026-09-30T15:39:00-04:00"
-    },
-    "TSLA": {
-      "symbol": "TSLA",
-      "price": 352.07,
-      "ema5": 352.12,
-      "ema20": 352.42,
-      "vwap": 350.04,
-      "rvol": 0.94,
-      "ema_spread_pct": -0.0869,
-      "above_vwap": true,
-      "state": "idle",
-      "signal": "idle",
-      "direction": null,
-      "trigger_level": null,
-      "bars_since_cross": null,
-      "vix": 15.96,
-      "bar_ts": "2026-09-30T15:39:00-04:00"
-    },
-    "NVDA": {
-      "symbol": "NVDA",
-      "price": 230.71,
-      "ema5": 230.7,
-      "ema20": 230.7,
-      "vwap": 230.61,
-      "rvol": 0.69,
-      "ema_spread_pct": -0.0001,
-      "above_vwap": true,
-      "state": "idle",
-      "signal": "idle",
-      "direction": null,
-      "trigger_level": null,
-      "bars_since_cross": null,
-      "vix": 15.96,
-      "bar_ts": "2026-09-30T15:40:00-04:00"
-    },
-    "PYPL": {
-      "symbol": "PYPL",
-      "price": 52.79,
-      "ema5": 52.78,
-      "ema20": 52.76,
-      "vwap": 52.97,
-      "rvol": 0.65,
-      "ema_spread_pct": 0.0385,
-      "above_vwap": false,
-      "state": "idle",
-      "signal": "idle",
-      "direction": null,
-      "trigger_level": null,
-      "bars_since_cross": null,
-      "vix": 15.96,
-      "bar_ts": "2026-09-30T15:39:00-04:00"
-    },
-    "GOOG": {
-      "symbol": "GOOG",
-      "price": 345.2,
-      "ema5": 345.14,
-      "ema20": 345.29,
-      "vwap": 345.96,
-      "rvol": 1.27,
-      "ema_spread_pct": -0.0435,
-      "above_vwap": false,
-      "state": "idle",
-      "signal": "idle",
-      "direction": null,
-      "trigger_level": null,
-      "bars_since_cross": null,
-      "vix": 15.96,
-      "bar_ts": "2026-09-30T15:39:00-04:00"
-    },
-    "META": {
-      "symbol": "META",
-      "price": 732.84,
-      "ema5": 732.77,
-      "ema20": 733.09,
-      "vwap": 731.3,
-      "rvol": 0.37,
-      "ema_spread_pct": -0.0437,
-      "above_vwap": true,
       "state": "armed_short",
       "signal": "armed",
       "direction": "short",
       "trigger_level": null,
-      "bars_since_cross": 5,
+      "bars_since_cross": 0,
       "vix": 15.96,
-      "bar_ts": "2026-09-30T15:39:00-04:00"
+      "bar_ts": "2026-09-30T15:42:00-04:00"
     },
-    "LQDA": {
-      "symbol": "LQDA",
-      "price": 30.88,
-      "ema5": 30.96,
-      "ema20": 32.13,
-      "vwap": 38.75,
-      "rvol": 59.22,
-      "ema_spread_pct": -3.6363,
+    "AAPL": {
+      "symbol": "AAPL",
+      "price": 335.22,
+      "ema5": 335.25,
+      "ema20": 335.44,
+      "vwap": 336.55,
+      "rvol": 1.22,
+      "ema_spread_pct": -0.054,
       "above_vwap": false,
       "state": "idle",
       "signal": "idle",
@@ -731,7 +595,143 @@
       "trigger_level": null,
       "bars_since_cross": null,
       "vix": 15.96,
-      "bar_ts": "2026-09-30T15:39:00-04:00"
+      "bar_ts": "2026-09-30T15:41:00-04:00"
+    },
+    "MSFT": {
+      "symbol": "MSFT",
+      "price": 516.43,
+      "ema5": 516.59,
+      "ema20": 517.05,
+      "vwap": 517.32,
+      "rvol": 1.17,
+      "ema_spread_pct": -0.0889,
+      "above_vwap": false,
+      "state": "idle",
+      "signal": "idle",
+      "direction": null,
+      "trigger_level": null,
+      "bars_since_cross": null,
+      "vix": 15.96,
+      "bar_ts": "2026-09-30T15:41:00-04:00"
+    },
+    "AMZN": {
+      "symbol": "AMZN",
+      "price": 249.81,
+      "ema5": 249.84,
+      "ema20": 249.91,
+      "vwap": 250.4,
+      "rvol": 1.07,
+      "ema_spread_pct": -0.0271,
+      "above_vwap": false,
+      "state": "idle",
+      "signal": "idle",
+      "direction": null,
+      "trigger_level": null,
+      "bars_since_cross": null,
+      "vix": 15.96,
+      "bar_ts": "2026-09-30T15:41:00-04:00"
+    },
+    "TSLA": {
+      "symbol": "TSLA",
+      "price": 351.95,
+      "ema5": 352.03,
+      "ema20": 352.34,
+      "vwap": 350.04,
+      "rvol": 0.82,
+      "ema_spread_pct": -0.0879,
+      "above_vwap": true,
+      "state": "idle",
+      "signal": "idle",
+      "direction": null,
+      "trigger_level": null,
+      "bars_since_cross": null,
+      "vix": 15.96,
+      "bar_ts": "2026-09-30T15:41:00-04:00"
+    },
+    "NVDA": {
+      "symbol": "NVDA",
+      "price": 230.59,
+      "ema5": 230.66,
+      "ema20": 230.69,
+      "vwap": 230.61,
+      "rvol": 0.62,
+      "ema_spread_pct": -0.0111,
+      "above_vwap": false,
+      "state": "idle",
+      "signal": "idle",
+      "direction": null,
+      "trigger_level": null,
+      "bars_since_cross": null,
+      "vix": 15.96,
+      "bar_ts": "2026-09-30T15:41:00-04:00"
+    },
+    "PYPL": {
+      "symbol": "PYPL",
+      "price": 52.73,
+      "ema5": 52.76,
+      "ema20": 52.76,
+      "vwap": 52.97,
+      "rvol": 0.64,
+      "ema_spread_pct": 0.0067,
+      "above_vwap": false,
+      "state": "idle",
+      "signal": "idle",
+      "direction": null,
+      "trigger_level": null,
+      "bars_since_cross": null,
+      "vix": 15.96,
+      "bar_ts": "2026-09-30T15:41:00-04:00"
+    },
+    "GOOG": {
+      "symbol": "GOOG",
+      "price": 344.98,
+      "ema5": 345.08,
+      "ema20": 345.24,
+      "vwap": 345.95,
+      "rvol": 1.34,
+      "ema_spread_pct": -0.0486,
+      "above_vwap": false,
+      "state": "idle",
+      "signal": "idle",
+      "direction": null,
+      "trigger_level": null,
+      "bars_since_cross": null,
+      "vix": 15.96,
+      "bar_ts": "2026-09-30T15:41:00-04:00"
+    },
+    "META": {
+      "symbol": "META",
+      "price": 732.5,
+      "ema5": 732.67,
+      "ema20": 733.0,
+      "vwap": 731.3,
+      "rvol": 0.43,
+      "ema_spread_pct": -0.0455,
+      "above_vwap": true,
+      "state": "pullback_short",
+      "signal": "pullback",
+      "direction": "short",
+      "trigger_level": 732.23,
+      "bars_since_cross": 7,
+      "vix": 15.96,
+      "bar_ts": "2026-09-30T15:41:00-04:00"
+    },
+    "LQDA": {
+      "symbol": "LQDA",
+      "price": 30.59,
+      "ema5": 30.85,
+      "ema20": 31.89,
+      "vwap": 38.64,
+      "rvol": 37.75,
+      "ema_spread_pct": -3.2678,
+      "above_vwap": false,
+      "state": "idle",
+      "signal": "idle",
+      "direction": null,
+      "trigger_level": null,
+      "bars_since_cross": null,
+      "vix": 15.96,
+      "bar_ts": "2026-09-30T15:41:00-04:00"
     }
   },
   "regime": {
@@ -746,7 +746,7 @@
     "window": "afternoon",
     "label": "Afternoon",
     "closes_at": "2026-09-30T16:00:00-04:00",
-    "minutes_left": 18
+    "minutes_left": 16
   },
   "brain": {
     "last_lesson": "trading-brain-lesson-004.md",
@@ -762,22 +762,6 @@
   },
   "bars": {
     "SPY": [
-      {
-        "t": "15:10",
-        "o": 766.81,
-        "h": 766.81,
-        "l": 766.55,
-        "c": 766.68,
-        "v": 53311
-      },
-      {
-        "t": "15:11",
-        "o": 766.66,
-        "h": 766.75,
-        "l": 766.54,
-        "c": 766.54,
-        "v": 38955
-      },
       {
         "t": "15:12",
         "o": 766.54,
@@ -1001,25 +985,25 @@
         "l": 765.73,
         "c": 765.98,
         "v": 146363
+      },
+      {
+        "t": "15:40",
+        "o": 765.96,
+        "h": 766.08,
+        "l": 765.88,
+        "c": 765.98,
+        "v": 151125
+      },
+      {
+        "t": "15:41",
+        "o": 765.98,
+        "h": 766.0,
+        "l": 765.73,
+        "c": 765.76,
+        "v": 99310
       }
     ],
     "QQQ": [
-      {
-        "t": "15:10",
-        "o": 743.81,
-        "h": 743.84,
-        "l": 743.53,
-        "c": 743.63,
-        "v": 33860
-      },
-      {
-        "t": "15:11",
-        "o": 743.62,
-        "h": 743.78,
-        "l": 743.51,
-        "c": 743.52,
-        "v": 68757
-      },
       {
         "t": "15:12",
         "o": 743.52,
@@ -1243,33 +1227,25 @@
         "l": 743.04,
         "c": 743.46,
         "v": 146463
+      },
+      {
+        "t": "15:40",
+        "o": 743.45,
+        "h": 743.51,
+        "l": 743.32,
+        "c": 743.39,
+        "v": 53476
+      },
+      {
+        "t": "15:41",
+        "o": 743.37,
+        "h": 743.44,
+        "l": 743.13,
+        "c": 743.13,
+        "v": 36530
       }
     ],
     "IWM": [
-      {
-        "t": "15:10",
-        "o": 279.0,
-        "h": 279.02,
-        "l": 278.97,
-        "c": 279.02,
-        "v": 26213
-      },
-      {
-        "t": "15:11",
-        "o": 279.02,
-        "h": 279.08,
-        "l": 278.98,
-        "c": 278.99,
-        "v": 35355
-      },
-      {
-        "t": "15:12",
-        "o": 278.99,
-        "h": 279.0,
-        "l": 278.97,
-        "c": 278.99,
-        "v": 30492
-      },
       {
         "t": "15:13",
         "o": 278.99,
@@ -1485,25 +1461,33 @@
         "l": 278.96,
         "c": 279.1,
         "v": 85348
+      },
+      {
+        "t": "15:40",
+        "o": 279.1,
+        "h": 279.12,
+        "l": 279.03,
+        "c": 279.07,
+        "v": 51263
+      },
+      {
+        "t": "15:41",
+        "o": 279.07,
+        "h": 279.08,
+        "l": 278.96,
+        "c": 278.96,
+        "v": 49584
+      },
+      {
+        "t": "15:42",
+        "o": 278.97,
+        "h": 278.99,
+        "l": 278.83,
+        "c": 278.87,
+        "v": 37983
       }
     ],
     "AAPL": [
-      {
-        "t": "15:10",
-        "o": 336.45,
-        "h": 336.46,
-        "l": 336.11,
-        "c": 336.19,
-        "v": 54293
-      },
-      {
-        "t": "15:11",
-        "o": 336.19,
-        "h": 336.3,
-        "l": 336.16,
-        "c": 336.24,
-        "v": 44351
-      },
       {
         "t": "15:12",
         "o": 336.25,
@@ -1727,25 +1711,25 @@
         "l": 335.17,
         "c": 335.45,
         "v": 196221
+      },
+      {
+        "t": "15:40",
+        "o": 335.45,
+        "h": 335.46,
+        "l": 335.12,
+        "c": 335.12,
+        "v": 49991
+      },
+      {
+        "t": "15:41",
+        "o": 335.12,
+        "h": 335.24,
+        "l": 335.07,
+        "c": 335.22,
+        "v": 53647
       }
     ],
     "MSFT": [
-      {
-        "t": "15:10",
-        "o": 518.4,
-        "h": 518.41,
-        "l": 517.86,
-        "c": 518.07,
-        "v": 41661
-      },
-      {
-        "t": "15:11",
-        "o": 518.05,
-        "h": 518.05,
-        "l": 517.92,
-        "c": 517.93,
-        "v": 27483
-      },
       {
         "t": "15:12",
         "o": 517.92,
@@ -1969,25 +1953,25 @@
         "l": 516.32,
         "c": 516.43,
         "v": 46221
+      },
+      {
+        "t": "15:40",
+        "o": 516.41,
+        "h": 516.59,
+        "l": 516.36,
+        "c": 516.56,
+        "v": 33987
+      },
+      {
+        "t": "15:41",
+        "o": 516.52,
+        "h": 516.61,
+        "l": 516.42,
+        "c": 516.43,
+        "v": 37876
       }
     ],
     "AMZN": [
-      {
-        "t": "15:10",
-        "o": 250.32,
-        "h": 250.33,
-        "l": 250.17,
-        "c": 250.17,
-        "v": 39627
-      },
-      {
-        "t": "15:11",
-        "o": 250.18,
-        "h": 250.2,
-        "l": 250.07,
-        "c": 250.07,
-        "v": 38925
-      },
       {
         "t": "15:12",
         "o": 250.07,
@@ -2211,25 +2195,25 @@
         "l": 249.8,
         "c": 249.97,
         "v": 51039
+      },
+      {
+        "t": "15:40",
+        "o": 249.95,
+        "h": 250.0,
+        "l": 249.78,
+        "c": 249.81,
+        "v": 129746
+      },
+      {
+        "t": "15:41",
+        "o": 249.81,
+        "h": 249.93,
+        "l": 249.78,
+        "c": 249.81,
+        "v": 39614
       }
     ],
     "TSLA": [
-      {
-        "t": "15:10",
-        "o": 353.3,
-        "h": 353.31,
-        "l": 352.93,
-        "c": 352.93,
-        "v": 65942
-      },
-      {
-        "t": "15:11",
-        "o": 353.04,
-        "h": 353.39,
-        "l": 353.0,
-        "c": 353.09,
-        "v": 56228
-      },
       {
         "t": "15:12",
         "o": 353.06,
@@ -2453,17 +2437,25 @@
         "l": 351.93,
         "c": 352.07,
         "v": 66262
+      },
+      {
+        "t": "15:40",
+        "o": 352.06,
+        "h": 352.13,
+        "l": 351.92,
+        "c": 351.97,
+        "v": 33218
+      },
+      {
+        "t": "15:41",
+        "o": 351.97,
+        "h": 352.15,
+        "l": 351.91,
+        "c": 351.95,
+        "v": 49495
       }
     ],
     "NVDA": [
-      {
-        "t": "15:11",
-        "o": 230.66,
-        "h": 230.72,
-        "l": 230.56,
-        "c": 230.61,
-        "v": 160084
-      },
       {
         "t": "15:12",
         "o": 230.6,
@@ -2695,25 +2687,17 @@
         "l": 230.68,
         "c": 230.71,
         "v": 155779
+      },
+      {
+        "t": "15:41",
+        "o": 230.7,
+        "h": 230.72,
+        "l": 230.55,
+        "c": 230.59,
+        "v": 126946
       }
     ],
     "PYPL": [
-      {
-        "t": "15:10",
-        "o": 52.71,
-        "h": 52.71,
-        "l": 52.64,
-        "c": 52.66,
-        "v": 19590
-      },
-      {
-        "t": "15:11",
-        "o": 52.66,
-        "h": 52.73,
-        "l": 52.66,
-        "c": 52.7,
-        "v": 18961
-      },
       {
         "t": "15:12",
         "o": 52.7,
@@ -2937,25 +2921,25 @@
         "l": 52.78,
         "c": 52.79,
         "v": 15410
+      },
+      {
+        "t": "15:40",
+        "o": 52.78,
+        "h": 52.81,
+        "l": 52.77,
+        "c": 52.78,
+        "v": 18338
+      },
+      {
+        "t": "15:41",
+        "o": 52.78,
+        "h": 52.79,
+        "l": 52.73,
+        "c": 52.73,
+        "v": 13333
       }
     ],
     "GOOG": [
-      {
-        "t": "15:10",
-        "o": 346.06,
-        "h": 346.06,
-        "l": 345.72,
-        "c": 345.75,
-        "v": 14007
-      },
-      {
-        "t": "15:11",
-        "o": 345.71,
-        "h": 345.82,
-        "l": 345.64,
-        "c": 345.65,
-        "v": 25240
-      },
       {
         "t": "15:12",
         "o": 345.63,
@@ -3179,25 +3163,25 @@
         "l": 344.95,
         "c": 345.2,
         "v": 31821
+      },
+      {
+        "t": "15:40",
+        "o": 345.13,
+        "h": 345.17,
+        "l": 345.04,
+        "c": 345.09,
+        "v": 24774
+      },
+      {
+        "t": "15:41",
+        "o": 345.09,
+        "h": 345.23,
+        "l": 344.98,
+        "c": 344.98,
+        "v": 48101
       }
     ],
     "META": [
-      {
-        "t": "15:10",
-        "o": 734.0,
-        "h": 734.18,
-        "l": 733.54,
-        "c": 733.66,
-        "v": 24664
-      },
-      {
-        "t": "15:11",
-        "o": 733.66,
-        "h": 733.85,
-        "l": 733.19,
-        "c": 733.22,
-        "v": 38641
-      },
       {
         "t": "15:12",
         "o": 733.16,
@@ -3421,25 +3405,25 @@
         "l": 732.23,
         "c": 732.84,
         "v": 25144
+      },
+      {
+        "t": "15:40",
+        "o": 732.86,
+        "h": 732.98,
+        "l": 732.63,
+        "c": 732.71,
+        "v": 22952
+      },
+      {
+        "t": "15:41",
+        "o": 732.82,
+        "h": 733.0,
+        "l": 732.43,
+        "c": 732.5,
+        "v": 20284
       }
     ],
     "LQDA": [
-      {
-        "t": "15:10",
-        "o": 35.11,
-        "h": 35.36,
-        "l": 35.1,
-        "c": 35.28,
-        "v": 72306
-      },
-      {
-        "t": "15:11",
-        "o": 35.21,
-        "h": 35.37,
-        "l": 34.98,
-        "c": 35.03,
-        "v": 158700
-      },
       {
         "t": "15:12",
         "o": 35.01,
@@ -3663,6 +3647,22 @@
         "l": 30.17,
         "c": 30.88,
         "v": 146898
+      },
+      {
+        "t": "15:40",
+        "o": 30.83,
+        "h": 31.07,
+        "l": 30.81,
+        "c": 31.0,
+        "v": 93095
+      },
+      {
+        "t": "15:41",
+        "o": 30.93,
+        "h": 31.19,
+        "l": 30.5,
+        "c": 30.59,
+        "v": 138843
       }
     ]
   },
