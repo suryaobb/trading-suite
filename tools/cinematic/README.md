@@ -18,3 +18,14 @@ Outputs: `catalog.json`, `catalog.csv`, `proxies/` (720p), `thumbs/`, `library.h
 `sample_output/` holds the first real test: 3 clips from the owner's Drive
 (a DJI Osmo Pocket 3 clip and two JW Marriott Parq Vancouver spa reels) → 38 labeled shots.
 `library_standalone.html` has thumbnails inlined so it opens anywhere; playback needs the proxies.
+
+## Rendering a reel from the catalog
+
+```bash
+python3 render_lite.py <out_dir>/catalog.json sample_output/edl_spa.json <clips_dir> reel.mp4
+```
+
+`render_lite.py` takes a minimal EDL (shot list with optional in/out/speed, a look, a title,
+an end card) and renders a vertical reel with ffmpeg: crop to 9:16, slow-motion via setpts,
+warm grade (saturation, contrast, colour balance, soft curve, vignette), fades. No music yet;
+that waits on a licensed library. `sample_output/edl_spa.json` is the first test reel.
