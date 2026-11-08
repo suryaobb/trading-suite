@@ -182,7 +182,7 @@ const labels=Object.entries(s.labels||{{}}).flatMap(([k,v])=>Array.isArray(v)?v:
 return `<div class="card"><img src="${{s.contact_sheet}}" loading="lazy" onclick="if(s.proxy)play(this,s)">
 <div class="meta"><span class="q ${{qc}}">${{s.quality_score}}</span><b>${{s.file}}</b> · shot ${{s.index}} · ${{s.start.toFixed(1)}}–${{s.end.toFixed(1)}}s<br>
 ${{s.camera}} · ${{s.log_profile}} · ${{s.width}}×${{s.height}} ${{s.fps}}fps${{s.duplicate_of?' · <i>dup of '+s.duplicate_of+'</i>':''}}<br>${{labels}}</div></div>`}}).join('');}}
-function play(img,s){const v=document.createElement('video');v.controls=true;v.autoplay=true;v.src=s.proxy+'#t='+s.start;img.replaceWith(v);}
+function play(img,s){{const v=document.createElement('video');v.controls=true;v.autoplay=true;v.src=s.proxy+'#t='+s.start;img.replaceWith(v);}}
 document.querySelectorAll('input,select').forEach(e=>e.addEventListener('input',render));render();
 </script></body></html>"""
     (out_dir / "library.html").write_text(html)
